@@ -14,3 +14,10 @@ test("does not mutate volumes or expose Docker environment",()=>{
  for(const marker of ["Container 'postgres'","Container 'redis'","/workspace/projects","/var/lib/hive","/var/lib/postgresql/data","-BaseUrl","Fairview"])assert(code.includes(marker));
  for(const forbidden of ["Config.Env","down -v","down --volumes","reset --hard","Remove-Item","docker compose up"])assert(!code.includes(forbidden));
 });
+
+test("Inspect permits pin-stable read-only preflight before hosted candidate validation while Verify gates candidate",()=>{
+ assert(code.includes("$Mode -eq 'Verify' -and"));
+ assert(code.includes("$Mode -eq 'Inspect'"));
+ assert(code.includes("$lock.base_release_commit"));
+ assert(code.includes("$lock.candidate_sha"));
+});

@@ -55,10 +55,13 @@ try {
     $canonicalData=HostPath $data
     if($canonicalData -eq 'd:/hive' -or $canonicalData.StartsWith('d:/hive/')) {throw 'GLOBAL_HIVE_DATA_ROOT_FORBIDDEN'}
     $lock=Get-Content -LiteralPath (Join-Path $RepoRoot '.integrations\hive-fv-maintenance.lock.json') -Raw | ConvertFrom-Json
-    if($lock.status -ne 'DEV_CANDIDATE_VERIFIED' -or $lock.validation.validate_conclusion -ne 'success' -or $lock.validation.integration_conclusion -ne 'success') {throw 'CANDIDATE_HOSTED_PROOFS_INCOMPLETE'}
+    if($lock.scope -ne 'ISOLATED_LOCAL_DEV_ONLY') {throw 'UNAUTHORIZED_CANDIDATE_SCOPE'}
+    if($Mode -eq 'Verify' -and ($lock.status -ne 'DEV_CANDIDATE_VERIFIED' -or $lock.validation.validate_conclusion -ne 'success' -or $lock.validation.integration_conclusion -ne 'success')) {throw 'CANDIDATE_HOSTED_PROOFS_INCOMPLETE'}
     $origin=Native 'git' @('-C',$source,'remote','get-url','origin')
     if($origin -notmatch '(?:^https://github\.com/|^git@github\.com:|^ssh://git@github\.com/)KayzenRoot/hive(?:\.git)?$') {throw 'UNEXPECTED_HIVE_ORIGIN'}
-    if((Native 'git' @('-C',$source,'rev-parse','HEAD')) -ne [string]$lock.candidate_sha) {throw 'HIVE_SOURCE_SHA_MISMATCH'}
+    $actualSha=Native 'git' @('-C',$source,'rev-parse','HEAD')
+    $allowedShas=if($Mode -eq 'Inspect'){@([string]$lock.base_release_commit,[string]$lock.candidate_sha)}else{@([string]$lock.candidate_sha)}
+    if($actualSha -notin $allowedShas) {throw 'HIVE_SOURCE_SHA_MISMATCH'}
     if(Native 'git' @('-C',$source,'status','--porcelain=v1','--untracked-files=no')) {throw 'HIVE_SOURCE_DIRTY'}
     if((Native 'docker' @('info','--format','{{.OSType}}')) -ne 'linux') {throw 'DOCKER_LINUX_ENGINE_REQUIRED'}
     $api=Container 'api'
