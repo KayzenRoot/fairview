@@ -21,3 +21,16 @@ test("Inspect permits pin-stable read-only preflight before hosted candidate val
  assert(code.includes("$lock.base_release_commit"));
  assert(code.includes("$lock.candidate_sha"));
 });
+
+test("PowerShell 5.1 switch forwarding omits false switch across both native subprocess boundaries",()=>{
+ const child=fs.readFileSync(new URL("../../scripts/local/invoke-hive-smoke.ps1",import.meta.url),"utf8");
+ assert(!code.includes("-RequireSemantic:$RequireSemantic"));
+ assert(!child.includes("-RequireSemantic:$RequireSemantic"));
+ for(const source of [code,child]) {
+   assert(source.includes("if($RequireSemantic.IsPresent)"));
+   assert(source.includes("'-RequireSemantic'"));
+   assert(source.includes("powershell.exe @"));
+ }
+ assert(child.includes("$LASTEXITCODE"));
+ assert(code.includes("$smokeExit=$LASTEXITCODE"));
+});

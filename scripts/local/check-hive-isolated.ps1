@@ -85,8 +85,21 @@ try {
     Write-Host ('[PASS] isolated source/mount/API checks image '+$image.Substring(0,16))
     Write-Host '[INFO] Docker build receipt and backup must be independently verified before trusting image provenance.'
     if($Mode -eq 'Verify') {
-        & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $RepoRoot 'scripts\local\check-hive.ps1') -BaseUrl $ApiBaseUrl.AbsoluteUri.TrimEnd('/') -ProjectRelativePath 'Fairview' -RequireSemantic:$RequireSemantic
-        if($LASTEXITCODE -ne 0) {throw 'FAIRVIEW_INDEX_OR_RETRIEVAL_FAILED'}
+        $args=@('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',
+            (Join-Path $RepoRoot 'scripts\local\invoke-hive-smoke.ps1'),
+            '-SmokeScriptPath',(Join-Path $RepoRoot 'scripts\local\check-hive.ps1'),
+            '-BaseUrl',$ApiBaseUrl.AbsoluteUri.TrimEnd('/'),
+            '-ProjectRelativePath','Fairview')
+        if($RequireSemantic.IsPresent) { $args+= '-RequireSemantic' }
+        $oldPreference=$ErrorActionPreference
+        try {
+            $ErrorActionPreference='Continue'
+            & powershell.exe @args
+            $smokeExit=$LASTEXITCODE
+        } finally {
+            $ErrorActionPreference=$oldPreference
+        }
+        if($smokeExit -ne 0) {throw 'FAIRVIEW_INDEX_OR_RETRIEVAL_FAILED'}
         Write-Host '[PASS] isolated Fairview READY/index/corpus/lexical/hybrid verified by actual smoke.'
     }
     Write-Host '[BOUNDARY] Semantic CURRENT and MCP handshake remain separate actual-host gates.'
