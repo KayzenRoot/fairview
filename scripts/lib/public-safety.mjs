@@ -7,7 +7,7 @@ export function forbiddenPath(repoPath) {
   if (/^\.env(?:\..+)?$/.test(name)) return "ENV_FILE";
   if ([".npmrc",".pypirc",".netrc","id_rsa","id_ed25519","id_ecdsa","id_dsa","credentials.json","secrets.json","wallet.json","keystore.json"].includes(name)) return "CREDENTIAL_FILE";
   if (/\.(?:pem|key|p12|pfx|kdbx|tfstate|tfstate\.backup|jks)$/.test(name)) return "SECRET_OR_PRIVATE_BINARY";
-  if (/^(?:\.aws\/credentials|\.ssh\/|\.kube\/config|\.docker\/config\.json)(?:$|\/)/.test(lower)) return "PRIVATE_CONFIG";
+  if (/(?:^|\/)(?:\.aws\/credentials|\.ssh\/|\.kube\/config|\.docker\/config\.json)(?:$|\/)/.test(lower)) return "PRIVATE_CONFIG";
   return null;
 }
 export function suspiciousContent(text) {
