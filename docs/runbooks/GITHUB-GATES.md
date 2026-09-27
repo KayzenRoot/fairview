@@ -3,6 +3,7 @@ Workflow: .github/workflows/foundation.yml has three required candidate check na
 - Source Pack and impact-driven harness
 - Pinned GEF release validation
 - Windows PowerShell parser and harness
+- Public repository security gate
 The GEF full npm suite must execute when its pinned gitlink/.gitmodules changes; otherwise a fast pin check and the source/harness controls suffice. Main or release boundaries may run broad integration proofs through a separate admitted WO.
 Public development is **owner-approved**. Do not attempt to make Fairview private yet; a verified PRIVATE visibility change is a mandatory PRE-PRODUCTION gate and will not conceal earlier public clones/forks. No production keys even in the future private repo. The fourth required check is `Public repository security gate`, added in the public-security delta.
 

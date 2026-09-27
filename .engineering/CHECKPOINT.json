@@ -54,10 +54,18 @@
   "pending_security_delta": {
     "work_order": "FV-BOOT-001",
     "kind": "CORRECTION_DELTA_D008",
-    "status": "PR_PROPOSED_NOT_PROMOTED",
+    "status": "REMOTE_AUDITED_CHECKPOINT_FINAL_CI_PENDING",
     "base_sha": "bc8fa90285a13673efce2bcdace25f83f5385e30",
     "owner_visibility_decision": "PUBLIC_DEVELOPMENT_PRIVATE_BEFORE_PRODUCTION",
     "private_visibility_verified": false,
-    "branch_protection_verified": false
+    "branch_protection_verified": false,
+    "audited_implementation_head_sha": "d973e3f0b149fc931c768ad86cbc55d9b716be24",
+    "review_comment_id": 5858087974,
+    "ci_run_id": 36336822805,
+    "ci_result": "success",
+    "sourcepack_fingerprint": "51555a899766923a866bb36a01ce97933f6d8b61049cf94d1f1a4497cae0f0b9",
+    "artifact_sha256": "b7ca28dd39d6148dbf0b11c81e09d3118208d9e0c9b510cc318a5bbedad81f26",
+    "independent_review": false,
+    "local_hive_validated": false
   }
 }
