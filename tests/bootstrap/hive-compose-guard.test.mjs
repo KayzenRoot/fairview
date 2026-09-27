@@ -88,6 +88,14 @@ test("planned and running data roots must match, not merely declared expected ro
  b.live.api.mounts[1].RW=true;
  assert.throws(()=>validateEffectiveConfig(b.plan,b.live,fixture),/LIVE_VOLUME_MODE_MISMATCH/);
 });
+test("unexpected API and init mounts stop before any Docker mutation",()=>{
+ const a=full();
+ a.plan.services.api.volumes.push(volume("D:/HIVE/data","/global-data"));
+ assert.throws(()=>validateEffectiveConfig(a.plan,a.live,fixture),/UNEXPECTED_API_MOUNT/);
+ const b=full();
+ b.plan.services["storage-init"].volumes.push(volume("D:/HIVE/data","/other"));
+ assert.throws(()=>validateEffectiveConfig(b.plan,b.live,fixture),/UNEXPECTED_STORAGE_INIT_MOUNT/);
+});
 test("candidate timeout passthrough, build source, all four service labels and loopback are compulsory",()=>{
  const a=full();
  delete a.plan.services.api.environment.HIVE_REPOSITORY_GIT_TIMEOUT_SECONDS;

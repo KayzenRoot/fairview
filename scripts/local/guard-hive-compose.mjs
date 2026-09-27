@@ -78,6 +78,8 @@ export function validateEffectiveConfig(rendered,live,opts) {
   assert(hostPath(api.build?.context||"")===hostPath(opts.checkout),"BUILD_CONTEXT_NOT_CANDIDATE");
   assert(String(api.environment?.HIVE_REPOSITORY_GIT_TIMEOUT_SECONDS)==="30",
     "CANDIDATE_GIT_TIMEOUT_NOT_WIRED");
+  assert((api.volumes||[]).length===2&&(live.api.mounts||[]).length===2,"UNEXPECTED_API_MOUNT");
+  assert((init.volumes||[]).length===1,"UNEXPECTED_STORAGE_INIT_MOUNT");
   requireMount(api.volumes,live.api.mounts,"/workspace/projects",opts.projectsRoot,true);
   requireMount(api.volumes,live.api.mounts,"/var/lib/hive",opts.dataRoot,false);
   requireMount(pg.volumes,live.postgres.mounts,"/var/lib/postgresql/data",
@@ -247,6 +249,10 @@ async function main() {
   assert(again.proof.fingerprint===proof.fingerprint,"COMPOSE_CONFIG_DRIFT_BEFORE_WRITE");
   const old=live;
   exec("docker",common.concat(["build","api"]),{env,timeout:12*60*1000,code:"ISOLATED_API_BUILD_FAILED"});
+  assert(exec("git",["-C",opts.checkout,"rev-parse","HEAD"],{code:"POST_BUILD_GIT_HEAD_UNAVAILABLE"})===opts.head,
+    "SOURCE_CHANGED_DURING_BUILD");
+  assert(!exec("git",["-C",opts.checkout,"status","--porcelain=v1","--untracked-files=no"],
+    {code:"POST_BUILD_GIT_STATUS_UNAVAILABLE"}),"SOURCE_DIRTY_DURING_BUILD");
   // Same exact Compose arguments, project directory, files, private env source and overrides.
   exec("docker",common.concat(["up","-d","--no-deps","--no-build","api"]),
     {env,timeout:3*60*1000,code:"ISOLATED_API_RECREATE_FAILED"});
