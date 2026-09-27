@@ -29,7 +29,7 @@ export function calculateImpact(registry, paths) {
     if (typeof path !== "string" || !path || path.startsWith("/") || path.includes("\\") || path.split("/").includes("..")) {
       unknown.push(String(path)); continue;
     }
-    if (high.has(path)) full = true;
+    if ([...high].some(prefix => prefix.endsWith('/') ? path.startsWith(prefix) : path === prefix)) full = true;
     let matched = false;
     for (const mod of registry.modules) if (mod.paths.some(prefix=> prefix.endsWith("/") ? path.startsWith(prefix) : path===prefix)) {
       touched.add(mod.id); matched = true;

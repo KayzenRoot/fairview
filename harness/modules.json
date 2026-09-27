@@ -19,7 +19,8 @@
         "package.json",
         ".gitignore",
         ".gitmodules",
-        "vendor/gef-bootstrap"
+        "vendor/gef-bootstrap",
+        "docs/runbooks/GITHUB-GATES.md"
       ],
       "tests": [
         "tests/bootstrap/*.test.mjs"

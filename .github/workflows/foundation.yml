@@ -30,6 +30,19 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: node scripts/harness.mjs verify --changed --base "$BASE_SHA" --head HEAD
+      - name: Exact-head scoped Evidence Bundle
+        if: github.event_name == 'pull_request'
+        env:
+          EVIDENCE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          EVIDENCE_TESTS_VERIFIED: '1'
+        run: node scripts/evidence.mjs
+      - name: Attach Evidence Bundle
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fairview-bootstrap-evidence
+          path: tmp/evidence/*.json
+          if-no-files-found: error
       - name: Full active harness (protected main)
         if: github.event_name == 'push'
         run: node scripts/harness.mjs verify --all
@@ -40,12 +53,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           submodules: recursive
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Decide GEF proof by exact changed gitlink
+        id: gef
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        shell: bash
+        run: |
+          test "$(git -C vendor/gef-bootstrap rev-parse HEAD)" = "866fe3af8cccc65c929aaf6a47a924401fa448b3"
+          if [[ -n "$BASE_SHA" ]] && git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null && git diff --quiet "$BASE_SHA"...HEAD -- vendor/gef-bootstrap .gitmodules; then
+            echo "run_full=false" >> "$GITHUB_OUTPUT"
+            echo "GEF upstream gitlink unchanged: reuse pinned upstream release proof"
+          else
+            echo "run_full=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Pinned source-workspace test
+        if: steps.gef.outputs.run_full == 'true'
         working-directory: vendor/gef-bootstrap
         run: |
           test "$(git rev-parse HEAD)" = "866fe3af8cccc65c929aaf6a47a924401fa448b3"
@@ -76,4 +104,4 @@ jobs:
       - name: Run source and deterministic tests
         run: |
           node scripts/check-sources.mjs
-          node --test tests/bootstrap/impact.test.mjs tests/bootstrap/windows-contract.test.mjs
+          node --test tests/bootstrap/impact.test.mjs tests/bootstrap/windows-contract.test.mjs tests/bootstrap/evidence-contract.test.mjs
