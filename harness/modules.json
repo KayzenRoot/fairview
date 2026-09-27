@@ -20,7 +20,8 @@
         ".gitignore",
         ".gitmodules",
         "vendor/gef-bootstrap",
-        "docs/runbooks/GITHUB-GATES.md"
+        "docs/runbooks/GITHUB-GATES.md",
+        ".gitattributes"
       ],
       "tests": [
         "tests/bootstrap/*.test.mjs"
