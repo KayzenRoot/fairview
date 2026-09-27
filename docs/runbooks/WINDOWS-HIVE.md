@@ -8,3 +8,5 @@ This runbook is operator-executed only, not evidence of installation. Do not exe
 5. HIVE MCP read-only surface is separate from REST startup; verify actual handshake in its execution host before claiming tool access. Never invent project/task UUID.
 6. Capture logs without credentials, exact Git pins, health result, project READY state, index/corpus receipts, search results and failure exit code in an Evidence Bundle. Operator machine success is independent of GitHub CI.
 Uninstall/upgrade is intentionally not automated; no volume deletion, migration or repository history rewrite under this Work Order.
+
+**Public repository isolation:** HIVE v1.0.3 may create/preserve a machine-local `.env` ONLY within its external checkout `D:\\Tools\\HIVE`. Neither Fairview nor GitHub Actions receives a copy of that file. HIVE_PROJECTS_ROOT is read-only for source inspection. Refuse to upload HIVE `.env`, local logs with secrets, account screenshots or real embedding-provider tokens in evidence.
