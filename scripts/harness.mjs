@@ -4,6 +4,7 @@ import path from "node:path";
 import {spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
 import {calculateImpact,validateRegistry} from "./lib/impact.mjs";
+import {parseGitDiffNameStatusZ} from "./lib/git-diff.mjs";
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 const args=process.argv.slice(2);
 const registry=validateRegistry(JSON.parse(fs.readFileSync(path.join(root,"harness/modules.json"),"utf8")));
@@ -21,9 +22,9 @@ function checkDoctor(){
 }
 function getFiles(base,head){
  if(!/^[a-fA-F0-9]{40}$/.test(base)|| !/^(HEAD|[a-fA-F0-9]{40})$/.test(head)) fail("INVALID_BASE_HEAD");
- const diff=run("git",["diff","--name-only","--diff-filter=ACMR",base+"..."+head,"--"]);
+ const diff=run("git",["diff","--name-status","-z","--find-renames","--diff-filter=ACDMRTUXB",base+"..."+head,"--"]);
  if(diff.status!==0) fail("GIT_DIFF_FAILED "+(diff.stderr||"").slice(0,240));
- return diff.stdout.trim().split("\n").filter(Boolean);
+ try { return parseGitDiffNameStatusZ(diff.stdout); } catch (error) { fail("GIT_DIFF_PARSE_FAILED "+error.message); }
 }
 const arg=(name,fallback)=>{const n=args.indexOf(name);return n>=0?args[n+1]:fallback};
 function impact(files){
