@@ -28,7 +28,7 @@ test("risky workflow trigger and workflow secrets blocked in workflow files only
  assert.deepEqual(workflowHazards("docs/workflows.md",dangerous),[]);
 });
 test("project gitignore bans all local env files without exception",()=>{
- const content=fs.readFileSync(new URL("../../.gitignore",import.meta.url),"utf8");
+ const content=fs.readFileSync(new URL("../../.gitignore",import.meta.url),"utf8").replace(/\r\n/g,"\n");
  assert(content.includes(".env\n"));
  assert(content.includes("**/.env.*"));
  assert(!content.includes("!.env.example"));
