@@ -9,3 +9,5 @@ test("both impact selection and evidence generation use shared deletion-aware pa
  const e=fs.readFileSync(new URL("../../scripts/evidence.mjs",import.meta.url),"utf8");
  for (const code of [h,e]) {assert(code.includes("parseGitDiffNameStatusZ"));assert(code.includes("--find-renames"));assert(!code.includes("--diff-filter=ACMR\""));}
 });
+
+test("evidence trims textual HEAD but preserves NUL diff records",()=>{const e=fs.readFileSync(new URL("../../scripts/evidence.mjs",import.meta.url),"utf8");assert(e.includes('head=git(["rev-parse","HEAD"]).trim()'));assert(e.includes('return p.stdout}'));});

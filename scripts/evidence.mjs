@@ -4,7 +4,7 @@ import fs from "node:fs";import path from "node:path";import crypto from"node:cr
 import{calculateImpact}from"./lib/impact.mjs";
 import{parseGitDiffNameStatusZ}from"./lib/git-diff.mjs";
 function git(args){const p=spawnSync("git",args,{encoding:"utf8"});if(p.status!==0)throw Error("GIT_FAILED: "+args[0]);return p.stdout}
-const root=process.cwd(),head=git(["rev-parse","HEAD"]),base=process.env.EVIDENCE_BASE_SHA;
+const root=process.cwd(),head=git(["rev-parse","HEAD"]).trim(),base=process.env.EVIDENCE_BASE_SHA;
 if(!base|| !/^[0-9a-f]{40}$/i.test(base))throw Error("EVIDENCE_BASE_SHA_REQUIRED");
 const changed=parseGitDiffNameStatusZ(git(["diff","--name-status","-z","--find-renames","--diff-filter=ACDMRTUXB",base+"..."+head,"--"]));
 const registry=JSON.parse(fs.readFileSync("harness/modules.json","utf8")),impact=calculateImpact(registry,changed);
