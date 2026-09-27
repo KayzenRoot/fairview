@@ -85,16 +85,16 @@ try {
     Write-Host ('[PASS] isolated source/mount/API checks image '+$image.Substring(0,16))
     Write-Host '[INFO] Docker build receipt and backup must be independently verified before trusting image provenance.'
     if($Mode -eq 'Verify') {
-        $args=@('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',
+        $smokeArguments=@('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',
             (Join-Path $RepoRoot 'scripts\local\invoke-hive-smoke.ps1'),
             '-SmokeScriptPath',(Join-Path $RepoRoot 'scripts\local\check-hive.ps1'),
             '-BaseUrl',$ApiBaseUrl.AbsoluteUri.TrimEnd('/'),
             '-ProjectRelativePath','Fairview')
-        if($RequireSemantic.IsPresent) { $args+= '-RequireSemantic' }
+        if($RequireSemantic.IsPresent) { $smokeArguments+= '-RequireSemantic' }
         $oldPreference=$ErrorActionPreference
         try {
             $ErrorActionPreference='Continue'
-            & powershell.exe @args
+            & powershell.exe @smokeArguments
             $smokeExit=$LASTEXITCODE
         } finally {
             $ErrorActionPreference=$oldPreference
