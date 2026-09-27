@@ -114,7 +114,7 @@ jobs:
       - name: Parse PowerShell scripts without installing any service
         shell: pwsh
         run: |
-          $files = @('scripts/local/setup-windows.ps1', 'scripts/local/check-hive.ps1', 'scripts/local/verify-checkpoint.ps1')
+          $files = @('scripts/local/setup-windows.ps1', 'scripts/local/check-hive.ps1', 'scripts/local/verify-checkpoint.ps1', 'scripts/local/check-hive-isolated.ps1')
           foreach ($file in $files) {
             $tokens = $null; $errors = $null
             [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$tokens, [ref]$errors) | Out-Null
@@ -123,4 +123,4 @@ jobs:
       - name: Run source and deterministic tests
         run: |
           node scripts/check-sources.mjs
-          node --test tests/bootstrap/impact.test.mjs tests/bootstrap/windows-contract.test.mjs tests/bootstrap/evidence-contract.test.mjs tests/bootstrap/source-fingerprint.test.mjs tests/bootstrap/git-diff.test.mjs tests/bootstrap/checkpoint-preflight.test.mjs
+          node --test tests/bootstrap/impact.test.mjs tests/bootstrap/windows-contract.test.mjs tests/bootstrap/evidence-contract.test.mjs tests/bootstrap/source-fingerprint.test.mjs tests/bootstrap/git-diff.test.mjs tests/bootstrap/checkpoint-preflight.test.mjs tests/bootstrap/isolated-hive-contract.test.mjs
