@@ -8,15 +8,20 @@
   "pr": 169,
   "candidate_sha": "2fbe0e6f5239c91d7ccae9e605a9f087f30ad095",
   "scope": "ISOLATED_LOCAL_DEV_ONLY",
-  "status": "PENDING_INTEGRATION",
+  "status": "DEV_CANDIDATE_VERIFIED",
   "validation": {
     "run": 36349473286,
     "validate_conclusion": "success",
-    "integration_conclusion": "pending",
-    "upstream_review_evidence": "UPSTREAM_GOVERNANCE_PENDING"
+    "integration_conclusion": "success",
+    "upstream_review_evidence": "FAILED_UNREGISTERED_WORK_ORDER_MARKER",
+    "review_evidence_conclusion": "failure",
+    "full_ci_run": 36349473286,
+    "verified_scope": "BACKEND_VALIDATE_AND_FULL_HOSTED_INTEGRATION_ONLY"
   },
   "untouched_global_hive_root": "D:/HIVE",
   "official_pin_unchanged": true,
   "semantic_provider": "NOT_CONFIGURED",
-  "host_rebuild_proof_required": true
+  "host_rebuild_proof_required": true,
+  "upstream_release_status": "UNPUBLISHED_DRAFT_PR_GOVERNANCE_BLOCKED",
+  "local_windows_verified": false
 }
