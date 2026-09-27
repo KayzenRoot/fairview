@@ -136,6 +136,9 @@ jobs:
             $failedExit = $LASTEXITCODE
           } finally { $ErrorActionPreference = $oldPreference }
           if ($failedExit -eq 0) { throw 'PS51_CHILD_FAILURE_NOT_PROPAGATED' }
+          # This nonzero exit was EXPECTED and asserted. Do not let pwsh's runner epilogue
+          # reinterpret the expected negative-case fixture as a failed job.
+          $global:LASTEXITCODE = 0
       - name: Run source and deterministic tests
         run: |
           node scripts/check-sources.mjs
