@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "product": "Fairview",
+  "source_repo": "KayzenRoot/hive",
+  "base_release": "v1.0.3",
+  "base_release_commit": "52bd3dab54dd4f16264072e198ed1fc23168f7fa",
+  "issue": 168,
+  "pr": 169,
+  "candidate_sha": "2fbe0e6f5239c91d7ccae9e605a9f087f30ad095",
+  "scope": "ISOLATED_LOCAL_DEV_ONLY",
+  "status": "PENDING_INTEGRATION",
+  "validation": {
+    "run": 36349473286,
+    "validate_conclusion": "success",
+    "integration_conclusion": "pending",
+    "upstream_review_evidence": "UPSTREAM_GOVERNANCE_PENDING"
+  },
+  "untouched_global_hive_root": "D:/HIVE",
+  "official_pin_unchanged": true,
+  "semantic_provider": "NOT_CONFIGURED",
+  "host_rebuild_proof_required": true
+}
