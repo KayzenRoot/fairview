@@ -67,5 +67,19 @@
     "artifact_sha256": "b7ca28dd39d6148dbf0b11c81e09d3118208d9e0c9b510cc318a5bbedad81f26",
     "independent_review": false,
     "local_hive_validated": false
+  },
+  "checkpoint_integrity_model": {
+    "model": "EXTERNAL_MAIN_RECEIPT_V1",
+    "scope": "LOCAL_DEV_PRECHECK_ONLY",
+    "policy": "LOCAL_HEAD_EQ_ORIGIN_MAIN_EQ_GITHUB_API_MAIN_PLUS_EXACT_SUCCESSFUL_CI_AND_POST_CI_OWNER_ISSUE_RECEIPT",
+    "issue": 1,
+    "receipt_marker": "FAIRVIEW_CHECKPOINT_RECEIPT_V1",
+    "independent_review_proven": false,
+    "financial_production_gate": "BLOCKED",
+    "historical_remote_main_sha": "b7a31098f6850bffd629682b68eedd24706f67e2",
+    "historical_remote_main_ci": 36337000907,
+    "local_windows_validation": "PENDING",
+    "proposed_correction_branch": "fix/fv-boot-001-checkpoint-external-receipt",
+    "correction_final_merge_sha": "UNKNOWN_UNTIL_MERGED"
   }
 }

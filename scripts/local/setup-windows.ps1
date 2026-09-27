@@ -38,6 +38,10 @@ try {
     $remote=(& git -C $repo remote get-url origin | Out-String).Trim()
     if ($LASTEXITCODE -ne 0 -or $remote -notmatch '(^|[:/])KayzenRoot/fairview(\.git)?$') { throw "UNEXPECTED_REPOSITORY_ORIGIN" }
     Run 'git' @('-C',$repo,'rev-parse','HEAD')
+    if ($Mode -eq 'Install') {
+        & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $repo 'scripts\local\verify-checkpoint.ps1') -ProjectRoot $repo
+        if ($LASTEXITCODE -ne 0) { throw 'CHECKPOINT_EXTERNAL_RECEIPT_OR_LOCAL_HEAD_PRECHECK_FAILED' }
+    }
     $gef=Join-Path $repo 'vendor\gef-bootstrap'
     if ($Mode -eq 'Doctor') {
         if (-not (Test-Path (Join-Path $gef 'package.json'))) { throw "GEF_SUBMODULE_UNINITIALIZED" }
