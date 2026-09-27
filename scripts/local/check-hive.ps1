@@ -15,26 +15,28 @@ function Post([string]$suffix,[object]$data=$null) {
 try {
     $health=Invoke-RestMethod -Uri "$BaseUrl/api/v1/health" -Method Get -TimeoutSec 10
     if ($health.status -ne 'ok') { throw 'HIVE_NOT_HEALTHY' }
-    $projects=@(Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects" -Method Get -TimeoutSec 10)
+    # Windows PowerShell 5.1 converts an empty JSON array (`[]`) to $null.
+    # Filter null pipeline output before reading ProjectResponse properties.
+    $projects=@(Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects" -Method Get -TimeoutSec 10 | Where-Object { $null -ne $_ })
     $found=@($projects | Where-Object { $_.relative_path -eq $ProjectRelativePath })
     if ($found.Count -eq 0) {
         # Automatic discovery may not have fired yet. Safe, idempotent bounded registration.
         try { $null=Post '/api/v1/projects' @{name='Fairview';relative_path=$ProjectRelativePath} }
         catch { if ($_.Exception.Response.StatusCode.value__ -ne 409) { throw } }
-        $projects=@(Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects" -Method Get -TimeoutSec 10)
+        $projects=@(Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects" -Method Get -TimeoutSec 10 | Where-Object { $null -ne $_ })
         $found=@($projects | Where-Object { $_.relative_path -eq $ProjectRelativePath })
     }
     if ($found.Count -ne 1) { throw "FAIRVIEW_REGISTRY_IDENTITY_MISSING_OR_AMBIGUOUS" }
     $project=$found[0]
     if ($project.state -ne 'READY') {
-        $project=Post "/api/v1/projects/$($project.id)/inspect"
+        $project=Post "/api/v1/projects/$($project.project_id)/inspect"
         if ($project.state -ne 'READY') { throw "FAIRVIEW_STATE_$($project.state)" }
     }
-    $id=$project.id
+    $id=$project.project_id
     $index=Post "/api/v1/projects/$id/index"
-    if ($index.status -ne 'COMPLETED') { throw "REPO_INDEX_$($index.status)" }
+    if ($index.status -ne 'COMPLETED') { throw "REPO_INDEX_$($index.status):$($index.error)" }
     $corpus=Post "/api/v1/projects/$id/retrieval/corpus/sync"
-    if ($corpus.status -ne 'COMPLETED') { throw "CORPUS_SYNC_$($corpus.status)" }
+    if ($corpus.status -ne 'COMPLETED') { throw "CORPUS_SYNC_$($corpus.status):$($corpus.error)" }
     $query=@{query='Fairview';top_k=3}
     $lexical=Post "/api/v1/projects/$id/retrieval/lexical" $query
     if (@($lexical.results).Count -lt 1) { throw 'LEXICAL_SEARCH_EMPTY' }
