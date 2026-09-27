@@ -1,0 +1,5 @@
+# Deployment and local setup
+This Work Order installs no live runtime. Windows target project checkout: D:\Projects\Fairview. HIVE source/tool checkout: D:\Tools\HIVE. HIVE durable database/CAS: D:\HIVE. HIVE_PROJECTS_ROOT=D:/Projects; HIVE_DATA_ROOT=D:/HIVE (must remain distinct). HIVE v1.0.3 published tag resolves to commit 52bd3dab54dd4f16264072e198ed1fc23168f7fa.
+GEF stable source release v1.0.0 resolves to 866fe3af8cccc65c929aaf6a47a924401fa448b3; included through vendor/gef-bootstrap immutable gitlink, not a fake global npm CLI.
+The committed PowerShell setup script is operator-executed on the Windows machine and must verify Docker Desktop Linux containers, Git, Node >=22, npm, Python, tag-to-commit identity, npm validation, Docker health, HIVE project status READY and search smoke tests before a local success claim. Never report remote repository checks as proof of Windows installation.
+CI/GitHub deployment for product runtime is future scope and requires independent safety/recovery acceptance.

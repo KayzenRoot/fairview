@@ -1,0 +1,6 @@
+# Fairview security | HIGH_ASSURANCE
+Do not commit API keys, wallet seeds/private keys, passwords, PII, customer account data, .env or live trade logs. Treat public repository as non-confidential. Prefer non-custodial or least-privilege connector identities and offline-controlled signing for DeFi.
+Every new live trading route requires approved threat model, contract/legal permission, idempotency, reconciliation, replay tests, bounded proof obligations, independent review for high-assurance safety, tested kill switch and rollback or roll-forward.
+Use environment-specific secrets provided at runtime, never as PDF payloads, CI artifact contents or prompt context. CI does not have live-trading keys. GitHub status gates cannot substitute product runtime safety.
+Current bootstrap gate: no trade/wallet or secret-bearing code. Local HIVE data root must be separate from read-only source mount. Installation scripts preserve .env and existing storage; do not delete Docker volumes.
+Security findings HIGH/CRITICAL prevent promotion and live activation.

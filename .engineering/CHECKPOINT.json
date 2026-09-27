@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "checkpoint": "FV-CP-0001",
+  "status": "REPO_BASELINE_AUDITED_LOCAL_PENDING",
+  "project": "Fairview",
+  "brand": "Next Labs",
+  "work_order": "FV-BOOT-001",
+  "issue": 1,
+  "pr": 2,
+  "branch": "feat/fv-boot-001-gef-hive-foundation",
+  "base_sha": "547d42121698cd35f2d41fc7675376e8ffb02121",
+  "audited_implementation_head_sha": "cbca78a8ea0d963cbf4c646621d5ea8f15599d08",
+  "audit": {
+    "verdict": "APPROVED_REPO_BOOTSTRAP_ONLY",
+    "method": "OWNER_SELF_AUDIT",
+    "independent": false,
+    "pr_comment_id": 5857992894,
+    "ci_run_id": 36335992178,
+    "ci_conclusion": "success",
+    "sourcepack_sha256": "99fc42659accedd9d5a4e7464c6aef0d424b9bcfabb922b638223b5827025ab8",
+    "artifact_sha256": "58931bfb4631e5276e1d5f4a0d43647237513ae43d48d6f24e751aaba721bafa"
+  },
+  "release_candidate_checkpoint_head_status": "REQUIRES_EXACT_HEAD_CI_AND_FINAL_AUDIT_BEFORE_MERGE",
+  "github_repo": "KayzenRoot/fairview",
+  "repo_visibility": "public",
+  "github_rulesets_observed": 0,
+  "admin_issue": 3,
+  "gef": {
+    "tag": "v1.0.0",
+    "commit": "866fe3af8cccc65c929aaf6a47a924401fa448b3",
+    "upstream_ci_verified": true,
+    "user_windows_verified": false
+  },
+  "hive": {
+    "tag": "v1.0.3",
+    "commit": "52bd3dab54dd4f16264072e198ed1fc23168f7fa",
+    "user_windows_verified": false,
+    "projects_root": "D:/Projects",
+    "project_path": "Fairview",
+    "semantic": "NOT_CONFIGURED_OR_NOT_VERIFIED",
+    "state": "LOCAL_VALIDATION_PENDING"
+  },
+  "production_readiness": "NOT_STARTED",
+  "active_remaining_work": "FV-BOOT-001_LOCAL_INSTALL_AND_VERIFICATION",
+  "next_product_work_order": "BLOCKED_UNTIL_CURRENT_WO_VALIDATED",
+  "last_audit": "APPROVED",
+  "last_audited_head_sha": "cbca78a8ea0d963cbf4c646621d5ea8f15599d08",
+  "next_checkpoint_commit_requires_new_audit": true
+}

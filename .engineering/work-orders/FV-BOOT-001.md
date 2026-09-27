@@ -1,0 +1,14 @@
+# FV-BOOT-001 | GEF/HIVE harness-first repository foundation
+OBJECTIVE: prepare governed Fairview repository, stable GEF and local HIVE recipes, auditable high-assurance module/test scaffolding and PDF prompt contract; no trading code.
+CONTEXT: greenfield KayzenRoot/fairview PUBLIC repo; Next Labs product; requested Windows D:\Projects\Fairview; released GEF v1.0.0 and HIVE v1.0.3.
+SCOPE: Source Pack and checkpoint; immutable GEF gitlink; PowerShell setup/doctor; HIVE smoke tests; npm/Node22 dependency-free impact selector; per-module fixtures/tests; GitHub CI and PR template; exact-head Evidence Bundle.
+OUT OF SCOPE: platform architecture execution beyond documented proposals, broker or exchange credentials, real trading, migrations, live VPS, commercial billing, altering GEF/HIVE upstream, destructive Windows actions.
+FILES/SOURCES TO READ: .engineering/SOURCE-HIERARCHY.md, CHECKPOINT.md, DECISIONS-LEDGER.md, SCOPE.md, DEFINITION-OF-DONE.md, ARCHITECTURE.md, SECURITY.md, TEST-BENCHMARK-PLAN.md, AGENTS.md, GEF v1.0.0 README/INSTALLATION, HIVE v1.0.3 docs/INSTALLATION and PROJECT-REGISTRY.
+REQUIREMENTS: validate pins; preserve existing files; avoid secret material; tag and Docker fail closed; HIVE registration READY and search validation; transparent remote/local verification split; PDF chat prompts.
+ARCHITECTURE RULES: GEF as pinned source-workspace gitlink; HIVE external context-only; use dependency-aware harness not full retest by default; unknown paths force broad checks; Git and code/evidence override conversation or HIVE.
+CONSTRAINTS: do not force push, rewrite history, delete local data or claim full host installation. GitHub first; normal PR; review in pt-BR.
+ACCEPTANCE CRITERIA: canonical files present; pinned refs reproducible; tests prove selector mapping and fail-closed fallback; mock/local script validation without secrets; scoped GitHub workflows; receipt tied to exact base/head.
+TESTS: Node22 node --test tests/bootstrap/*.test.mjs, node scripts/harness.mjs doctor, node scripts/harness.mjs verify --all, GEF npm ci/validate/audit in controlled checkout, HIVE Windows host verification separate.
+DELIVERABLES: PR, source pack, gitlink, scripts, tests, docs, workflow, evidence bundle, proposed checkpoint delta and downloadable PDF runbook/prompt when issued from chat.
+REVIEW FORMAT: Portuguese; scope, security, architecture, tests, hashes, evidence, HIGH/CRITICAL, APPROVED/CORRECTION REQUIRED/BLOCKED, no owner self-approve review.
+STOP CONDITION: no future increment or checkpoint promotion before exact-head CI and objective audit. Missing local HIVE runtime => label LOCAL_VALIDATION_PENDING, never claim READY.
