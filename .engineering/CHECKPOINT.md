@@ -1,0 +1,7 @@
+# Fairview checkpoint | FV-CP-0001 DRAFT
+Date: 2026-09-27. Authoritative main currently contains only repository initialization. Branch: feat/fv-boot-001-gef-hive-foundation. Base commit: 547d42121698cd35f2d41fc7675376e8ffb02121.
+Active Work Order: FV-BOOT-001. State: IN_PROGRESS / NOT_APPROVED / NOT_MERGED. This checkpoint is a proposal until exact-head audit and promotion.
+Confirmed remotely: Fairview repository exists, owner KayzenRoot, current visibility PUBLIC; GEF stable release v1.0.0 commit 866fe3af8cccc65c929aaf6a47a924401fa448b3; HIVE stable release v1.0.3 commit 52bd3dab54dd4f16264072e198ed1fc23168f7fa.
+Not confirmed: local Windows D:\Projects\Fairview checkout; GEF npm validation on user's Windows; Docker installation, HIVE health, READY registry, search capabilities; any app/trading runtime or product performance.
+Next allowed action: finish FV-BOOT-001 source/automation files, run focused CI, audit exact PR head, correct same Work Order until accepted. Do not begin product feature implementation or promote checkpoint until that gate.
+Resume: inspect Git main and PR first; read source hierarchy, decisions, this checkpoint, active WO, exact-head checks and PR audit before proposing any change.

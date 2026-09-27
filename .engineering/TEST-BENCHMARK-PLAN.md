@@ -1,0 +1,6 @@
+# Test and benchmark plan
+Risk: FV-BOOT-001 STANDARD for docs/CI; all live-trading and privileged wallet work HIGH_ASSURANCE.
+Boot checks: verify source pack required files and nonempty content; GEF gitlink at pinned release SHA; HIVE tag pin; impact-map integrity; Windows bootstrap script is non-destructive by inspection; CI gates operate without live secrets.
+Harness selection: explicit module registry; changed path -> owning module -> reverse dependency closure; shared contracts and unknown paths -> full test set. Deterministic first: format/static -> module unit -> adapter integration with mock fixtures -> replay -> cross-domain regression at integration milestones. Never require full suite for trivial isolated bug unless impact propagation demands it.
+Proof for live trading later: order-by-order receipts, exact adapter configs, rejecting/slippage/fill statistics, P50/P95/P99 end-to-end latency, disconnect and crash recovery, replay during extreme events and negative tests. Performance comparisons only under matched feeds, servers, venues and measurement windows.
+Evidence Bundle records base/head, changed files, impacted module set, run commands, test exit codes, skipped tests with reasons, security checks, known risks and proposed checkpoint delta. Reuse only exact dependency-valid evidence; stale baseline invalidates its proof.

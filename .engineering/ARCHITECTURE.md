@@ -1,0 +1,7 @@
+# Architecture | Planning baseline
+Seams: Web Control Plane (proposed Next.js), Trading Execution Plane (proposed Rust), venue adapters (FIX/REST/WebSocket/DEX when authorized), independent deterministic Risk Kernel, market-event store, order/position ledger, replay/shadow engine, AI advisory separated from critical execution.
+Venue adapters normalize timestamps, tick size, fees, precision, Bid/Ask, sequence gaps, order acknowledgments, fills, rejection and cancel states. Never confuse observed market gap with executable edge; measure end-to-end latency percentiles and live fill outcomes.
+Risk Kernel is independent of agents and strategies: per-user notional, daily loss, max drawdown, leverage, stale feed, health, circuit breaker, kill switch and one-leg recovery; runtime fails closed.
+One module = one explicit boundary with isolated harness, fixtures and deterministic replay. Package/import dependency graph feeds targeted checks; changed shared contracts or unknown paths widen tests, never silently skip.
+HIVE is external local-first read-only context assistant. GEF is vendored via immutable git submodule commit as a governed source workspace. Neither is a dependency of live trading runtime. GEF / HIVE failure must not disable deployed trading risk services.
+No low-level product stack implementation is admitted by FV-BOOT-001; detailed architecture and partner contracts require later ADRs.

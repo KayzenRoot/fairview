@@ -1,0 +1,4 @@
+# PDF-only chat prompt policy (approved owner instruction)
+All chat-issued executor prompts, audit prompts, correction deltas and continuation Work Orders must be polished downloadable PDFs. Chat responses may summarize decisions/status and link the PDF but must not supply the complete executor prompt in a copyable code box.
+Version-controlled .engineering/work-orders/*.md remains the canonical searchable machine-readable mirror. Every PDF carries project, WO ID, branch/base/head, source hierarchy, HIVE preflight state, exact scope/exclusions, acceptance/tests, Evidence Bundle and STOP CONDITION. Rendering and visual QA are required. If PDF generation is unavailable, disclose the blocker rather than silently replacing it.
+Do not publish secrets or live account identifiers inside prompt PDFs. A PDF handoff does not imply approval and cannot bypass a blocked gate.

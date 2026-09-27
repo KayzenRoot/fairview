@@ -1,0 +1,5 @@
+# Fairview | Next Labs
+Product: browser-operated, server-executed algorithmic trading for Forex, centralized crypto exchanges and selected DeFi integrations. Research roadmap: latency arbitrage, cross-venue arbitrage, liquidity management, bounded AI analytics/autopilot.
+V1 objective: a defined subset in production with measurable, independently checked execution, fail-safe risk controls, operational recovery, observability and documentation. No guaranteed profitability or equivalence with Westernpips. A web UI is not the execution engine.
+Commercial installation/subscription billing is excluded from V1 while retaining future multi-tenant design boundaries. Proprietary production assets or credentials must never be committed to this currently public repository.
+Development language: English canonical code/docs; user-facing review, prompt PDFs and status: Brazilian Portuguese.
