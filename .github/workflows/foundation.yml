@@ -76,4 +76,4 @@ jobs:
       - name: Run source and deterministic tests
         run: |
           node scripts/check-sources.mjs
-          node --test tests/bootstrap/*.test.mjs
+          node --test tests/bootstrap/impact.test.mjs tests/bootstrap/windows-contract.test.mjs

@@ -18,7 +18,8 @@
         "AGENTS.md",
         "package.json",
         ".gitignore",
-        ".gitmodules"
+        ".gitmodules",
+        "vendor/gef-bootstrap"
       ],
       "tests": [
         "tests/bootstrap/*.test.mjs"
