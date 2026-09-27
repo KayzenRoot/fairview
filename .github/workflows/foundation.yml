@@ -114,12 +114,31 @@ jobs:
       - name: Parse PowerShell scripts without installing any service
         shell: pwsh
         run: |
-          $files = @('scripts/local/setup-windows.ps1', 'scripts/local/check-hive.ps1', 'scripts/local/verify-checkpoint.ps1', 'scripts/local/check-hive-isolated.ps1')
+          $files = @('scripts/local/setup-windows.ps1', 'scripts/local/check-hive.ps1', 'scripts/local/verify-checkpoint.ps1', 'scripts/local/check-hive-isolated.ps1', 'scripts/local/invoke-hive-smoke.ps1', 'tests/bootstrap/fixtures/smoke-switch-child.ps1')
           foreach ($file in $files) {
             $tokens = $null; $errors = $null
             [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$tokens, [ref]$errors) | Out-Null
             if ($errors.Count) { $errors | Out-String | Write-Error; exit 1 }
           }
+      - name: Actual Windows PowerShell 5.1 child-switch and exit propagation regression
+        shell: pwsh
+        run: |
+          $runner = (Resolve-Path 'scripts/local/invoke-hive-smoke.ps1').Path
+          $fixture = (Resolve-Path 'tests/bootstrap/fixtures/smoke-switch-child.ps1').Path
+          $off = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview
+          if ($LASTEXITCODE -ne 0 -or ($off -join "`n") -notmatch 'SEMANTIC_ABSENT') { throw 'PS51_ABSENT_SWITCH_REGRESSION' }
+          $on = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview -RequireSemantic
+          if ($LASTEXITCODE -ne 0 -or ($on -join "`n") -notmatch 'SEMANTIC_PRESENT') { throw 'PS51_PRESENT_SWITCH_REGRESSION' }
+          $oldPreference = $ErrorActionPreference
+          try {
+            $ErrorActionPreference = 'Continue'
+            $failure = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18999 -ProjectRelativePath Fairview 2>&1
+            $failedExit = $LASTEXITCODE
+          } finally { $ErrorActionPreference = $oldPreference }
+          if ($failedExit -eq 0) { throw 'PS51_CHILD_FAILURE_NOT_PROPAGATED' }
+          # This nonzero exit was EXPECTED and asserted. Do not let pwsh's runner epilogue
+          # reinterpret the expected negative-case fixture as a failed job.
+          $global:LASTEXITCODE = 0
       - name: Run source and deterministic tests
         run: |
           node scripts/check-sources.mjs
