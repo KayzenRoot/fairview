@@ -8,8 +8,17 @@ $Headers = @{'Accept'='application/vnd.github+json';'User-Agent'='Fairview-Check
 $RequiredJobs = @('Public repository security gate', 'Source Pack and impact-driven harness',
     'Windows PowerShell parser and harness','Pinned GEF release validation')
 function RunGit([string[]]$GitArguments) {
-    $result = (& git -C $ProjectRoot @GitArguments 2>$null | Out-String).Trim()
-    if ($LASTEXITCODE -ne 0) { throw ("GIT_PRECHECK_FAILED_" + $GitArguments[0]) }
+    # Windows PowerShell 5.1 promotes native stderr records to terminating errors under Stop.
+    # Git writes routine fetch progress to stderr, so relax the preference only around Git.
+    $savedErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        $result = (& git -C $ProjectRoot @GitArguments 2>$null | Out-String).Trim()
+        $exitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $savedErrorActionPreference
+    }
+    if ($exitCode -ne 0) { throw ("GIT_PRECHECK_FAILED_" + $GitArguments[0]) }
     return $result
 }
 function GitHubGet([string]$uri) {
