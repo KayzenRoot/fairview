@@ -19,3 +19,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local\setup-window
 The installer never silently upgrades an existing HIVE or deletes state. A semantic-search embedding provider is not bundled; `-RequireSemantic` explicitly gates verified semantic capability.
 
 Review in pt-BR; all chat-issued executor/audit/correction prompts are downloadable PDFs only. Never put trading secrets into this public repository.
+
+## Public development security
+By owner decision D-008, this repository remains **PUBLIC for development and credential-free CI/CD**. It must become **PRIVATE before financial production launch**, with independent runtime approval. No Fairview `.env` files or examples, API/venue credentials, wallet keys, customer data, or production logs are allowed, including after the visibility change. Existing public Git history/forks cannot be recalled by switching visibility. See `.engineering/SECURITY.md` and `docs/runbooks/GITHUB-GATES.md`.
+Run `node scripts/security-scan.mjs` before any PR. Opt-in local staged-file hook: `git config core.hooksPath .githooks`. A passing scanner reduces accidental leakage but is not proof that arbitrary secrets could never be disclosed.

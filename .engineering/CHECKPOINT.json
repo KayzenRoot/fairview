@@ -45,5 +45,19 @@
   "next_product_work_order": "BLOCKED_UNTIL_CURRENT_WO_VALIDATED",
   "last_audit": "APPROVED",
   "last_audited_head_sha": "cbca78a8ea0d963cbf4c646621d5ea8f15599d08",
-  "next_checkpoint_commit_requires_new_audit": true
+  "next_checkpoint_commit_requires_new_audit": true,
+  "source_main_post_merge": {
+    "sha": "bc8fa90285a13673efce2bcdace25f83f5385e30",
+    "ci_run_id": 36336210392,
+    "conclusion": "success"
+  },
+  "pending_security_delta": {
+    "work_order": "FV-BOOT-001",
+    "kind": "CORRECTION_DELTA_D008",
+    "status": "PR_PROPOSED_NOT_PROMOTED",
+    "base_sha": "bc8fa90285a13673efce2bcdace25f83f5385e30",
+    "owner_visibility_decision": "PUBLIC_DEVELOPMENT_PRIVATE_BEFORE_PRODUCTION",
+    "private_visibility_verified": false,
+    "branch_protection_verified": false
+  }
 }
