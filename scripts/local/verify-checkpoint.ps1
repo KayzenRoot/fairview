@@ -7,9 +7,9 @@ $ApiRoot = 'https://api.github.com/repos/KayzenRoot/fairview'
 $Headers = @{'Accept'='application/vnd.github+json';'User-Agent'='Fairview-Checkpoint-Doctor'}
 $RequiredJobs = @('Public repository security gate', 'Source Pack and impact-driven harness',
     'Windows PowerShell parser and harness','Pinned GEF release validation')
-function RunGit([string[]]$args) {
-    $result = (& git -C $ProjectRoot @args 2>$null | Out-String).Trim()
-    if ($LASTEXITCODE -ne 0) { throw ("GIT_PRECHECK_FAILED_" + $args[0]) }
+function RunGit([string[]]$GitArguments) {
+    $result = (& git -C $ProjectRoot @GitArguments 2>$null | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0) { throw ("GIT_PRECHECK_FAILED_" + $GitArguments[0]) }
     return $result
 }
 function GitHubGet([string]$uri) {
