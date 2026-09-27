@@ -1,0 +1,3 @@
+[submodule "vendor/gef-bootstrap"]
+	path = vendor/gef-bootstrap
+	url = https://github.com/KayzenRoot/gef-bootstrap.git

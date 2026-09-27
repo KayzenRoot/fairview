@@ -1,0 +1,16 @@
+{
+  "name": "fairview-foundation",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "doctor": "node scripts/harness.mjs doctor",
+    "test": "node --test tests/bootstrap/*.test.mjs",
+    "validate": "node scripts/check-sources.mjs && node scripts/security-scan.mjs && node scripts/harness.mjs doctor && node scripts/harness.mjs verify --all",
+    "impact": "node scripts/harness.mjs impact"
+  },
+  "license": "UNLICENSED"
+}

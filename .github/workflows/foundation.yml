@@ -1,0 +1,79 @@
+name: Fairview foundation
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  governed-harness:
+    name: Source Pack and impact-driven harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Canonical source and security
+        run: |
+          node scripts/check-sources.mjs
+          node scripts/security-scan.mjs
+      - name: Local harness doctor
+        run: node scripts/harness.mjs doctor
+      - name: Impact-driven scoped proof (PR)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/harness.mjs verify --changed --base "$BASE_SHA" --head HEAD
+      - name: Full active harness (protected main)
+        if: github.event_name == 'push'
+        run: node scripts/harness.mjs verify --all
+  gef-upstream-release:
+    name: Pinned GEF release validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pinned source-workspace test
+        working-directory: vendor/gef-bootstrap
+        run: |
+          test "$(git rev-parse HEAD)" = "866fe3af8cccc65c929aaf6a47a924401fa448b3"
+          npm ci
+          npm run validate
+          npm audit --audit-level=high
+  windows-bootstrap-compat:
+    name: Windows PowerShell parser and harness
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Parse PowerShell scripts without installing any service
+        shell: pwsh
+        run: |
+          $files = @('scripts/local/setup-windows.ps1', 'scripts/local/check-hive.ps1')
+          foreach ($file in $files) {
+            $tokens = $null; $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count) { $errors | Out-String | Write-Error; exit 1 }
+          }
+      - name: Run source and deterministic tests
+        run: |
+          node scripts/check-sources.mjs
+          node --test tests/bootstrap/*.test.mjs

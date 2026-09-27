@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "modules": [
+    {
+      "id": "bootstrap",
+      "state": "active",
+      "depends_on": [],
+      "paths": [
+        ".engineering/",
+        "docs/",
+        "tests/bootstrap/",
+        "scripts/",
+        "harness/",
+        ".github/",
+        ".integrations/",
+        "vendor/gef-bootstrap/",
+        "README.md",
+        "AGENTS.md",
+        "package.json",
+        ".gitignore",
+        ".gitmodules"
+      ],
+      "tests": [
+        "tests/bootstrap/*.test.mjs"
+      ]
+    },
+    {
+      "id": "risk",
+      "state": "planned",
+      "depends_on": [],
+      "paths": [
+        "src/risk/",
+        "tests/risk/"
+      ],
+      "tests": []
+    },
+    {
+      "id": "forex",
+      "state": "planned",
+      "depends_on": [
+        "risk"
+      ],
+      "paths": [
+        "src/forex/",
+        "tests/forex/"
+      ],
+      "tests": []
+    },
+    {
+      "id": "cex",
+      "state": "planned",
+      "depends_on": [
+        "risk"
+      ],
+      "paths": [
+        "src/cex/",
+        "tests/cex/"
+      ],
+      "tests": []
+    },
+    {
+      "id": "defi",
+      "state": "planned",
+      "depends_on": [
+        "risk"
+      ],
+      "paths": [
+        "src/defi/",
+        "tests/defi/"
+      ],
+      "tests": []
+    },
+    {
+      "id": "ai",
+      "state": "planned",
+      "depends_on": [
+        "risk"
+      ],
+      "paths": [
+        "src/ai/",
+        "tests/ai/"
+      ],
+      "tests": []
+    },
+    {
+      "id": "web",
+      "state": "planned",
+      "depends_on": [
+        "risk"
+      ],
+      "paths": [
+        "src/web/",
+        "tests/web/"
+      ],
+      "tests": []
+    },
+    {
+      "id": "integration",
+      "state": "planned",
+      "depends_on": [
+        "risk",
+        "forex",
+        "cex",
+        "defi",
+        "ai",
+        "web"
+      ],
+      "paths": [
+        "tests/integration/",
+        "src/contracts/"
+      ],
+      "tests": []
+    }
+  ],
+  "high_impact": [
+    ".engineering/SCOPE.md",
+    ".engineering/DEFINITION-OF-DONE.md",
+    ".engineering/ARCHITECTURE.md",
+    ".engineering/SECURITY.md",
+    ".engineering/DECISIONS-LEDGER.md",
+    "src/contracts/"
+  ],
+  "note": "Any file without explicit ownership fails closed; planned module changes cannot be released without activation and tests."
+}
