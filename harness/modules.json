@@ -21,7 +21,8 @@
         ".gitmodules",
         "vendor/gef-bootstrap",
         "docs/runbooks/GITHUB-GATES.md",
-        ".gitattributes"
+        ".gitattributes",
+        ".githooks/"
       ],
       "tests": [
         "tests/bootstrap/*.test.mjs"

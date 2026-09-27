@@ -1,0 +1,4 @@
+#!/bin/sh
+# Opt-in: git config core.hooksPath .githooks
+set -eu
+node scripts/security-scan.mjs --staged
