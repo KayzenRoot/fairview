@@ -42,5 +42,8 @@
   },
   "production_readiness": "NOT_STARTED",
   "active_remaining_work": "FV-BOOT-001_LOCAL_INSTALL_AND_VERIFICATION",
-  "next_product_work_order": "BLOCKED_UNTIL_CURRENT_WO_VALIDATED"
+  "next_product_work_order": "BLOCKED_UNTIL_CURRENT_WO_VALIDATED",
+  "last_audit": "APPROVED",
+  "last_audited_head_sha": "cbca78a8ea0d963cbf4c646621d5ea8f15599d08",
+  "next_checkpoint_commit_requires_new_audit": true
 }
