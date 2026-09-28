@@ -60,3 +60,13 @@ test("index main advancement needs exact prior SHA and off-Git explicit operator
  assert(code.includes("Assert-HiveHeadAdvanceReceipt"));
  assert(fs.readFileSync(new URL("../../scripts/local/hive-window-assertions.ps1",import.meta.url),"utf8").includes("WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED"));
 });
+
+test("window-only direct smoke preflight never invokes a second smoke",()=>{
+ assert(code.includes("WINDOW_ONLY_REQUIRES_VERIFY"));
+ assert(code.includes("if($WindowOnly.IsPresent)"));
+ assert(code.indexOf("if($WindowOnly.IsPresent)")<code.indexOf("$smokeArguments=@("));
+ const runner=fs.readFileSync(new URL("../../scripts/local/invoke-hive-smoke.ps1",import.meta.url),"utf8");
+ for(const marker of ["'-HiveCheckout'","'-IsolatedDataRoot'","'-ExclusiveWindowReceipt'"]){
+   assert(runner.includes(marker)||code.includes(marker),marker);
+ }
+});
