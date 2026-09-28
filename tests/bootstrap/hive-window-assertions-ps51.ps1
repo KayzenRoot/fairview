@@ -34,14 +34,14 @@ ExpectBlocked { Assert-HiveWindowReceipt -Receipt $notConsented -ApiContainerId 
 $expired=[pscustomobject]@{};$receipt.psobject.Properties | ForEach-Object { $expired | Add-Member -NotePropertyName $_.Name -NotePropertyValue $_.Value }
 $expired.created_at_utc=$now.AddMinutes(-60).ToString('o')
 ExpectBlocked { Assert-HiveWindowReceipt -Receipt $expired -ApiContainerId $api -PostgresContainerId $pg -CanonicalDataRoot $root -Now $now } 'WINDOW_RECEIPT_EXPIRED'
-$before=[pscustomobject]@{datname='hive';stats_reset='never';other_active='0';tup_inserted='12';tup_updated='35';tup_deleted='0'}
-$after=[pscustomobject]@{datname='hive';stats_reset='never';other_active='0';tup_inserted='12';tup_updated='35';tup_deleted='0'}
+$before=[pscustomobject]@{datname='hive';wal_lsn='0/123';stats_reset='never';other_active='0';tup_inserted='12';tup_updated='35';tup_deleted='0'}
+$after=[pscustomobject]@{datname='hive';wal_lsn='0/123';stats_reset='never';other_active='0';tup_inserted='12';tup_updated='35';tup_deleted='0'}
 Assert-HiveDatabaseQuiet -Before $before -After $after
-$writes=[pscustomobject]@{datname='hive';stats_reset='never';other_active='0';tup_inserted='12';tup_updated='36';tup_deleted='0'}
+$writes=[pscustomobject]@{datname='hive';wal_lsn='0/123';stats_reset='never';other_active='0';tup_inserted='12';tup_updated='36';tup_deleted='0'}
 ExpectBlocked { Assert-HiveDatabaseQuiet -Before $before -After $writes } 'WINDOW_DB_WRITES_OBSERVED'
-$reset=[pscustomobject]@{datname='hive';stats_reset='2026-09-28';other_active='0';tup_inserted='12';tup_updated='35';tup_deleted='0'}
+$reset=[pscustomobject]@{datname='hive';wal_lsn='0/123';stats_reset='2026-09-28';other_active='0';tup_inserted='12';tup_updated='35';tup_deleted='0'}
 ExpectBlocked { Assert-HiveDatabaseQuiet -Before $before -After $reset } 'WINDOW_DB_STATS_UNTRUSTWORTHY'
-$active=[pscustomobject]@{datname='hive';stats_reset='never';other_active='1';tup_inserted='12';tup_updated='35';tup_deleted='0'}
+$active=[pscustomobject]@{datname='hive';wal_lsn='0/123';stats_reset='never';other_active='1';tup_inserted='12';tup_updated='35';tup_deleted='0'}
 ExpectBlocked { Assert-HiveDatabaseQuiet -Before $before -After $active } 'WINDOW_DB_ACTIVE_SESSIONS'
 Write-Output '[PASS] PS51_ISOLATED_WRITER_WINDOW_FAIL_CLOSED'
 
@@ -117,3 +117,46 @@ try {
     if(Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Recurse -Force }
 }
 Write-Output '[PASS] PS51_SHARED_MUTATION_JOURNAL_CREATE_NEW_REJECTS_DUPLICATE'
+
+
+# Inherited guard regressions: offset-free timestamps, DDL/TRUNCATE WAL drift,
+# and canonical absolute backup paths must all fail closed.
+$offsetless=[pscustomobject]@{}
+$receipt.psobject.Properties | ForEach-Object { $offsetless | Add-Member -NotePropertyName $_.Name -NotePropertyValue $_.Value }
+$offsetless.created_at_utc=$now.AddMinutes(-1).ToString('yyyy-MM-ddTHH:mm:ss')
+ExpectBlocked { Assert-HiveWindowReceipt -Receipt $offsetless -ApiContainerId $api -PostgresContainerId $pg -CanonicalDataRoot $root -Now $now } 'WINDOW_RECEIPT_TIMESTAMP_INVALID'
+$walDrift=[pscustomobject]@{datname='hive';wal_lsn='0/124';stats_reset='never';other_active='0';tup_inserted='12';tup_updated='35';tup_deleted='0'}
+ExpectBlocked { Assert-HiveDatabaseQuiet -Before $before -After $walDrift } 'WINDOW_DB_WAL_WRITES_OBSERVED'
+$walMissing=[pscustomobject]@{datname='hive';stats_reset='never';other_active='0';tup_inserted='12';tup_updated='35';tup_deleted='0'}
+ExpectBlocked { Assert-HiveDatabaseQuiet -Before $before -After $walMissing } 'WINDOW_DB_STATS_UNTRUSTWORTHY'
+
+$fixtureRoot=Join-Path ([System.IO.Path]::GetTempPath()) ('fairview-r8-window-backup-'+[guid]::NewGuid().ToString('N'))
+try {
+    $testRepo=Join-Path $fixtureRoot 'repo'
+    $testOutside=Join-Path $fixtureRoot 'outside'
+    $null=New-Item -Path $testRepo -ItemType Directory -Force -ErrorAction Stop
+    $null=New-Item -Path $testOutside -ItemType Directory -Force -ErrorAction Stop
+    $goodBackup=Join-Path $testOutside 'restore.zip'
+    $repoBackup=Join-Path $testRepo 'forbidden.zip'
+    [System.IO.File]::WriteAllText($goodBackup,'synthetic-nonsecret-fixture')
+    [System.IO.File]::WriteAllText($repoBackup,'synthetic-nonsecret-fixture')
+    $trusted=Get-HiveTrustedBackupPath -BackupPath $goodBackup -RepoRoot $testRepo
+    if($trusted -cne [System.IO.Path]::GetFullPath($goodBackup)) { throw 'EXPECTED_CANONICAL_GOOD_BACKUP' }
+    ExpectBlocked { Get-HiveTrustedBackupPath -BackupPath '.\restore.zip' -RepoRoot $testRepo } 'WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE'
+    ExpectBlocked { Get-HiveTrustedBackupPath -BackupPath $repoBackup -RepoRoot $testRepo } 'WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE'
+    $traversal=Join-Path $testOutside '..\repo\forbidden.zip'
+    ExpectBlocked { Get-HiveTrustedBackupPath -BackupPath $traversal -RepoRoot $testRepo } 'WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE'
+    # If the runner allows local junction creation, also exercise a linked ancestor.
+    $junction=Join-Path $fixtureRoot 'linked-repo'
+    $junctionMade=$false
+    try {
+        $null=New-Item -Path $junction -ItemType Junction -Target $testRepo -ErrorAction Stop
+        $junctionMade=$true
+    } catch { Write-Output '[INFO] PS51 local junction creation unavailable; static reparse guard still checked.' }
+    if($junctionMade) {
+        ExpectBlocked { Get-HiveTrustedBackupPath -BackupPath (Join-Path $junction 'forbidden.zip') -RepoRoot $testRepo } 'WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE'
+    }
+} finally {
+    if(Test-Path -LiteralPath $fixtureRoot) { Remove-Item -LiteralPath $fixtureRoot -Recurse -Force }
+}
+Write-Output '[PASS] PS51_R8_WAL_BACKUP_UTC_GATES'
