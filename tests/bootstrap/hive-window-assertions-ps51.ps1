@@ -70,3 +70,12 @@ ExpectBlocked { Assert-HiveWindowReceipt -Receipt $stringRestore -ApiContainerId
 $stringAdvance=[pscustomobject]@{operator_authorized_one_head_advance_index='True';prior_index_head=$oldHead;target_fairview_head=$newHead}
 ExpectBlocked { Assert-HiveHeadAdvanceReceipt -Receipt $stringAdvance -ExpectedHead $newHead } 'WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED'
 Write-Output '[PASS] PS51_TYPED_OPERATOR_CONSENT_ONLY'
+
+$corpusPermit=[pscustomobject]@{operator_authorized_one_corpus_sync=$true;authorized_fairview_project_id=$api;target_fairview_head=$newHead;prior_corpus_run_id='00000000-0000-0000-0000-000000000001'}
+$blockedCorpus=[pscustomobject]@{run_id='00000000-0000-0000-0000-000000000001'}
+if((Assert-HiveCorpusCorrectionReceipt -Receipt $corpusPermit -ProjectId $api -ExpectedHead $newHead -LatestRun $blockedCorpus) -cne $blockedCorpus.run_id){throw 'EXPECTED_EXACT_PRIOR_CORPUS_ID'}
+$wrongCorpus=[pscustomobject]@{run_id='00000000-0000-0000-0000-000000000002'}
+ExpectBlocked { Assert-HiveCorpusCorrectionReceipt -Receipt $corpusPermit -ProjectId $api -ExpectedHead $newHead -LatestRun $wrongCorpus } 'CORPUS_PRIOR_RUN_ID_MISMATCH'
+$untypedCorpus=[pscustomobject]@{operator_authorized_one_corpus_sync='True';authorized_fairview_project_id=$api;target_fairview_head=$newHead;prior_corpus_run_id=$blockedCorpus.run_id}
+ExpectBlocked { Assert-HiveCorpusCorrectionReceipt -Receipt $untypedCorpus -ProjectId $api -ExpectedHead $newHead -LatestRun $blockedCorpus } 'CORPUS_CORRECTION_NOT_OPERATOR_AUTHORIZED'
+Write-Output '[PASS] PS51_TYPED_CORPUS_CORRECTION_PRIOR_RUN_WITNESS'
