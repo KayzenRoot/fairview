@@ -80,11 +80,35 @@ function Assert-HiveCorpusFresh {
 
 
 # R8 follow-up: choose a pure, fail-closed read-only corpus action. No hidden index retries.
+function Get-HiveIndexAction {
+    [CmdletBinding()]
+    param([AllowNull()][object]$Index,
+        [Parameter(Mandatory=$true)][string]$ProjectId,
+        [Parameter(Mandatory=$true)][string]$ExpectedHead,
+        [bool]$AllowAdvance=$false,
+        [string]$AuthorizedPriorHead)
+    if($ExpectedHead -cnotmatch '^[0-9a-f]{40}$' -or
+        $null -eq $Index -or [string]$Index.project_id -ne $ProjectId -or
+        [string]::IsNullOrWhiteSpace([string]$Index.run_id) -or
+        $Index.status -ne 'COMPLETED') {
+        throw 'INDEX_NOT_VERIFIED_NO_REINDEX_AUTHORIZED'
+    }
+    if([string]$Index.repository_head_sha -ceq $ExpectedHead) { return 'REUSE' }
+    if(-not $AllowAdvance -or [string]$AuthorizedPriorHead -cnotmatch '^[0-9a-f]{40}$' -or
+        [string]$Index.repository_head_sha -cne $AuthorizedPriorHead -or
+        $AuthorizedPriorHead -ceq $ExpectedHead) {
+        throw 'INDEX_HEAD_STALE_NO_INCREMENT_AUTHORIZED'
+    }
+    # Caller MUST separately prove read-only Git ancestry before ONE POST.
+    return 'ADVANCE_ONCE'
+}
+
 function Get-HiveCorpusAction {
     [CmdletBinding()]
     param([AllowNull()][object]$Status,
         [Parameter(Mandatory=$true)][string]$ProjectId,
-        [Parameter(Mandatory=$true)][string]$IndexRunId)
+        [Parameter(Mandatory=$true)][string]$IndexRunId,
+        [string]$PriorIndexRunId)
     if($null -eq $Status -or [string]$Status.project_id -ne $ProjectId -or
         [string]::IsNullOrWhiteSpace($IndexRunId)) {
         throw 'CORPUS_STATUS_PROJECT_OR_INDEX_MISMATCH'
@@ -106,7 +130,9 @@ function Get-HiveCorpusAction {
         if($null -eq $latest) { return 'SYNC_ONCE' }
         if($latest.status -eq 'BLOCKED' -and
             [string]$latest.project_id -eq $ProjectId -and
-            [string]$latest.repository_index_run_id -eq $IndexRunId -and
+            ([string]$latest.repository_index_run_id -eq $IndexRunId -or
+             (-not [string]::IsNullOrWhiteSpace($PriorIndexRunId) -and
+              [string]$latest.repository_index_run_id -eq $PriorIndexRunId)) -and
             $latest.error -eq 'repository_index_stale' -and
             [int]$latest.chunk_count -eq 0 -and
             [int]$latest.repository_reference_count -eq 0) { return 'SYNC_ONCE' }

@@ -109,3 +109,22 @@ Expect-HiveFailure { Get-HiveCorpusAction -Status $active -ProjectId $project -I
 $wrong=[pscustomobject]@{project_id=$other;state='CURRENT';latest_run=$goodCorpus;chunk_count=11;repository_reference_count=12}
 Expect-HiveFailure { Get-HiveCorpusAction -Status $wrong -ProjectId $project -IndexRunId $run } 'CORPUS_STATUS_PROJECT_OR_INDEX_MISMATCH'
 Write-Output '[PASS] PS51_EXISTING_INDEX_AND_CORPUS_REUSE_NO_BLIND_RETRY'
+
+
+# Main advanced after the local index: explicit owner-authorized one-shot path.
+$oldHead='e'*40
+$priorIndex=[pscustomobject]@{project_id=$project;run_id=$run;repository_head_sha=$oldHead;status='COMPLETED'}
+if((Get-HiveIndexAction -Index $freshIndex -ProjectId $project -ExpectedHead $head) -ne 'REUSE') {
+    throw 'EXPECTED_REUSE_OF_CURRENT_INDEX'
+}
+Expect-HiveFailure { Get-HiveIndexAction -Index $priorIndex -ProjectId $project -ExpectedHead $head } 'INDEX_HEAD_STALE_NO_INCREMENT_AUTHORIZED'
+Expect-HiveFailure { Get-HiveIndexAction -Index $priorIndex -ProjectId $project -ExpectedHead $head -AllowAdvance $true -AuthorizedPriorHead $stale } 'INDEX_HEAD_STALE_NO_INCREMENT_AUTHORIZED'
+if((Get-HiveIndexAction -Index $priorIndex -ProjectId $project -ExpectedHead $head -AllowAdvance $true -AuthorizedPriorHead $oldHead) -ne 'ADVANCE_ONCE') {
+    throw 'EXPECTED_ONE_OWNER_AUTHORIZED_INDEX_ADVANCE'
+}
+$failedIndex=[pscustomobject]@{project_id=$project;run_id=$run;repository_head_sha=$oldHead;status='FAILED'}
+Expect-HiveFailure { Get-HiveIndexAction -Index $failedIndex -ProjectId $project -ExpectedHead $head -AllowAdvance $true -AuthorizedPriorHead $oldHead } 'INDEX_NOT_VERIFIED_NO_REINDEX_AUTHORIZED'
+if((Get-HiveCorpusAction -Status $blocked -ProjectId $project -IndexRunId $other -PriorIndexRunId $run) -ne 'SYNC_ONCE') {
+    throw 'EXPECTED_ONE_CORPUS_CORRECTION_AFTER_PROVEN_INDEX_ADVANCE'
+}
+Write-Output '[PASS] PS51_EXPLICIT_ONE_SHOT_VERIFIED_MAIN_INDEX_ADVANCE'

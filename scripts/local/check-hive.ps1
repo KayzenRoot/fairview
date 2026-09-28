@@ -3,7 +3,9 @@
 param(
     [string]$BaseUrl = 'http://localhost:8000',
     [string]$ProjectRelativePath = 'Fairview',
-    [switch]$RequireSemantic
+    [switch]$RequireSemantic,
+    [switch]$AllowHeadAdvanceIndex,
+    [string]$AuthorizedPriorIndexHead
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -59,10 +61,26 @@ try {
     # A second POST /index is forbidden. A stale/absent run needs an explicit new authority.
     try { $index=Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects/$id/index/status" -Method Get -TimeoutSec 10 }
     catch { throw 'INDEX_NOT_VERIFIED_NO_REINDEX_AUTHORIZED' }
+    $priorIndexRunId=[string]$index.run_id
+    $indexAction=Get-HiveIndexAction -Index $index -ProjectId ([string]$id) -ExpectedHead $expectedHead -AllowAdvance $AllowHeadAdvanceIndex.IsPresent -AuthorizedPriorHead $AuthorizedPriorIndexHead
+    if($indexAction -eq 'ADVANCE_ONCE') {
+        $repo=(Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
+        $previous=$ErrorActionPreference
+        try {
+            $ErrorActionPreference='Continue'
+            & git -C $repo merge-base --is-ancestor ([string]$index.repository_head_sha) $expectedHead 2>$null | Out-Null
+            $ancestry=$LASTEXITCODE
+        } finally { $ErrorActionPreference=$previous }
+        if($ancestry -ne 0) { throw 'INDEX_HEAD_ADVANCE_NOT_PROVEN_ANCESTOR' }
+        $index=Post "/api/v1/projects/$id/index"
+        if($index.status -ne 'COMPLETED') { throw "REPO_INDEX_$($index.status):$($index.error)" }
+        Write-Host '[PASS] one approved descendant incremental index; never automatically retry.'
+    } else {
+        Write-Host '[PASS] existing exact-HEAD HIVE index reused; no new index POST.'
+    }
     Assert-HiveIndexFresh -Index $index -ProjectId ([string]$id) -ExpectedHead $expectedHead
-    Write-Host '[PASS] existing exact-HEAD HIVE repository index reused; no new index POST.'
     $status=Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects/$id/retrieval/corpus" -Method Get -TimeoutSec 10
-    $action=Get-HiveCorpusAction -Status $status -ProjectId ([string]$id) -IndexRunId ([string]$index.run_id)
+    $action=Get-HiveCorpusAction -Status $status -ProjectId ([string]$id) -IndexRunId ([string]$index.run_id) -PriorIndexRunId $priorIndexRunId
     if($action -eq 'REUSE') {
         $corpus=$status.latest_run
         Write-Host '[PASS] existing CURRENT corpus reused; no corpus POST.'
