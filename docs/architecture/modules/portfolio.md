@@ -1,19 +1,15 @@
-# Balances, exposure and reconciliation | module `portfolio`
+# Portfolio, available balances and reconciliation | module `portfolio`
 
-State: **PLANNED, NOT IMPLEMENTED**. Authority: proposed FV-DISC-001 modular map; separate admitted Work Order required to add source/tests.
+**PLANNED, NOT IMPLEMENTED.** FV-DISC-001 Round 8 extends original `portfolio`, reserved `src/portfolio/` and `tests/portfolio/`. Existing dependencies `risk`, `ledger` stay **unchanged**; additional reverse dependency could create a cycle and requires a separately audited integration contract and activation WO.
 
-Reserved source ownership: `src/portfolio/`.
-Harness ownership: `tests/portfolio/`.
-Dependency graph: `risk`, `ledger`.
+## Financial responsibility
+Project immutable, exact-decimal, contract-aware **per-venue/per-account/per-asset** balances, positions, reserved inventory, fees/carry/funding and worst possible externally unknown fills. Reconcile against complete authenticated scoped external venue history and source-specific blockchain canonicality, including cursor watermark, timestamp/clock proof and chain finality. Never assume CEX A's assets fund B, infer no fill from lost ACK, call a pending transfer spendable or merge ticker-identical different contract assets. Reconciliation state `VALID | STALE | UNRECONCILED | DISCREPANCY_LOCKED` independently governs Risk Kernel view freshness.
 
-## Responsibility and scope
-Aggregate balances, margin, positions, multi-account allocation under explicit authority, collateral boundaries and external venue reconciliation.
+## Proposed typed contracts
+`BalancePositionObservationV0`, `ReconciliationCursorV0`, `InventoryReservationV0`, `ReconciliationDiscrepancyV0`, `PortfolioSnapshotV0`, `PortfolioRiskViewV0` with version/hash and restricted immutable evidence links. Defined in `docs/architecture/PORTFOLIO-OBSERVABILITY-R8.md` and proposed FV-ADR-015. Maintain a segregated audit reference to Ledger, never write simulated external fills into financial truth.
 
-## Candidate existing technology to evaluate
-PostgreSQL snapshots + event ledger projections; decimal fixed-precision amount types.
+## Existing technology candidates
+Separate product PostgreSQL for versioned local projections and scoped unique/atomic reservation transactions, local SERIALIZABLE conflict retry only (SQLSTATE 40001), optional asynchronous **dashboard-only** materialized views: https://www.postgresql.org/docs/18/transaction-iso.html ; https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html ; https://www.postgresql.org/docs/18/sql-refreshmaterializedview.html . No installed database or HIVE dependency in this planning PR.
 
-## First activation proof / STOP
-Deterministic mismatched-fill detection; fail closed on missing balance.
-
-### Design-time interface contract
-Produce a typed input/output specification, ownership and failure-state table, fixture/provenance specification, numerical acceptance metrics if appropriate, upstream license/terms record, rollback/reconciliation requirements and one narrowly scoped WO before implementing. Default mode: documentation or deterministic offline research. No live credentials or orders, no trading implementation under this proposal.
+## Future activated harness and STOP
+Synthetic DUPLICATE_EXTERNAL_FILL, CONFLICTING_FILL_IDS, LOST_ACK_OPEN_POSITION, INCOMPLETE_HISTORY_CURSOR, BALANCE_POSITION_DRIFT, CROSS_ACCOUNT_FUNDS, PENDING_WITHDRAWAL, WRONG_ASSET_ISSUER, FX_CONVERSION_STALE, MISSING_FEE_OR_CARRY, RESERVATION_CONFLICT, SERIALIZATION_RETRY_SIDE_EFFECT, STALE_RISK_VIEW, REORGED_CHAIN_RECEIPT, KILL_PERSIST_AFTER_RESTART and PRIVATE_STREAM_GAP. **STOP** new risk-increasing orders when no complete reconciled and unexpired evidence-bound risk view; any hedge requires a separate permitted Risk Kernel admission and FV-BOOT-001 FULL/independent review.
