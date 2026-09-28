@@ -39,3 +39,29 @@ test("planning docs remain bootstrap-owned while new source requires activation"
   assert(code.planned.includes("integration"));
   assert.deepEqual(code.unknown,[]);
 });
+
+test("Forex Round 1 keeps unapproved provider research fail-closed",()=>{
+  const file=fs.readFileSync(new URL("../../docs/architecture/FOREX-VENUE-POLICY-R1.md",import.meta.url),"utf8");
+  const candidates=["cTrader Open API","OANDA v20","LMAX Exchange","TrueFX / Integral"];
+  for(const candidate of candidates){
+    const record=file.split("\\n").find(line=>line.startsWith("| "+candidate+" | "));
+    assert(record, "MISSING_CANDIDATE "+candidate);
+    assert(record.includes("| RESEARCH_ONLY |"),"CANDIDATE_IMPLICITLY_AUTHORIZED "+candidate);
+  }
+  for(const term of ["commercial","redistribution","DEMO_ELIGIBLE","LIVE_CANDIDATE","INTERNAL","no live","STOP"]){
+    assert(file.toLowerCase().includes(term.toLowerCase()),"MISSING_POLICY_GATE "+term);
+  }
+  const adr=fs.readFileSync(new URL("../../docs/architecture/adrs/FV-ADR-001-PROPOSED-FOREX-VENUE-SELECTION.md",import.meta.url),"utf8");
+  assert(adr.includes("PROPOSED_NOT_ADOPTED"));
+  assert(adr.includes("no automatic live execution permit")||adr.includes("no production selection")||adr.includes("No actual account"));
+  assert.equal(r.modules.find(m=>m.id==="policy").state,"planned");
+  assert.equal(r.modules.find(m=>m.id==="forex").state,"planned");
+});
+test("Forex Round 1 research docs route to existing bootstrap harness only",()=>{
+  for(const path of ["docs/architecture/FOREX-VENUE-POLICY-R1.md","docs/architecture/adrs/FV-ADR-001-PROPOSED-FOREX-VENUE-SELECTION.md"]){
+    const result=calculateImpact(r,[path]);
+    assert.deepEqual(result.active,["bootstrap"]);
+    assert.deepEqual(result.planned,[]);
+    assert.deepEqual(result.unknown,[]);
+  }
+});
