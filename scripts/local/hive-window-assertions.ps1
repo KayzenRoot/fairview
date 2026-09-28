@@ -240,3 +240,52 @@ function Get-HiveTrustedBackupPath {
     }
     return $canonical
 }
+
+
+# The machine-known lexical root is insufficient if a directory in its ancestry
+# is a junction or symlink to public Git, global HIVE, or a restorable snapshot.
+# This predicate is pure; call BEFORE creating the leaf and AGAIN after creation.
+function Assert-HiveTrustedMutationJournalRoot {
+    [CmdletBinding()]
+    param([Parameter(Mandatory=$true)][string]$JournalRoot,
+        [Parameter(Mandatory=$true)][string]$MachineRoot,
+        [Parameter(Mandatory=$true)][string]$RepoRoot)
+    try {
+        $machine=[System.IO.Path]::GetFullPath($MachineRoot)
+        $expected=[System.IO.Path]::GetFullPath((Join-Path $machine 'Fairview\R8-Attempts'))
+        $candidate=[System.IO.Path]::GetFullPath($JournalRoot)
+        $repo=[System.IO.Path]::GetFullPath($RepoRoot)
+        if($candidate -ine $expected -or -not (Test-Path -LiteralPath $machine -PathType Container)) {
+            throw 'MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE'
+        }
+        $repoNorm=$repo.Replace('\','/').TrimEnd('/').ToLowerInvariant()
+        $walk=$candidate
+        while(-not [string]::IsNullOrWhiteSpace($walk)) {
+            $item=Get-Item -LiteralPath $walk -Force -ErrorAction SilentlyContinue
+            if($null -ne $item) {
+                if(($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+                    throw 'MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE'
+                }
+                if(-not $item.PSIsContainer) { throw 'MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE' }
+            }
+            $parent=[System.IO.Path]::GetDirectoryName($walk)
+            if([string]::IsNullOrWhiteSpace($parent) -or $parent -ieq $walk) { break }
+            $walk=$parent
+        }
+        $canonical=$candidate
+        if(Test-Path -LiteralPath $candidate -PathType Container) {
+            $canonical=[System.IO.Path]::GetFullPath(
+                (Resolve-Path -LiteralPath $candidate -ErrorAction Stop).ProviderPath)
+        }
+        foreach($path in @($candidate,$canonical)) {
+            $norm=$path.Replace('\','/').TrimEnd('/').ToLowerInvariant()
+            if($norm -eq $repoNorm -or $norm.StartsWith($repoNorm+'/') -or
+                $norm -eq 'd:/hive' -or $norm.StartsWith('d:/hive/')) {
+                throw 'MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE'
+            }
+        }
+    } catch {
+        throw 'MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE'
+    }
+    return $candidate
+}
