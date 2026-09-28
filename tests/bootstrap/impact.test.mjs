@@ -44,11 +44,11 @@ test("Forex Round 1 keeps unapproved provider research fail-closed",()=>{
   const file=fs.readFileSync(new URL("../../docs/architecture/FOREX-VENUE-POLICY-R1.md",import.meta.url),"utf8");
   const candidates=["cTrader Open API","OANDA v20","LMAX Exchange","TrueFX / Integral"];
   for(const candidate of candidates){
-    const record=file.split("\\n").find(line=>line.startsWith("| "+candidate+" | "));
+    const record=file.split(/\r?\n/).find(line=>line.startsWith("| "+candidate+" | "));
     assert(record, "MISSING_CANDIDATE "+candidate);
     assert(record.includes("| RESEARCH_ONLY |"),"CANDIDATE_IMPLICITLY_AUTHORIZED "+candidate);
   }
-  for(const term of ["commercial","redistribution","DEMO_ELIGIBLE","LIVE_CANDIDATE","INTERNAL","no live","STOP"]){
+  for(const term of ["commercial","redistribution","DEMO_ELIGIBLE","LIVE_CANDIDATE","INTERNAL","no real orders","STOP"]){
     assert(file.toLowerCase().includes(term.toLowerCase()),"MISSING_POLICY_GATE "+term);
   }
   const adr=fs.readFileSync(new URL("../../docs/architecture/adrs/FV-ADR-001-PROPOSED-FOREX-VENUE-SELECTION.md",import.meta.url),"utf8");
