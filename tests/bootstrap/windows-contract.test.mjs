@@ -47,3 +47,16 @@ test("one-shot descendant advancement is witnessed, ancestral, and forwarded saf
  const ps51=fs.readFileSync(new URL("../../tests/bootstrap/smoke-assertions-ps51.ps1",import.meta.url),"utf8");
  assert(ps51.includes("PS51_EXPLICIT_ONE_SHOT_VERIFIED_MAIN_INDEX_ADVANCE"));
 });
+
+test("direct index advance and corpus sync demand a live window and durable one-shot journal",()=>{
+ const doctor=fs.readFileSync(new URL("../../scripts/local/check-hive-isolated.ps1",import.meta.url),"utf8");
+ const runner=fs.readFileSync(new URL("../../scripts/local/invoke-hive-smoke.ps1",import.meta.url),"utf8");
+ for(const marker of ["ExclusiveWindowReceipt","HiveCheckout","IsolatedDataRoot","Assert-MutationWindow -ForIndexAdvance $true","Assert-HiveHeadAdvanceReceipt -Receipt $script:PrivateWindowReceipt","'-WindowOnly'"])assert([smoke,doctor,runner].some(s=>s.includes(marker)),marker);
+ assert(doctor.includes("if($WindowOnly.IsPresent)"));
+ assert(doctor.indexOf("if($WindowOnly.IsPresent)")<doctor.indexOf("$smokeArguments=@("));
+ assert(smoke.includes("Write-CorpusAttemptJournal"));
+ assert(smoke.indexOf("Write-CorpusAttemptJournal -ProjectId")<smoke.indexOf('Post "/api/v1/projects/$id/retrieval/corpus/sync"'));
+ assert(assertions.includes("AuthorizedPriorRunId"));
+ const fixture=fs.readFileSync(new URL("../../tests/bootstrap/smoke-assertions-ps51.ps1",import.meta.url),"utf8");
+ assert(fixture.includes("PS51_ONE_SHOT_CORPUS_AND_FIRST_NEW_SEMANTIC_SYNC"));
+});
