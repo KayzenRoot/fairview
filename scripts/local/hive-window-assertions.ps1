@@ -98,3 +98,28 @@ function Assert-HiveHeadAdvanceReceipt {
     }
     return [string]$Receipt.prior_index_head
 }
+
+# Private one-shot authorization is tied to the original failed run; not to an error label alone.
+function Assert-HiveCorpusCorrectionReceipt {
+    [CmdletBinding()]
+    param([AllowNull()][object]$Receipt,
+        [Parameter(Mandatory=$true)][string]$ProjectId,
+        [Parameter(Mandatory=$true)][string]$ExpectedHead,
+        [AllowNull()][object]$LatestRun)
+    if($null -eq $Receipt -or
+        -not ($Receipt.operator_authorized_one_corpus_sync -is [bool]) -or
+        $Receipt.operator_authorized_one_corpus_sync -ne $true -or
+        [string]$Receipt.authorized_fairview_project_id -cne $ProjectId -or
+        $ExpectedHead -cnotmatch '^[0-9a-f]{40}$' -or
+        [string]$Receipt.target_fairview_head -cne $ExpectedHead) {
+        throw 'CORPUS_CORRECTION_NOT_OPERATOR_AUTHORIZED'
+    }
+    $prior=[string]$Receipt.prior_corpus_run_id
+    if($null -eq $LatestRun) {
+        if(-not [string]::IsNullOrWhiteSpace($prior)) { throw 'CORPUS_PRIOR_RUN_ID_MISMATCH' }
+    } elseif($prior -cnotmatch '^[0-9a-fA-F-]{36}$' -or
+        [string]$LatestRun.run_id -cne $prior) {
+        throw 'CORPUS_PRIOR_RUN_ID_MISMATCH'
+    }
+    return $prior
+}
