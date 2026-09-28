@@ -55,8 +55,23 @@ function Assert-MutationWindow([bool]$ForIndexAdvance) {
     $script:WindowVerifiedForMutations=$true
 }
 function Write-CorpusAttemptJournal([string]$ProjectId,[string]$Head,[string]$IndexRunId,[string]$PriorCorpusRunId) {
-    $dir=Split-Path -Path $ExclusiveWindowReceipt -Parent
-    $journal=Join-Path $dir ("fv-r8-corpus-"+$ProjectId+"-"+$Head+".once.json")
+    # Stable OS-known per-user root is independent of both the receipt location
+    # and HIVE's isolated data backup/restore path.
+    $localRoot=[System.Environment]::GetFolderPath(
+        [System.Environment+SpecialFolder]::LocalApplicationData)
+    if([string]::IsNullOrWhiteSpace($localRoot)) { throw 'CORPUS_JOURNAL_PRIVATE_ROOT_UNAVAILABLE' }
+    $dir=Join-Path $localRoot 'Fairview\R8-Attempts'
+    $repo=(Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
+    $norm=$dir.Replace('\','/').TrimEnd('/').ToLowerInvariant()
+    $gitNorm=$repo.Replace('\','/').TrimEnd('/').ToLowerInvariant()
+    if($norm.StartsWith($gitNorm+'/') -or $norm -eq 'd:/hive' -or $norm.StartsWith('d:/hive/')) {
+        throw 'CORPUS_JOURNAL_PRIVATE_ROOT_UNAVAILABLE'
+    }
+    if(-not (Test-Path -LiteralPath $dir -PathType Container)) {
+        try { $null=New-Item -Path $dir -ItemType Directory -ErrorAction Stop }
+        catch { throw 'CORPUS_JOURNAL_PRIVATE_ROOT_UNAVAILABLE' }
+    }
+    $journal=Get-HiveCorpusJournalPath -JournalRoot $dir -ProjectId $ProjectId -ExpectedHead $Head
     $body=@{schema_version=1;project_id=$ProjectId;head=$Head;
         index_run_id=$IndexRunId;prior_corpus_run_id=$PriorCorpusRunId;
         attempted_at_utc=[datetime]::UtcNow.ToString('o')} | ConvertTo-Json -Compress
@@ -162,7 +177,11 @@ try {
     }
     Assert-HiveIndexFresh -Index $index -ProjectId ([string]$id) -ExpectedHead $expectedHead
     $status=Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects/$id/retrieval/corpus" -Method Get -TimeoutSec 10
-    $authorizedPriorCorpus=if($null -ne $script:PrivateWindowReceipt){[string]$script:PrivateWindowReceipt.prior_corpus_run_id}else{''}
+    $authorizedPriorCorpus=''
+    if($null -ne $script:PrivateWindowReceipt -and
+        $null -ne $script:PrivateWindowReceipt.PSObject.Properties['prior_corpus_run_id']) {
+        $authorizedPriorCorpus=[string]$script:PrivateWindowReceipt.prior_corpus_run_id
+    }
     $action=Get-HiveCorpusAction -Status $status -ProjectId ([string]$id) -IndexRunId ([string]$index.run_id) -PriorIndexRunId $priorIndexRunId -AuthorizedPriorRunId $authorizedPriorCorpus
     if($action -eq 'REUSE') {
         $corpus=$status.latest_run
