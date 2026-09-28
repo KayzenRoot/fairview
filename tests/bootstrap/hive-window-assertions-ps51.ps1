@@ -160,3 +160,36 @@ try {
     if(Test-Path -LiteralPath $fixtureRoot) { Remove-Item -LiteralPath $fixtureRoot -Recurse -Force }
 }
 Write-Output '[PASS] PS51_R8_WAL_BACKUP_UTC_GATES'
+
+
+# Physically trusted machine-wide root: check all EXISTING ancestors BEFORE mkdir.
+$rootFixture=Join-Path ([System.IO.Path]::GetTempPath()) ('fairview-r8-root-fixture-'+[guid]::NewGuid().ToString('N'))
+try {
+    $machine=Join-Path $rootFixture 'machine'
+    $repoFixture=Join-Path $rootFixture 'repo'
+    $parent=Join-Path $machine 'Fairview'
+    $journalRoot=Join-Path $parent 'R8-Attempts'
+    $null=New-Item -Path $machine -ItemType Directory -Force -ErrorAction Stop
+    $null=New-Item -Path $repoFixture -ItemType Directory -Force -ErrorAction Stop
+    $null=New-Item -Path $parent -ItemType Directory -Force -ErrorAction Stop
+    $candidate=Assert-HiveTrustedMutationJournalRoot -JournalRoot $journalRoot -MachineRoot $machine -RepoRoot $repoFixture
+    if($candidate -cne [System.IO.Path]::GetFullPath($journalRoot)) { throw 'EXPECTED_TRUSTED_ROOT_BEFORE_CREATE' }
+    $null=New-Item -Path $journalRoot -ItemType Directory -Force -ErrorAction Stop
+    $again=Assert-HiveTrustedMutationJournalRoot -JournalRoot $journalRoot -MachineRoot $machine -RepoRoot $repoFixture
+    if($again -cne $candidate) { throw 'EXPECTED_TRUSTED_ROOT_AFTER_CREATE' }
+    ExpectBlocked { Assert-HiveTrustedMutationJournalRoot -JournalRoot $journalRoot -MachineRoot $machine -RepoRoot $machine } 'MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE'
+    $junctionMade=$false
+    Remove-Item -LiteralPath $journalRoot -Recurse -Force
+    try {
+        $null=New-Item -Path $journalRoot -ItemType Junction -Target $repoFixture -ErrorAction Stop
+        $junctionMade=$true
+    } catch {
+        Write-Output '[INFO] Windows junction not available on this runner; root ancestor and identity checks still tested.'
+    }
+    if($junctionMade) {
+        ExpectBlocked { Assert-HiveTrustedMutationJournalRoot -JournalRoot $journalRoot -MachineRoot $machine -RepoRoot $repoFixture } 'MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE'
+    }
+} finally {
+    if(Test-Path -LiteralPath $rootFixture) { Remove-Item -LiteralPath $rootFixture -Recurse -Force }
+}
+Write-Output '[PASS] PS51_MACHINE_ROOT_LINK_REJECTION'
