@@ -1,19 +1,13 @@
-# DEX feasibility strategies | module `strategy-defi`
+# CEX/DEX and same-chain DEX feasibility | module `strategy-defi`
 
-State: **PLANNED, NOT IMPLEMENTED**. Authority: proposed FV-DISC-001 modular map; separate admitted Work Order required to add source/tests.
+**PLANNED, NOT IMPLEMENTED.** FV-DISC-001 Round 7; same original module `strategy-defi`, no additional registry IDs. Reserved `src/strategy-defi/`, `tests/strategy-defi/`; existing dependencies: `defi`, `replay`, `portfolio`. Never authorize an order, sign a wallet transaction, deploy a router/hook or imply an atomic hedge.
 
-Reserved source ownership: `src/strategy-defi/`.
-Harness ownership: `tests/strategy-defi/`.
-Dependency graph: `defi`, `replay`, `portfolio`.
+## Two internal research families
+- `CEX_DEX_SPREAD`: compare independent actual CEX spot executable depth/account-local inventory with same-block Uniswap pool route and exact token/chain/quote currency. Model asynchronous two-leg uncertainty, all fees/slippage, v4 hook behavior when applicable, gas native-to-settlement conversion, chain reorg/finality and CEX order ACK/fill ambiguity. A transfer/bridge/withdrawal cannot be assumed to rebalance instantly. Any later hedge requires separate policy, reconciled balances and independent Risk Kernel admission.
+- `DEX_POOL_ROUTE`: compare explicit directed pools on ONE eventually approved chain, per-hop exact input/output, v3 tick-crossing or v4 hook effects, route-wide gas and reverts, and conservative possible inclusion-price changes. A simulated pool swap is not a real fill, and an atomic router is a separately audited potential future technology rather than a current strategy assumption.
 
-## Responsibility and scope
-Read-only CEX/DEX spread and Uniswap pool opportunity research with gas/MEV/reorg risk; atomic routing after separate audit only.
+## Proposed contracts and existing technology candidates
+`DexFeasibilityV0`, `CexDexExposurePlanV0`, `DexQuoteEnvelopeV0`, `DexGasCostV0` with R2 block and clocks, R3 Risk Kernel/ledger and R4 deterministic replay. Official Uniswap SDK version by selected v3/v4 pool, viem read-only/simulateContract as potential future tooling, Foundry Anvil for later pinned-block fork regression: https://developers.uniswap.org/docs/protocols/v4/concepts/hooks ; https://viem.sh/docs/contract/simulateContract ; https://www.getfoundry.sh/anvil/index.html . License and chain-provider rights per later exact-version ADR only.
 
-## Candidate existing technology to evaluate
-Official Uniswap SDK and Hummingbot Gateway as evaluated reference options.
-
-## First activation proof / STOP
-No optimistic profit ignoring gas, sandwich exposure, revert or execution asymmetry.
-
-### Design-time interface contract
-Produce a typed input/output specification, ownership and failure-state table, fixture/provenance specification, numerical acceptance metrics if appropriate, upstream license/terms record, rollback/reconciliation requirements and one narrowly scoped WO before implementing. Default mode: documentation or deterministic offline research. No live credentials or orders, no trading implementation under this proposal.
+## Future harness and STOP
+Synthetic POOL_FEE_UNMODELED, TOKEN_TRANSFER_FEE, UNBOUNDED_GAS_COST, BASE_FEE_SPIKE, SWAP_REVERT, SLIPPAGE_STATE_DRIFT, SANDWICH_ADVERSE_SELECTION, CEX_LEG_UNKNOWN, INSTANT_BRIDGE_ASSUMPTION, PREMATURE_FINALITY and UNLICENSED_RPC_ARCHIVE. Detailed 20-case matrix in R7 main document. **STOP** on any unverified token/contract/hook, chain reorg, unknown gas/conversion, insufficient available balances, loss-limit breach, missing venue permission or incomplete reconciliation. A separate admitted source WO and independently proven FV-BOOT-001 FULL/financial controls must precede any real adapter or signing.
