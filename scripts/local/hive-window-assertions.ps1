@@ -25,13 +25,17 @@ function Assert-HiveWindowReceipt {
         [string]$Receipt.data_root -cne $CanonicalDataRoot) {
         throw 'WINDOW_RECEIPT_ISOLATION_IDENTITY_MISMATCH'
     }
-    if($Receipt.operator_confirmed_no_other_writers -cne $true -or
-        $Receipt.operator_confirmed_exclusive_window -cne $true) {
+    if(-not ($Receipt.operator_confirmed_no_other_writers -is [bool]) -or
+        -not ($Receipt.operator_confirmed_exclusive_window -is [bool]) -or
+        $Receipt.operator_confirmed_no_other_writers -ne $true -or
+        $Receipt.operator_confirmed_exclusive_window -ne $true) {
         throw 'WINDOW_OPERATOR_CONSENT_NOT_PROVEN'
     }
-    if($Receipt.postgres_restore_verified -cne $true -or
+    if(-not ($Receipt.postgres_restore_verified -is [bool]) -or
+        -not ($Receipt.cas_manifest_verified -is [bool]) -or
+        $Receipt.postgres_restore_verified -ne $true -or
         [int]$Receipt.postgres_restored_tables -lt 1 -or
-        $Receipt.cas_manifest_verified -cne $true) {
+        $Receipt.cas_manifest_verified -ne $true) {
         throw 'WINDOW_RESTORABLE_BACKUP_NOT_PROVEN'
     }
     if([string]$Receipt.backup_file -eq '' -or
@@ -85,7 +89,8 @@ function Assert-HiveHeadAdvanceReceipt {
             throw 'WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED'
         }
     }
-    if($Receipt.operator_authorized_one_head_advance_index -cne $true -or
+    if(-not ($Receipt.operator_authorized_one_head_advance_index -is [bool]) -or
+        $Receipt.operator_authorized_one_head_advance_index -ne $true -or
         [string]$Receipt.prior_index_head -cnotmatch '^[0-9a-f]{40}$' -or
         [string]$Receipt.target_fairview_head -cne $ExpectedHead -or
         [string]$Receipt.prior_index_head -ceq $ExpectedHead) {

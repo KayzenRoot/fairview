@@ -6,7 +6,8 @@ param(
     [string]$ProjectRelativePath='Fairview',
     [switch]$RequireSemantic,
     [switch]$AllowHeadAdvanceIndex,
-    [string]$AuthorizedPriorIndexHead
+    [string]$AuthorizedPriorIndexHead,
+    [string]$AuthorizedTargetHead
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
@@ -23,7 +24,9 @@ try {
     if($RequireSemantic.IsPresent) { $arguments+= '-RequireSemantic' }
     if($AllowHeadAdvanceIndex.IsPresent) {
         if($AuthorizedPriorIndexHead -cnotmatch '^[0-9a-f]{40}$') { throw 'INDEX_PRIOR_HEAD_REQUIRED' }
-        $arguments+= @('-AllowHeadAdvanceIndex','-AuthorizedPriorIndexHead',$AuthorizedPriorIndexHead)
+        if($AuthorizedTargetHead -cnotmatch '^[0-9a-f]{40}$' -or
+            $AuthorizedTargetHead -ceq $AuthorizedPriorIndexHead) { throw 'INDEX_TARGET_HEAD_REQUIRED' }
+        $arguments+= @('-AllowHeadAdvanceIndex','-AuthorizedPriorIndexHead',$AuthorizedPriorIndexHead,'-AuthorizedTargetHead',$AuthorizedTargetHead)
     }
     $previous=$ErrorActionPreference
     try {

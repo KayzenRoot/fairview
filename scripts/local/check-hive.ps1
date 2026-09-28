@@ -5,7 +5,8 @@ param(
     [string]$ProjectRelativePath = 'Fairview',
     [switch]$RequireSemantic,
     [switch]$AllowHeadAdvanceIndex,
-    [string]$AuthorizedPriorIndexHead
+    [string]$AuthorizedPriorIndexHead,
+    [string]$AuthorizedTargetHead
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -29,6 +30,10 @@ function Post([string]$suffix,[object]$data=$null) {
 }
 try {
     $expectedHead=Get-LocalFairviewHead
+    if($AllowHeadAdvanceIndex.IsPresent -and
+        ($AuthorizedTargetHead -cnotmatch '^[0-9a-f]{40}$' -or $expectedHead -cne $AuthorizedTargetHead)) {
+        throw 'INDEX_TARGET_HEAD_CHANGED'
+    }
     $health=Invoke-RestMethod -Uri "$BaseUrl/api/v1/health" -Method Get -TimeoutSec 10
     if ($health.status -ne 'ok') { throw 'HIVE_NOT_HEALTHY' }
     # Windows PowerShell 5.1 converts an empty JSON array (`[]`) to $null.
@@ -38,6 +43,16 @@ try {
     $projectResponse=Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects" -Method Get -TimeoutSec 10
     $projects=Convert-HiveProjectList -Response $projectResponse
     $found=@($projects | Where-Object { $_.relative_path -eq $ProjectRelativePath })
+    # FULL provider preflight is READ-ONLY and occurs before ANY registration or inspect POST.
+    if ($RequireSemantic) {
+        if ($found.Count -ne 1) { throw 'SEMANTIC_PROJECT_NOT_REGISTERED' }
+        $preflightId=[string]$found[0].project_id
+        $preflightSemantic=Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects/$preflightId/retrieval/semantic" -Method Get -TimeoutSec 10
+        if ([string]$preflightSemantic.project_id -ne $preflightId -or
+            $preflightSemantic.enabled -ne $true -or $preflightSemantic.configured -ne $true) {
+            throw 'SEMANTIC_PROVIDER_NOT_CONFIGURED'
+        }
+    }
     if ($found.Count -eq 0) {
         # Automatic discovery may not have fired yet. Safe, idempotent bounded registration.
         try { $null=Post '/api/v1/projects' @{name='Fairview';relative_path=$ProjectRelativePath} }
@@ -103,15 +118,12 @@ try {
     $semantic=Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects/$id/retrieval/semantic" -Method Get -TimeoutSec 10
     if ($RequireSemantic) {
         if (-not ($semantic.enabled -and $semantic.configured)) { throw 'SEMANTIC_PROVIDER_NOT_CONFIGURED' }
-        if ($semantic.state -eq 'CURRENT' -and
-            [string]$semantic.current_corpus_run_id -eq [string]$corpus.run_id -and
-            [int]$semantic.embedded_chunk_count -gt 0 -and [int]$semantic.missing_chunk_count -eq 0) {
+        $semanticAction=Get-HiveSemanticAction -Status $semantic -ProjectId ([string]$id) -CorpusRunId ([string]$corpus.run_id)
+        if ($semanticAction -eq 'REUSE') {
             Write-Host '[PASS] current semantic embeddings reused; no provider sync.'
         } else {
-            if ($semantic.state -eq 'SYNCING' -or ($semantic.latest_run -and $semantic.latest_run.status -eq 'RUNNING')) {
-                throw 'SEMANTIC_CONCURRENT_SYNC_FORBIDDEN'
-            }
-            # Exactly one provider-backed sync within the witnessed operator-exclusive window.
+            # The helper rejects previous FAILED/BLOCKED attempts and concurrent sync.
+            # SEMANTIC_CONCURRENT_SYNC_FORBIDDEN is enforced BEFORE the single POST.
             $sync=Post "/api/v1/projects/$id/retrieval/semantic/sync"
             if ($sync.status -ne 'COMPLETED') { throw "SEMANTIC_SYNC_$($sync.status)" }
             Write-Host '[PASS] one authorized current-corpus semantic sync; no retry.'

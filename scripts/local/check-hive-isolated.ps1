@@ -154,7 +154,7 @@ try {
             '-BaseUrl',$ApiBaseUrl.AbsoluteUri.TrimEnd('/'),
             '-ProjectRelativePath','Fairview')
         if($RequireSemantic.IsPresent) { $smokeArguments+= '-RequireSemantic' }
-        if($AllowHeadAdvanceIndex.IsPresent) { $smokeArguments+= @('-AllowHeadAdvanceIndex','-AuthorizedPriorIndexHead',$authorizedPriorHead) }
+        if($AllowHeadAdvanceIndex.IsPresent) { $smokeArguments+= @('-AllowHeadAdvanceIndex','-AuthorizedPriorIndexHead',$authorizedPriorHead,'-AuthorizedTargetHead',$target) }
         $oldPreference=$ErrorActionPreference
         try {
             $ErrorActionPreference='Continue'
