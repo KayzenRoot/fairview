@@ -46,7 +46,13 @@ test("Verify rejects writes before smoke unless discovery is off and exclusive w
  assert(fixture.includes("PS51_ISOLATED_WRITER_WINDOW_FAIL_CLOSED"));
 });
 
-test("even an in-place Docker restart and backup archive under public Git are rejected",()=>{assert(code.includes("WINDOW_CONTAINER_RESTARTED"));assert(code.includes("WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE"));assert(code.includes("{{.State.StartedAt}}"));});
+test("even an in-place Docker restart and backup archive under public Git are rejected",()=>{
+ const pure=fs.readFileSync(new URL("../../scripts/local/hive-window-assertions.ps1",import.meta.url),"utf8");
+ assert(code.includes("WINDOW_CONTAINER_RESTARTED"));
+ assert(code.includes("Get-HiveTrustedBackupPath -BackupPath"));
+ assert(pure.includes("WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE"));
+ assert(code.includes("{{.State.StartedAt}}"));
+});
 
 test("index main advancement needs exact prior SHA and off-Git explicit operator approval",()=>{
  const runner=fs.readFileSync(new URL("../../scripts/local/invoke-hive-smoke.ps1",import.meta.url),"utf8");
