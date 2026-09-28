@@ -74,10 +74,12 @@ function Write-HiveMutationAttemptJournal {
        $norm -eq 'd:/hive' -or $norm.StartsWith('d:/hive/')) {
         throw 'MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE'
     }
+    $dir=Assert-HiveTrustedMutationJournalRoot -JournalRoot $dir -MachineRoot $localRoot -RepoRoot $repo
     if(-not (Test-Path -LiteralPath $dir -PathType Container)) {
         try { $null=New-Item -Path $dir -ItemType Directory -ErrorAction Stop }
         catch { throw 'MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE' }
     }
+    $dir=Assert-HiveTrustedMutationJournalRoot -JournalRoot $dir -MachineRoot $localRoot -RepoRoot $repo
     $journal=Get-HiveMutationJournalPath -JournalRoot $dir -ProjectId $ProjectId -Kind $Kind -GenerationId $GenerationId
     $payload=@{schema_version=1;mutation_kind=$Kind;project_id=$ProjectId;
         target_generation=$GenerationId;index_run_id=$IndexRunId;
