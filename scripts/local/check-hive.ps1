@@ -6,12 +6,73 @@ param(
     [switch]$RequireSemantic,
     [switch]$AllowHeadAdvanceIndex,
     [string]$AuthorizedPriorIndexHead,
-    [string]$AuthorizedTargetHead
+    [string]$AuthorizedTargetHead,
+    [string]$HiveCheckout,
+    [string]$IsolatedDataRoot,
+    [string]$ExclusiveWindowReceipt
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'hive-project-list.ps1')
 . (Join-Path $PSScriptRoot 'hive-smoke-assertions.ps1')
+. (Join-Path $PSScriptRoot 'hive-window-assertions.ps1')
+$script:WindowVerifiedForMutations=$false
+$script:PrivateWindowReceipt=$null
+if(-not [string]::IsNullOrWhiteSpace($ExclusiveWindowReceipt)) {
+    try {
+        $privatePath=(Resolve-Path -LiteralPath $ExclusiveWindowReceipt -ErrorAction Stop).Path
+        $repo=(Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
+        $normalized=$privatePath.Replace('\','/').ToLowerInvariant()
+        $repoNormalized=$repo.Replace('\','/').TrimEnd('/').ToLowerInvariant()
+        if($normalized.StartsWith($repoNormalized+'/') -or
+            $normalized -eq 'd:/hive' -or $normalized.StartsWith('d:/hive/')) {
+            throw 'WINDOW_RECEIPT_MUST_STAY_PRIVATE'
+        }
+        $script:PrivateWindowReceipt=Get-Content -LiteralPath $privatePath -Raw | ConvertFrom-Json -ErrorAction Stop
+    } catch { throw 'WINDOW_PRIVATE_RECEIPT_INVALID' }
+}
+function Assert-MutationWindow([bool]$ForIndexAdvance) {
+    if($script:WindowVerifiedForMutations) { return }
+    if([string]::IsNullOrWhiteSpace($ExclusiveWindowReceipt) -or
+        [string]::IsNullOrWhiteSpace($HiveCheckout) -or
+        [string]::IsNullOrWhiteSpace($IsolatedDataRoot) -or
+        $null -eq $script:PrivateWindowReceipt) {
+        throw 'MUTATION_EXCLUSIVE_WINDOW_PROOF_REQUIRED'
+    }
+    $argsDoctor=@('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass',
+        '-File',(Join-Path $PSScriptRoot 'check-hive-isolated.ps1'),
+        '-HiveCheckout',$HiveCheckout,'-IsolatedDataRoot',$IsolatedDataRoot,
+        '-ApiBaseUrl',$BaseUrl,'-Mode','Verify',
+        '-ExclusiveWindowReceipt',$ExclusiveWindowReceipt,'-WindowOnly')
+    if($ForIndexAdvance) { $argsDoctor+= '-AllowHeadAdvanceIndex' }
+    $old=$ErrorActionPreference
+    try {
+        $ErrorActionPreference='Continue'
+        & powershell.exe @argsDoctor
+        $code=$LASTEXITCODE
+    } finally { $ErrorActionPreference=$old }
+    if($code -ne 0) { throw 'MUTATION_EXCLUSIVE_WINDOW_PROOF_FAILED' }
+    $script:WindowVerifiedForMutations=$true
+}
+function Write-CorpusAttemptJournal([string]$ProjectId,[string]$Head,[string]$IndexRunId,[string]$PriorCorpusRunId) {
+    $dir=Split-Path -Path $ExclusiveWindowReceipt -Parent
+    $journal=Join-Path $dir ("fv-r8-corpus-"+$ProjectId+"-"+$Head+".once.json")
+    $body=@{schema_version=1;project_id=$ProjectId;head=$Head;
+        index_run_id=$IndexRunId;prior_corpus_run_id=$PriorCorpusRunId;
+        attempted_at_utc=[datetime]::UtcNow.ToString('o')} | ConvertTo-Json -Compress
+    $bytes=[System.Text.Encoding]::UTF8.GetBytes($body)
+    $stream=$null
+    try {
+        $stream=[System.IO.File]::Open($journal,
+            [System.IO.FileMode]::CreateNew,[System.IO.FileAccess]::Write,[System.IO.FileShare]::None)
+        $stream.Write($bytes,0,$bytes.Length)
+        $stream.Flush($true)
+    } catch [System.IO.IOException] {
+        throw 'CORPUS_CORRECTION_ALREADY_ATTEMPTED_OR_JOURNAL_UNAVAILABLE'
+    } finally {
+        if($null -ne $stream) { $stream.Dispose() }
+    }
+}
 function Get-LocalFairviewHead {
     $repo=(Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
     $previous=$ErrorActionPreference
@@ -79,6 +140,12 @@ try {
     $priorIndexRunId=[string]$index.run_id
     $indexAction=Get-HiveIndexAction -Index $index -ProjectId ([string]$id) -ExpectedHead $expectedHead -AllowAdvance $AllowHeadAdvanceIndex.IsPresent -AuthorizedPriorHead $AuthorizedPriorIndexHead
     if($indexAction -eq 'ADVANCE_ONCE') {
+        if($null -eq $script:PrivateWindowReceipt -or
+            (Assert-HiveHeadAdvanceReceipt -Receipt $script:PrivateWindowReceipt -ExpectedHead $expectedHead) -cne $AuthorizedPriorIndexHead) {
+            throw 'INDEX_HEAD_ADVANCE_NOT_WITNESSED'
+        }
+        Assert-MutationWindow -ForIndexAdvance $true
+        if((Get-LocalFairviewHead) -cne $expectedHead) { throw 'INDEX_TARGET_HEAD_CHANGED' }
         $repo=(Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
         $previous=$ErrorActionPreference
         try {
@@ -95,14 +162,19 @@ try {
     }
     Assert-HiveIndexFresh -Index $index -ProjectId ([string]$id) -ExpectedHead $expectedHead
     $status=Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects/$id/retrieval/corpus" -Method Get -TimeoutSec 10
-    $action=Get-HiveCorpusAction -Status $status -ProjectId ([string]$id) -IndexRunId ([string]$index.run_id) -PriorIndexRunId $priorIndexRunId
+    $authorizedPriorCorpus=if($null -ne $script:PrivateWindowReceipt){[string]$script:PrivateWindowReceipt.prior_corpus_run_id}else{''}
+    $action=Get-HiveCorpusAction -Status $status -ProjectId ([string]$id) -IndexRunId ([string]$index.run_id) -PriorIndexRunId $priorIndexRunId -AuthorizedPriorRunId $authorizedPriorCorpus
     if($action -eq 'REUSE') {
         $corpus=$status.latest_run
         Write-Host '[PASS] existing CURRENT corpus reused; no corpus POST.'
     } else {
         # ONE conditional correction ONLY: prior BLOCKED repository_index_stale
         # from the mode-160000 GEF gitlink or an empty initial corpus.
-        # The isolated doctor has already verified operator-backed exclusivity.
+        # Persistent private attempt marker BEFORE the one permitted corpus POST.
+        $priorCorpus=Assert-HiveCorpusCorrectionReceipt -Receipt $script:PrivateWindowReceipt -ProjectId ([string]$id) -ExpectedHead $expectedHead -LatestRun $status.latest_run
+        Assert-MutationWindow -ForIndexAdvance $false
+        if((Get-LocalFairviewHead) -cne $expectedHead) { throw 'CORPUS_TARGET_HEAD_CHANGED' }
+        Write-CorpusAttemptJournal -ProjectId ([string]$id) -Head $expectedHead -IndexRunId ([string]$index.run_id) -PriorCorpusRunId $priorCorpus
         $corpus=Post "/api/v1/projects/$id/retrieval/corpus/sync"
         if ($corpus.status -ne 'COMPLETED') { throw "CORPUS_SYNC_$($corpus.status):$($corpus.error)" }
         Write-Host '[PASS] one justified corpus correction completed; never retry automatically.'
@@ -124,6 +196,7 @@ try {
         } else {
             # The helper rejects previous FAILED/BLOCKED attempts and concurrent sync.
             # SEMANTIC_CONCURRENT_SYNC_FORBIDDEN is enforced BEFORE the single POST.
+            Assert-MutationWindow -ForIndexAdvance $false
             $sync=Post "/api/v1/projects/$id/retrieval/semantic/sync"
             if ($sync.status -ne 'COMPLETED') { throw "SEMANTIC_SYNC_$($sync.status)" }
             Write-Host '[PASS] one authorized current-corpus semantic sync; no retry.'
