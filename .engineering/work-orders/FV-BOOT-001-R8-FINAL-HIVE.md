@@ -25,3 +25,28 @@ Base main SHA: `dc34b5b83d1a2d93022398d7dd60984d3b47c53b`. This is a correction 
 NECESSARY correction: explicitly enumerate and count non-null result items; require exact project identity and source/chunk provenance on every returned result; require completed corpus with nonempty repository-backed references/chunks; in the final semantic gate issue a strict-semantic hybrid request and demand actual nonzero semantic contribution in returned results. Isolate testable PowerShell 5.1 predicates in a sourced helper with real Windows PowerShell 5.1 regression fixtures covering null/empty, wrong-project, absent provenance, fallback-only and genuine semantic contribution. Update the current bootstrap Windows CI parser/fixture steps, Node static contract and the relevant R8 runbook to prevent regression.
 
 Acceptance remains ONE overall R8 gate: no fake green from `@($null)` or fallback; real local HIVE, true MCP handshake, upstream release governance and independent HIGH_ASSURANCE review remain unverified and are not declared completed by hosted CI. No HIVE container/checkout changes, global installation mutation, credential handling, checkpoint promotion or new trading features are authorized by this scoped patch.
+
+# FV-BOOT-001 R8 | Additional freshness proof correction (same Work Order)
+
+Status: PROPOSED; scoped correction, not an additional HIVE configuration round.
+Exact base main: `8d5c55bdcbd6812a4b3de3fd7f3b060b9bfefdef`; existing issue #1 and the single consolidated R8 executor remain authoritative.
+
+## Diagnosis (inspected source, not host evidence)
+The current Fairview `check-hive.ps1` performs `/inspect` only when the cached registry state is not READY. It does not compare either `ProjectResponse.git_head_sha` or `IndexRunSummary.repository_head_sha` to Fairview's actual local Git HEAD. It also checks `CorpusRunSummary.status=COMPLETED` without checking `repository_index_run_id` against the indexing run just returned. These source-level gaps could allow the local gate to accept an old registry/index/corpus generation when the Fairview checkout has advanced. HIVE's published typed responses expose all three lineage fields.
+
+## Authorized narrow correction
+OBJECTIVE: fail closed on stale project identity or mismatched index/corpus generation, as already required by R8's existing exact-HEAD acceptance.
+
+CONTEXT: `.engineering/CHECKPOINT.*` remains `LOCAL_VALIDATION_PENDING`. D-008 public development / zero secrets / private-before-production and all prior decisions remain unchanged. This correction depends only on published HIVE response contracts, not HIVE private host data or unpublished v1.0.4.
+
+SCOPE: derive exact local Fairview Git HEAD without mutating the checkout, always request fresh HIVE project inspection before index; compare inspected project HEAD and repository accessibility/cleanliness, index project + HEAD, corpus project + repository index run ID. Use deterministic pure PowerShell assertion helper with actual Windows PowerShell 5.1 fixtures. Update existing static contract and Windows runbook. No independent new operator setup or extra acceptance gate.
+
+OUT OF SCOPE: touching the isolated or global HIVE runtime, new Compose/env/secrets, upgrading or publishing HIVE, modifying trading modules, checkpoint promotion, resetting Git state.
+
+FILES: existing `scripts/local/check-hive.ps1`, `scripts/local/hive-smoke-assertions.ps1`, `tests/bootstrap/smoke-assertions-ps51.ps1`, `tests/bootstrap/windows-contract.test.mjs`, `docs/runbooks/WINDOWS-HIVE.md` and this appendix/context lock only.
+
+REQUIREMENTS: git HEAD must be a validated lowercase 40-character SHA; Git failures propagate without content dumps. Never treat a cached READY registry row or COMPLETED run from another head/project as fresh. Preserve null/empty/provenance/strict-semantic checks from PR #12. Do not output env values or invoke HIVE global.
+
+ACCEPTANCE CRITERIA: negative fixtures for wrong registered SHA, dirty registry state, wrong index HEAD/ID, wrong corpus lineage; positive fixture with matched provenance; 4 exact-head GitHub jobs PASS including real PS5.1 fixture, Node impact test, public security scan. Review exact diff objectively; owner self-audit is not independent. Same overall R8 HIVE_LOCAL_FULLY_FUNCTIONAL gate remains FAILED until actual Windows off-Git evidence including MCP/semantic/restart.
+
+STOP CONDITION: if local Git/API response contract differs from inspected upstream type or an existing canonical decision changes, STOP this change, mark context STALE and correct in this PR without unapproved cleanup.

@@ -8,3 +8,11 @@ test("never performs destructive Docker volume wipe",()=>{assert.doesNotMatch(se
 test("HIVE smoke actually tests READY and retrieval; semantic optional and gated",()=>{for(const s of ["READY","/retrieval/lexical","/retrieval/hybrid","/retrieval/semantic","SEMANTIC_PROVIDER_NOT_CONFIGURED","$project.project_id","$($index.error)"])assert(smoke.includes(s));assert.equal((smoke.match(/Convert-HiveProjectList -Response \$projectResponse/g)||[]).length,2);assert(projectList.includes("foreach($item in $Response)"));assert(!smoke.includes('Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects" -Method Get -TimeoutSec 10 | Where-Object'))});
 
 test("R8 retrieval proofs reject empty arrays and semantic fallback",()=>{for(const s of ["Assert-HiveResultSet -Response $lexical","Assert-HiveResultSet -Response $hybrid","Assert-HiveResultSet -Response $result","Assert-HiveSemanticContribution -Response $hybrid","CORPUS_EMPTY_OR_NO_REPOSITORY_REFERENCES","SEMANTIC_EMBEDDINGS_INCOMPLETE_OR_STALE","strict_semantic=$true"])assert(smoke.includes(s));assert(!smoke.includes("@($lexical.results).Count"));assert(!smoke.includes("@($hybrid.results).Count"));assert(!smoke.includes("@($result.results).Count"));for(const s of ["$null -eq $Response.results","source_content_sha256","chunk_content_sha256","semantic_contribution"])assert(assertions.includes(s))});
+
+test("R8 requires fresh inspected project, index and corpus exact Git lineage",()=>{
+    for(const marker of ["Get-LocalFairviewHead","rev-parse HEAD","Assert-HiveProjectFresh -Project $project","Assert-HiveIndexFresh -Index $index","Assert-HiveCorpusFresh -Corpus $corpus"])assert(smoke.includes(marker));
+    assert(!smoke.includes("if ($project.state -ne 'READY') {"));
+    for(const marker of ["git_head_sha","repository_head_sha","repository_index_run_id","working_tree_clean","HIVE_PROJECT_HEAD_STALE","HIVE_INDEX_HEAD_STALE","CORPUS_INDEX_GENERATION_STALE"])assert(assertions.includes(marker));
+    const fixture=fs.readFileSync(new URL("../../tests/bootstrap/smoke-assertions-ps51.ps1",import.meta.url),"utf8");
+    assert(fixture.includes("PS51_HIVE_PROJECT_INDEX_CORPUS_HEAD_LINEAGE"));
+});

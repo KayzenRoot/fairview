@@ -9,12 +9,24 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'hive-project-list.ps1')
 . (Join-Path $PSScriptRoot 'hive-smoke-assertions.ps1')
+function Get-LocalFairviewHead {
+    $repo=(Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
+    $previous=$ErrorActionPreference
+    try {
+        $ErrorActionPreference='Continue'
+        $head=(& git -C $repo rev-parse HEAD 2>$null | Out-String).Trim()
+        $code=$LASTEXITCODE
+    } finally { $ErrorActionPreference=$previous }
+    if($code -ne 0 -or $head -cnotmatch '^[0-9a-f]{40}$') { throw 'FAIRVIEW_LOCAL_GIT_HEAD_UNVERIFIED' }
+    return $head
+}
 function Post([string]$suffix,[object]$data=$null) {
     $parameters=@{Uri="$BaseUrl$suffix";Method='Post';TimeoutSec=90}
     if ($null -ne $data) { $parameters.ContentType='application/json';$parameters.Body=($data | ConvertTo-Json -Depth 6 -Compress) }
     return Invoke-RestMethod @parameters
 }
 try {
+    $expectedHead=Get-LocalFairviewHead
     $health=Invoke-RestMethod -Uri "$BaseUrl/api/v1/health" -Method Get -TimeoutSec 10
     if ($health.status -ne 'ok') { throw 'HIVE_NOT_HEALTHY' }
     # Windows PowerShell 5.1 converts an empty JSON array (`[]`) to $null.
@@ -33,17 +45,17 @@ try {
         $found=@($projects | Where-Object { $_.relative_path -eq $ProjectRelativePath })
     }
     if ($found.Count -ne 1) { throw "FAIRVIEW_REGISTRY_IDENTITY_MISSING_OR_AMBIGUOUS" }
-    $project=$found[0]
-    if ($project.state -ne 'READY') {
-        $project=Post "/api/v1/projects/$($project.project_id)/inspect"
-        if ($project.state -ne 'READY') { throw "FAIRVIEW_STATE_$($project.state)" }
-    }
+    $cachedProject=$found[0]
+    # A cached READY row is not enough: inspect the actual mounted Git checkout.
+    $project=Post "/api/v1/projects/$($cachedProject.project_id)/inspect"
+    Assert-HiveProjectFresh -Project $project -ProjectId ([string]$cachedProject.project_id) -RelativePath $ProjectRelativePath -ExpectedHead $expectedHead
     $id=$project.project_id
     $index=Post "/api/v1/projects/$id/index"
     if ($index.status -ne 'COMPLETED') { throw "REPO_INDEX_$($index.status):$($index.error)" }
+    Assert-HiveIndexFresh -Index $index -ProjectId ([string]$id) -ExpectedHead $expectedHead
     $corpus=Post "/api/v1/projects/$id/retrieval/corpus/sync"
     if ($corpus.status -ne 'COMPLETED') { throw "CORPUS_SYNC_$($corpus.status):$($corpus.error)" }
-    if ([string]$corpus.project_id -ne [string]$id) { throw 'CORPUS_PROJECT_MISMATCH' }
+    Assert-HiveCorpusFresh -Corpus $corpus -ProjectId ([string]$id) -IndexRunId ([string]$index.run_id)
     if ([int]$corpus.chunk_count -lt 1 -or [int]$corpus.repository_reference_count -lt 1) { throw 'CORPUS_EMPTY_OR_NO_REPOSITORY_REFERENCES' }
     $query=@{query='Fairview';top_k=3}
     $lexical=Post "/api/v1/projects/$id/retrieval/lexical" $query
