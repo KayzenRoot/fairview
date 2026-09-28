@@ -65,3 +65,37 @@ test("Forex Round 1 research docs route to existing bootstrap harness only",()=>
     assert.deepEqual(result.unknown,[]);
   }
 });
+
+test("Round 2 design keeps clock and market-data PLANNED and prohibits host clock mutation",()=>{
+  const design=fs.readFileSync(new URL("../../docs/architecture/CLOCK-MARKET-DATA-R2.md",import.meta.url),"utf8");
+  for(const field of ["source_event_utc_ns","local_receive_monotonic_ns","clock_domain_id","local_receive_wall_utc_ns","estimated_clock_error_ns","source_timestamp_semantics","data_usage_scope","ELIGIBLE_FOR_FURTHER_RISK_EVALUATION"]){
+    assert(design.includes(field),"R2_MISSING_TYPED_CONTRACT "+field);
+  }
+  for(const scenario of ["UNKNOWN_CLOCK","CROSS_DOMAIN","BACKWARD_WALL","SEQUENCE_GAP","THROTTLED_FEED","LICENCE_UNKNOWN","BOOK_UNAVAILABLE","VENUE_QUOTE_INDICATIVE","INSTRUMENT_MISMATCH","STALE_FEED","OUT_OF_ORDER_DUPLICATE","CAPTURE_OVERFLOW"]){
+    const row=design.split(/\r?\n/).find(line=>line.startsWith("| "+scenario+" | "));
+    assert(row&&row.split("|").length>=4,"R2_MISSING_NEGATIVE_FIXTURE "+scenario);
+  }
+  for(const id of ["clock","market-data"]){
+    assert.equal(r.modules.find(m=>m.id===id)?.state,"planned","R2_PRODUCT_MODULE_PREMATURELY_ACTIVATED "+id);
+    const moduleDoc=fs.readFileSync(new URL("../../docs/architecture/modules/"+id+".md",import.meta.url),"utf8");
+    assert(moduleDoc.includes("PLANNED, NOT IMPLEMENTED"));
+    assert(moduleDoc.includes("STOP"));
+  }
+  assert.equal(r.modules.length,20);
+  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap"]);
+});
+test("Round 2 time and market-data ADRs are proposed and docs stay bootstrap-owned",()=>{
+  const docs=["docs/architecture/CLOCK-MARKET-DATA-R2.md","docs/architecture/adrs/FV-ADR-002-PROPOSED-TIME-INTEGRITY.md","docs/architecture/adrs/FV-ADR-003-PROPOSED-MARKET-DATA-PROVENANCE.md"];
+  for(const path of docs){
+    const state=calculateImpact(r,[path]);
+    assert.deepEqual(state.unknown,[]);
+    assert.deepEqual(state.active,["bootstrap"]);
+    assert.deepEqual(state.planned,[]);
+  }
+  for(const name of ["FV-ADR-002-PROPOSED-TIME-INTEGRITY.md","FV-ADR-003-PROPOSED-MARKET-DATA-PROVENANCE.md"]){
+    const adr=fs.readFileSync(new URL("../../docs/architecture/adrs/"+name,import.meta.url),"utf8");
+    assert(adr.includes("PROPOSED_NOT_ADOPTED"),"ADR_PREMATURELY_ADOPTED "+name);
+  }
+  const sourceChange=calculateImpact(r,["src/clock/clock.rs"]);
+  assert(sourceChange.planned.includes("clock")&&sourceChange.planned.includes("market-data")&&sourceChange.planned.includes("risk"));
+});
