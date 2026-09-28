@@ -139,3 +139,41 @@ test("Round 3 ADRs remain proposals and changed future trading source fails clos
     assert.deepEqual(impact.unknown,[]);
   }
 });
+
+test("Round 4 replay design documents reproducibility and all adverse scenario obligations",()=>{
+  const design=fs.readFileSync(new URL("../../docs/architecture/REPLAY-BENCHMARK-R4.md",import.meta.url),"utf8");
+  for(const field of ["ReplayEventV0","VirtualClockV0","ReplayRunManifestV0","BenchmarkCaseV0","dataset_sha256","data_usage_scope","clock_domain_id","output_canonical_event_hash","INSUFFICIENT_TAIL_SAMPLE","COMPETITOR_NOT_MEASURED"]){
+    assert(design.includes(field),"R4_MISSING_DESIGN_CONTRACT "+field);
+  }
+  for(const scenario of ["FUTURE_LOOKAHEAD","NONDETERMINISTIC_TIE","CROSS_DOMAIN_CLOCK","UNKNOWN_SOURCE_TIME","SNAPSHOT_SEQUENCE_GAP","THROTTLED_REFERENCE","MISSING_DEPTH","MAKER_QUEUE_UNKNOWN","MISSING_COST","CANCEL_FILL_RACE","LOST_ACK_UNKNOWN_LEG","RISK_KILL_RESTART","SEED_OR_MODEL_DRIFT","UNPINNED_DATASET","SELECTIVE_WINNER","THIN_TAIL_SAMPLE","COLLECTOR_OUTAGE","PAPER_LIVE_CONFLATION"]){
+    const row=design.split(/\r?\n/).find(line=>line.startsWith("| "+scenario+" | "));
+    assert(row&&row.split("|").length>=4,"R4_MISSING_ADVERSE_DESIGN_FIXTURE "+scenario);
+  }
+  for(const id of ["replay","research"]){
+    assert.equal(r.modules.find(m=>m.id===id)?.state,"planned","R4_PREMATURE_PRODUCT_ACTIVATION "+id);
+    const charter=fs.readFileSync(new URL("../../docs/architecture/modules/"+id+".md",import.meta.url),"utf8");
+    assert(charter.includes("PLANNED, NOT IMPLEMENTED"));
+    assert(charter.includes("STOP"));
+  }
+  assert.equal(r.modules.length,20);
+  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap"]);
+});
+test("Round 4 research ADRs stay proposed and future source changes require activated harness",()=>{
+  const names=["FV-ADR-007-PROPOSED-DETERMINISTIC-REPLAY.md","FV-ADR-008-PROPOSED-BENCHMARK-METHODOLOGY.md"];
+  for(const name of names){
+    const doc=fs.readFileSync(new URL("../../docs/architecture/adrs/"+name,import.meta.url),"utf8");
+    assert(doc.includes("PROPOSED_NOT_ADOPTED"),"R4_ADR_WRONGLY_ADOPTED "+name);
+  }
+  for(const path of ["docs/architecture/REPLAY-BENCHMARK-R4.md",...names.map(name=>"docs/architecture/adrs/"+name)]){
+    const impact=calculateImpact(r,[path]);
+    assert.deepEqual(impact.active,["bootstrap"]);
+    assert.deepEqual(impact.planned,[]);
+    assert.deepEqual(impact.unknown,[]);
+  }
+  for(const id of ["replay","research"]){
+    const impact=calculateImpact(r,["src/"+id+"/future.rs"]);
+    assert(impact.planned.includes(id));
+    assert(impact.planned.includes("integration"));
+    assert.deepEqual(impact.unknown,[]);
+  }
+});
