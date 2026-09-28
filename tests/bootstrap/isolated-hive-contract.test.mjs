@@ -70,3 +70,11 @@ test("window-only direct smoke preflight never invokes a second smoke",()=>{
    assert(runner.includes(marker)||code.includes(marker),marker);
  }
 });
+
+test("R8 rejects stale receipt time and WAL drift, and hashes a trusted archive path",()=>{
+ const pure=fs.readFileSync(new URL("../../scripts/local/hive-window-assertions.ps1",import.meta.url),"utf8");
+ const fixture=fs.readFileSync(new URL("../../tests/bootstrap/hive-window-assertions-ps51.ps1",import.meta.url),"utf8");
+ for(const marker of ["pg_current_wal_lsn()","Get-HiveTrustedBackupPath -BackupPath","$trustedBackup","Get-FileHash -LiteralPath $trustedBackup"])assert(code.includes(marker),marker);
+ for(const marker of ["WINDOW_DB_WAL_WRITES_OBSERVED","WINDOW_RECEIPT_TIMESTAMP_INVALID","ReparsePoint","IsPathRooted","GetFullPath"])assert(pure.includes(marker),marker);
+ assert(fixture.includes("PS51_R8_WAL_BACKUP_UTC_GATES"));
+});
