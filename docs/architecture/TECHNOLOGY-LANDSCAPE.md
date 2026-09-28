@@ -24,3 +24,10 @@ Checked against publicly accessible official/vendor documentation on 2026-09-28.
 
 ### Evaluation experiment standard
 Same timestamped input traces, identical symbol/market depth, venue accounts and permissions, matched hardware/network and risk thresholds. Measure p50/p95/p99 latency, attempted/accepted/filled order counts, effective slippage/fees, hedge completion and fail-closed recovery, separately for offline replay, sandbox/paper and permissioned limited-live trials. No trade performance target until real instrument/venue configuration and audit.
+### Initial upstream licensing evidence (review again at version pin)
+- **NautilusTrader:** upstream currently states **LGPL-3.0**. Because Fairview may become a commercially distributed product, treat in-process embedding and binary redistribution as a licensing decision requiring specialist review; prefer an independent research comparison until an ADR approves terms. https://github.com/nautechsystems/nautilus_trader
+- **CCXT / CCXT Pro:** CCXT upstream currently declares **MIT**. Pro WebSocket functionality is documented as a free part of CCXT, but check all connector and venue exchange terms separately. https://github.com/ccxt/ccxt/blob/master/LICENSE.txt and https://docs.ccxt.com/docs/pro-manual
+- **Hummingbot:** upstream currently declares **Apache-2.0**, with additional transitive dependencies/connector-specific terms to review. https://github.com/hummingbot/hummingbot
+- **QuantConnect LEAN:** upstream currently declares **Apache-2.0**; this does not grant redistribution rights for third-party market data. https://github.com/QuantConnect/Lean
+- **Aeron:** upstream currently declares **Apache-2.0**; record any version/dependency constraints if future performance tests justify adoption. https://github.com/aeron-io/aeron/blob/master/LICENSE
+- **QuickFIX:** upstream states the **QuickFIX Software License**; read the exact license and selected venue's FIX session agreement, rather than assuming MIT/Apache-2.0 equivalence. https://github.com/quickfix/quickfix/blob/master/LICENSE
