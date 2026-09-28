@@ -55,10 +55,10 @@ function Assert-MutationWindow([bool]$ForIndexAdvance) {
     $script:WindowVerifiedForMutations=$true
 }
 function Write-CorpusAttemptJournal([string]$ProjectId,[string]$Head,[string]$IndexRunId,[string]$PriorCorpusRunId) {
-    # Stable OS-known per-user root is independent of both the receipt location
+    # Stable OS-known machine-wide root is independent of Windows login, receipt location
     # and HIVE's isolated data backup/restore path.
     $localRoot=[System.Environment]::GetFolderPath(
-        [System.Environment+SpecialFolder]::LocalApplicationData)
+        [System.Environment+SpecialFolder]::CommonApplicationData)
     if([string]::IsNullOrWhiteSpace($localRoot)) { throw 'CORPUS_JOURNAL_PRIVATE_ROOT_UNAVAILABLE' }
     $dir=Join-Path $localRoot 'Fairview\R8-Attempts'
     $repo=(Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
