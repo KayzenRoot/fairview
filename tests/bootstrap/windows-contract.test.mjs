@@ -107,3 +107,16 @@ test("machine-wide journal cannot be redirected into a restorable root by juncti
  for(const word of ["function Assert-HiveTrustedMutationJournalRoot","ReparsePoint","GetDirectoryName","Resolve-Path","MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE"])assert(helper.includes(word));
  assert(fixture.includes("PS51_MACHINE_ROOT_LINK_REJECTION"));
 });
+
+test("direct smoke witnesses the exclusive window before either registry write",()=>{
+    const readOnlySemantic=smoke.indexOf('$preflightSemantic=Invoke-RestMethod');
+    const earlyGuard=smoke.indexOf('    Assert-MutationWindow -ForIndexAdvance $AllowHeadAdvanceIndex.IsPresent');
+    const register=smoke.indexOf("Post '/api/v1/projects'");
+    const inspect=smoke.indexOf('Post "/api/v1/projects/$($cachedProject.project_id)/inspect"');
+    assert(readOnlySemantic>0&&earlyGuard>readOnlySemantic&&register>earlyGuard&&inspect>earlyGuard);
+    assert.equal(smoke.split('Assert-MutationWindow -ForIndexAdvance $AllowHeadAdvanceIndex.IsPresent').length,2);
+    assert(smoke.includes("if($ForIndexAdvance) { $argsDoctor+= '-AllowHeadAdvanceIndex' }"));
+    assert(smoke.includes("'-WindowOnly'"));
+    assert(smoke.includes("throw 'MUTATION_EXCLUSIVE_WINDOW_PROOF_REQUIRED'"));
+    assert(smoke.includes("throw 'MUTATION_EXCLUSIVE_WINDOW_PROOF_FAILED'"));
+});

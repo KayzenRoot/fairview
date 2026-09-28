@@ -130,6 +130,11 @@ try {
             throw 'SEMANTIC_PROVIDER_NOT_CONFIGURED'
         }
     }
+    # Registry registration and inspect are BOTH persistent PostgreSQL mutations.
+    # Direct smoke must witness the isolated exclusive window BEFORE EITHER POST.
+    # Verify stronger head-advance consent early when the switch is present:
+    # never cache a weaker guard that skips stronger authorization later.
+    Assert-MutationWindow -ForIndexAdvance $AllowHeadAdvanceIndex.IsPresent
     if ($found.Count -eq 0) {
         # Automatic discovery may not have fired yet. Safe, idempotent bounded registration.
         try { $null=Post '/api/v1/projects' @{name='Fairview';relative_path=$ProjectRelativePath} }
