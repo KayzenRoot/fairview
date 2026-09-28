@@ -12,7 +12,9 @@ test("isolated doctor checks exact SHA, mount identities, root boundary and port
 });
 test("does not mutate volumes or expose Docker environment",()=>{
  for(const marker of ["Container 'postgres'","Container 'redis'","/workspace/projects","/var/lib/hive","/var/lib/postgresql/data","-BaseUrl","Fairview"])assert(code.includes(marker));
- for(const forbidden of ["Config.Env","down -v","down --volumes","reset --hard","Remove-Item","docker compose up"])assert(!code.includes(forbidden));
+ for(const forbidden of ["down -v","down --volumes","reset --hard","Remove-Item","docker compose up"])assert(!code.includes(forbidden));
+ assert(code.includes("{{json .Config.Env}}")); // read only in memory to check discovery flag
+ assert(!code.includes("Write-Host $configEnvironment"));
 });
 
 test("Inspect permits pin-stable read-only preflight before hosted candidate validation while Verify gates candidate",()=>{
@@ -34,3 +36,14 @@ test("PowerShell 5.1 switch forwarding omits false switch across both native sub
  assert(child.includes("$LASTEXITCODE"));
  assert(code.includes("$smokeExit=$LASTEXITCODE"));
 });
+
+test("Verify rejects writes before smoke unless discovery is off and exclusive window is witnessed",()=>{
+ const pure=fs.readFileSync(new URL("../../scripts/local/hive-window-assertions.ps1",import.meta.url),"utf8");
+ const fixture=fs.readFileSync(new URL("../../tests/bootstrap/hive-window-assertions-ps51.ps1",import.meta.url),"utf8");
+ for(const marker of ["ExclusiveWindowReceipt","WINDOW_RECEIPT_REQUIRED","Assert-HiveWindowReceipt","Assert-HiveAutoDiscoveryDisabled","Get-HiveDatabaseWriteStats","Assert-HiveDatabaseQuiet","Start-Sleep -Seconds $ObserveSeconds","WINDOW_BACKUP_DIGEST_MISMATCH"])assert(code.includes(marker));
+ assert(code.indexOf("Assert-HiveDatabaseQuiet -Before $before -After $after")<code.indexOf("$smokeArguments=@("));
+ for(const marker of ["WINDOW_DISCOVERY_STILL_ENABLED","WINDOW_OPERATOR_CONSENT_NOT_PROVEN","WINDOW_DB_WRITES_OBSERVED","WINDOW_DB_STATS_UNTRUSTWORTHY"])assert(pure.includes(marker));
+ assert(fixture.includes("PS51_ISOLATED_WRITER_WINDOW_FAIL_CLOSED"));
+});
+
+test("even an in-place Docker restart and backup archive under public Git are rejected",()=>{assert(code.includes("WINDOW_CONTAINER_RESTARTED"));assert(code.includes("WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE"));assert(code.includes("{{.State.StartedAt}}"));});

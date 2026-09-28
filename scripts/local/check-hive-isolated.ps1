@@ -6,11 +6,14 @@ param(
     [Parameter(Mandatory=$true)][uri]$ApiBaseUrl,
     [ValidateSet('Inspect','Verify')][string]$Mode='Inspect',
     [string]$ComposeProject='hive-fairview-dev',
-    [switch]$RequireSemantic
+    [switch]$RequireSemantic,
+    [string]$ExclusiveWindowReceipt,
+    [ValidateRange(120,360)][int]$ObserveSeconds=120
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
 $RepoRoot=(Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
+. (Join-Path $PSScriptRoot 'hive-window-assertions.ps1')
 function Native([string]$Exe,[string[]]$NativeArgs) {
     $old=$ErrorActionPreference
     try {
@@ -43,6 +46,19 @@ function Container([string]$Service) {
     $ids=@($output -split '[\r\n]+' | Where-Object { $_ })
     if($ids.Count -ne 1) {throw 'ISOLATED_SERVICE_MISSING_OR_AMBIGUOUS'}
     return $ids[0]
+}
+function Get-HiveDatabaseWriteStats([string]$PostgresContainerId) {
+    # Read-only SQL via container-local Unix socket. No credentials or env values printed.
+    $sql="SELECT row_to_json(s) FROM (SELECT d.datname, d.tup_inserted::text AS tup_inserted, d.tup_updated::text AS tup_updated, d.tup_deleted::text AS tup_deleted, COALESCE(d.stats_reset::text,'never') AS stats_reset, (SELECT count(*) FROM pg_stat_activity a WHERE a.datname=current_database() AND a.pid<>pg_backend_pid() AND a.state='active') AS other_active FROM pg_stat_database d WHERE d.datname=current_database()) s;"
+    $command='exec psql -X -qAt -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "'+$sql+'"'
+    $raw=Native 'docker' @('exec',$PostgresContainerId,'sh','-c',$command)
+    if([string]::IsNullOrWhiteSpace($raw)) { throw 'WINDOW_DB_STATS_UNAVAILABLE' }
+    try { $stats=$raw | ConvertFrom-Json -ErrorAction Stop }
+    catch { throw 'WINDOW_DB_STATS_UNAVAILABLE' }
+    if($null -eq $stats -or [string]::IsNullOrWhiteSpace([string]$stats.datname)) {
+        throw 'WINDOW_DB_STATS_UNAVAILABLE'
+    }
+    return $stats
 }
 function ContainerMounts([string]$Id) {
     return @((Native 'docker' @('inspect','--format','{{json .Mounts}}',$Id) | ConvertFrom-Json))
@@ -85,6 +101,48 @@ try {
     Write-Host ('[PASS] isolated source/mount/API checks image '+$image.Substring(0,16))
     Write-Host '[INFO] Docker build receipt and backup must be independently verified before trusting image provenance.'
     if($Mode -eq 'Verify') {
+        # Fail closed before any mutating REST call if the operator-exclusive window is absent.
+        if([string]::IsNullOrWhiteSpace($ExclusiveWindowReceipt)) { throw 'WINDOW_RECEIPT_REQUIRED' }
+        $receiptPath=(Resolve-Path -LiteralPath $ExclusiveWindowReceipt -ErrorAction Stop).Path
+        if((HostPath $receiptPath).StartsWith((HostPath $RepoRoot)+'/')) {
+            throw 'WINDOW_RECEIPT_MUST_STAY_OFF_GIT'
+        }
+        try { $receipt=Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json -ErrorAction Stop }
+        catch { throw 'WINDOW_RECEIPT_INVALID' }
+        Assert-HiveWindowReceipt -Receipt $receipt -ApiContainerId $api -PostgresContainerId $pg -CanonicalDataRoot $canonicalData -Now ([datetimeoffset]::UtcNow)
+        if((HostPath ([string]$receipt.backup_file)).StartsWith((HostPath $RepoRoot)+'/') -or
+            (HostPath ([string]$receipt.backup_file)) -eq 'd:/hive' -or
+            (HostPath ([string]$receipt.backup_file)).StartsWith('d:/hive/')) {
+            throw 'WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE'
+        }
+        if(-not (Test-Path -LiteralPath ([string]$receipt.backup_file) -PathType Leaf)) {
+            throw 'WINDOW_BACKUP_FILE_UNAVAILABLE'
+        }
+        $actualBackupHash=(Get-FileHash -LiteralPath ([string]$receipt.backup_file) -Algorithm SHA256).Hash
+        if($actualBackupHash -ine [string]$receipt.backup_sha256) {
+            throw 'WINDOW_BACKUP_DIGEST_MISMATCH'
+        }
+        # docker inspect returns the environment only in memory. Never display it.
+        $configEnvironment=Native 'docker' @('inspect','--format','{{json .Config.Env}}',$api) | ConvertFrom-Json
+        Assert-HiveAutoDiscoveryDisabled -Environment $configEnvironment
+        $apiStartedAt=Native 'docker' @('inspect','--format','{{.State.StartedAt}}',$api)
+        $postgresStartedAt=Native 'docker' @('inspect','--format','{{.State.StartedAt}}',$pg)
+        $before=Get-HiveDatabaseWriteStats $pg
+        if([long]$before.other_active -ne 0) { throw 'WINDOW_DB_ACTIVE_SESSIONS' }
+        Write-Host '[INFO] Isolated auto-discovery disabled; watching DB write counters in operator-exclusive window.'
+        Start-Sleep -Seconds $ObserveSeconds
+        if((Container 'api') -ne $api -or (Container 'postgres') -ne $pg) {
+            throw 'WINDOW_CONTAINER_ID_DRIFT'
+        }
+        if((Native 'docker' @('inspect','--format','{{.State.StartedAt}}',$api)) -cne $apiStartedAt -or
+            (Native 'docker' @('inspect','--format','{{.State.StartedAt}}',$pg)) -cne $postgresStartedAt) {
+            throw 'WINDOW_CONTAINER_RESTARTED'
+        }
+        $configEnvironment=Native 'docker' @('inspect','--format','{{json .Config.Env}}',$api) | ConvertFrom-Json
+        Assert-HiveAutoDiscoveryDisabled -Environment $configEnvironment
+        $after=Get-HiveDatabaseWriteStats $pg
+        Assert-HiveDatabaseQuiet -Before $before -After $after
+        Write-Host '[PASS] Observed 120s+ no database tuple writes; operator exclusivity must remain valid through smoke.'
         $smokeArguments=@('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',
             (Join-Path $RepoRoot 'scripts\local\invoke-hive-smoke.ps1'),
             '-SmokeScriptPath',(Join-Path $RepoRoot 'scripts\local\check-hive.ps1'),
@@ -102,7 +160,7 @@ try {
         if($smokeExit -ne 0) {throw 'FAIRVIEW_INDEX_OR_RETRIEVAL_FAILED'}
         Write-Host '[PASS] isolated Fairview READY/index/corpus/lexical/hybrid verified by actual smoke.'
     }
-    Write-Host '[BOUNDARY] Semantic CURRENT and MCP handshake remain separate actual-host gates.'
+    Write-Host '[BOUNDARY] Exclusive writer absence and restore are operator-attested; stats cover only observed window. Semantic CURRENT, MCP and restart remain separate actual-host gates.'
     exit 0
 } catch {
     $category=$_.Exception.Message
