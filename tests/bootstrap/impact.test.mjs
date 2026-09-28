@@ -390,3 +390,61 @@ test("Round 9 web and AI ADRs remain proposals and future source dependencies ne
   assert(aiImpact.planned.includes("integration"));
   assert.deepEqual(aiImpact.unknown,[]);
 });
+
+
+test("Round 10 readiness inventory exactly mirrors the canonical 20-module DAG and reserved owners",()=>{
+  const design=fs.readFileSync(new URL("../../docs/architecture/MODULE-READINESS-AND-IMPLEMENTATION-R10.md",import.meta.url),"utf8");
+  const waves=[["bootstrap"],["policy","clock"],["market-data","ledger"],["risk"],["execution","portfolio"],["forex","cex","defi","replay","observability"],["research","strategy-forex","strategy-cex","strategy-defi"],["ai"],["web"],["integration"]];
+  assert.equal(r.modules.length,20);
+  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap"]);
+  assert.deepEqual([...new Set(waves.flat())].sort(),r.modules.map(m=>m.id).sort());
+  for(const mod of r.modules){
+    const wave=waves.findIndex(w=>w.includes(mod.id));
+    assert(wave>=0,"R10_UNMAPPED_MODULE "+mod.id);
+    const deps=mod.depends_on.length?mod.depends_on.map(id=>"`"+id+"`").join(", "):"none";
+    const row="| `"+mod.id+"` | "+mod.state.toUpperCase()+" | "+wave+" | "+deps+" |";
+    assert(design.includes(row),"R10_REGISTRY_DIVERGENCE "+mod.id);
+    const source=mod.paths.filter(p=>p.startsWith("src/")).join(", ")||"bootstrap-owned existing paths";
+    const harness=mod.paths.filter(p=>p.startsWith("tests/")).join(", ")||"tests/bootstrap/";
+    assert(design.includes("`"+source+"` / `"+harness+"`"),"R10_OWNER_MISSING "+mod.id);
+    for(const dep of mod.depends_on){
+      const dependencyWave=waves.findIndex(w=>w.includes(dep));
+      assert(dependencyWave>=0&&dependencyWave<wave,"R10_DEPENDENCY_WAVE_INVALID "+mod.id+" -> "+dep);
+    }
+    if(mod.id!=="bootstrap"){
+      assert.equal(mod.state,"planned","R10_PREMATURE_MODULE_ACTIVATION "+mod.id);
+      assert.deepEqual(mod.tests,[],"R10_FALSE_ACTIVE_TEST_OWNER "+mod.id);
+    }
+  }
+  assert(design.includes("FV-BOOT-001")&&design.includes("FAILED")&&design.includes("independent"),"R10_MISSING_EXTERNAL_GATE");
+  assert(design.includes("risk -> portfolio")&&design.includes("web")&&design.includes("ai"),"R10_UNDOCUMENTED_GRAPH_CONSTRAINT");
+});
+test("Round 10 WO and proposed ADRs do not admit source, and future changes propagate through planned owners",()=>{
+  const docs=["docs/architecture/MODULE-READINESS-AND-IMPLEMENTATION-R10.md","docs/architecture/FUTURE-WORK-ORDER-TEMPLATE-R10.md","docs/architecture/adrs/FV-ADR-019-PROPOSED-MODULE-ADMISSION-ORDER.md","docs/architecture/adrs/FV-ADR-020-PROPOSED-CROSS-MODULE-SNAPSHOT-CONTRACT.md"];
+  const workOrder=fs.readFileSync(new URL("../../docs/architecture/FUTURE-WORK-ORDER-TEMPLATE-R10.md",import.meta.url),"utf8");
+  assert(workOrder.includes("NOT ADMITTED")&&workOrder.includes("FV-BOOT-001")&&workOrder.includes("independent"));
+  for(const name of docs.filter(path=>path.includes("/adrs/"))){
+    const adr=fs.readFileSync(new URL("../../"+name,import.meta.url),"utf8");
+    assert(adr.includes("PROPOSED_NOT_ADOPTED"),"R10_PREMATURE_ADR "+name);
+  }
+  const charter=fs.readFileSync(new URL("../../docs/architecture/modules/integration.md",import.meta.url),"utf8");
+  assert(charter.includes("PLANNED, NOT IMPLEMENTED"));
+  assert(charter.includes("18 literal product dependencies"));
+  assert.equal(r.modules.find(m=>m.id==="integration")?.state,"planned");
+  assert.equal(r.modules.find(m=>m.id==="integration")?.depends_on.length,18);
+  for(const name of docs){
+    const impact=calculateImpact(r,[name]);
+    assert.deepEqual(impact.active,["bootstrap"]);
+    assert.deepEqual(impact.planned,[]);
+    assert.deepEqual(impact.unknown,[]);
+  }
+  const policy=calculateImpact(r,["src/policy/approval.rs"]);
+  assert(policy.planned.includes("policy")&&policy.planned.includes("risk")&&policy.planned.includes("integration"));
+  assert.deepEqual(policy.unknown,[]);
+  const risk=calculateImpact(r,["src/risk/deny.rs"]);
+  assert(risk.planned.includes("risk")&&risk.planned.includes("execution")&&risk.planned.includes("portfolio")&&risk.planned.includes("integration"));
+  assert.deepEqual(risk.unknown,[]);
+  const ai=calculateImpact(r,["src/ai/advisory.rs"]);
+  assert(ai.planned.includes("ai")&&ai.planned.includes("web")&&ai.planned.includes("integration"));
+  assert.deepEqual(ai.unknown,[]);
+});
