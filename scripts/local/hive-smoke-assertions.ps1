@@ -132,6 +132,7 @@ function Get-HiveCorpusAction {
         if($null -eq $latest) { return 'SYNC_ONCE' }
         if($latest.status -eq 'BLOCKED' -and
             [string]$latest.project_id -eq $ProjectId -and
+            $null -ne $latest.PSObject.Properties['run_id'] -and
             [string]$latest.run_id -cmatch '^[0-9a-fA-F-]{36}$' -and
             [string]$latest.run_id -ceq $AuthorizedPriorRunId -and
             ([string]$latest.repository_index_run_id -eq $IndexRunId -or
