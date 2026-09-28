@@ -44,3 +44,17 @@ ExpectBlocked { Assert-HiveDatabaseQuiet -Before $before -After $reset } 'WINDOW
 $active=[pscustomobject]@{datname='hive';stats_reset='never';other_active='1';tup_inserted='12';tup_updated='35';tup_deleted='0'}
 ExpectBlocked { Assert-HiveDatabaseQuiet -Before $before -After $active } 'WINDOW_DB_ACTIVE_SESSIONS'
 Write-Output '[PASS] PS51_ISOLATED_WRITER_WINDOW_FAIL_CLOSED'
+
+
+# Optional head-advance witness: absent field, false consent, wrong target and valid all verified.
+$oldHead='b'*40
+$newHead='c'*40
+ExpectBlocked { Assert-HiveHeadAdvanceReceipt -Receipt $receipt -ExpectedHead $newHead } 'WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED'
+$advanceReceipt=[pscustomobject]@{operator_authorized_one_head_advance_index=$true;prior_index_head=$oldHead;target_fairview_head=$newHead}
+if((Assert-HiveHeadAdvanceReceipt -Receipt $advanceReceipt -ExpectedHead $newHead) -cne $oldHead) {
+    throw 'EXPECTED_OPERATOR_AUTHORIZED_PRIOR_HEAD'
+}
+ExpectBlocked { Assert-HiveHeadAdvanceReceipt -Receipt $advanceReceipt -ExpectedHead $oldHead } 'WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED'
+$rejected=[pscustomobject]@{operator_authorized_one_head_advance_index=$false;prior_index_head=$oldHead;target_fairview_head=$newHead}
+ExpectBlocked { Assert-HiveHeadAdvanceReceipt -Receipt $rejected -ExpectedHead $newHead } 'WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED'
+Write-Output '[PASS] PS51_HEAD_ADVANCE_RECEIPT_MISSING_FALSE_WRONG_VALID'

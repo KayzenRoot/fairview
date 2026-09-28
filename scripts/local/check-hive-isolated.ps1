@@ -113,11 +113,7 @@ try {
         Assert-HiveWindowReceipt -Receipt $receipt -ApiContainerId $api -PostgresContainerId $pg -CanonicalDataRoot $canonicalData -Now ([datetimeoffset]::UtcNow)
         if($AllowHeadAdvanceIndex.IsPresent) {
             $target=Native 'git' @('-C',$RepoRoot,'rev-parse','HEAD')
-            if($receipt.operator_authorized_one_head_advance_index -cne $true -or
-                [string]$receipt.prior_index_head -cnotmatch '^[0-9a-f]{40}$' -or
-                [string]$receipt.target_fairview_head -cne $target) {
-                throw 'WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED'
-            }
+            $authorizedPriorHead=Assert-HiveHeadAdvanceReceipt -Receipt $receipt -ExpectedHead $target
         }
         if((HostPath ([string]$receipt.backup_file)).StartsWith((HostPath $RepoRoot)+'/') -or
             (HostPath ([string]$receipt.backup_file)) -eq 'd:/hive' -or
@@ -158,7 +154,7 @@ try {
             '-BaseUrl',$ApiBaseUrl.AbsoluteUri.TrimEnd('/'),
             '-ProjectRelativePath','Fairview')
         if($RequireSemantic.IsPresent) { $smokeArguments+= '-RequireSemantic' }
-        if($AllowHeadAdvanceIndex.IsPresent) { $smokeArguments+= @('-AllowHeadAdvanceIndex','-AuthorizedPriorIndexHead',[string]$receipt.prior_index_head) }
+        if($AllowHeadAdvanceIndex.IsPresent) { $smokeArguments+= @('-AllowHeadAdvanceIndex','-AuthorizedPriorIndexHead',$authorizedPriorHead) }
         $oldPreference=$ErrorActionPreference
         try {
             $ErrorActionPreference='Continue'

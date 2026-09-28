@@ -70,3 +70,26 @@ function Assert-HiveDatabaseQuiet {
         }
     }
 }
+
+
+# Explicit maintenance permission is an exact typed off-Git witness, not inferred from existence.
+function Assert-HiveHeadAdvanceReceipt {
+    [CmdletBinding()]
+    param([AllowNull()][object]$Receipt,
+        [Parameter(Mandatory=$true)][string]$ExpectedHead)
+    if($null -eq $Receipt -or $ExpectedHead -cnotmatch '^[0-9a-f]{40}$') {
+        throw 'WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED'
+    }
+    foreach($key in @('operator_authorized_one_head_advance_index','prior_index_head','target_fairview_head')) {
+        if($null -eq $Receipt.PSObject.Properties[$key]) {
+            throw 'WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED'
+        }
+    }
+    if($Receipt.operator_authorized_one_head_advance_index -cne $true -or
+        [string]$Receipt.prior_index_head -cnotmatch '^[0-9a-f]{40}$' -or
+        [string]$Receipt.target_fairview_head -cne $ExpectedHead -or
+        [string]$Receipt.prior_index_head -ceq $ExpectedHead) {
+        throw 'WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED'
+    }
+    return [string]$Receipt.prior_index_head
+}

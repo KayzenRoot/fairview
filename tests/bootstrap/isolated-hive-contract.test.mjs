@@ -57,5 +57,6 @@ test("index main advancement needs exact prior SHA and off-Git explicit operator
  }
  assert(code.includes("operator_authorized_one_head_advance_index"));
  assert(code.includes("target_fairview_head"));
+ assert(code.includes("Assert-HiveHeadAdvanceReceipt"));
  assert(code.includes("WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED"));
 });
