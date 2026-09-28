@@ -1,19 +1,11 @@
-# CEX cross-venue and triangular strategies | module `strategy-cex`
+# CEX cross-venue, triangular and maker/taker strategies | module `strategy-cex`
 
-State: **PLANNED, NOT IMPLEMENTED**. Authority: proposed FV-DISC-001 modular map; separate admitted Work Order required to add source/tests.
+**PLANNED, NOT IMPLEMENTED.** Same existing module, not three new registry modules. Reserved `src/strategy-cex/` and `tests/strategy-cex/`, existing dependencies `cex`, `replay`, `portfolio`.
 
-Reserved source ownership: `src/strategy-cex/`.
-Harness ownership: `tests/strategy-cex/`.
-Dependency graph: `cex`, `replay`, `portfolio`.
+## Three internal profile boundaries
+- `CROSS_EXCHANGE_TAKER`: two independently entitled venues and matching spot assets, actual executable bid/ask depth, fully costed fees and pre-funded **venue-local** inventory. Independent per-leg risk admission and unknown-fill reconciliation.
+- `TRIANGULAR_SPOT`: three directed spot edges on one entitled exchange with bid or inverse ask chosen by actual direction, min notional, lot/tick and fee-asset rounding **after every leg** and nonzero residual inventory on a partial leg.
+- `XEMM_MAKER_TAKER`: maker venue quotes with explicit queue uncertainty and cancel/fill races; propose a separately licensed and independently risk-approved taker hedge only after a confirmed maker fill. A rejected/unknown hedge leaves an incident, not a flat book.
 
-## Responsibility and scope
-Two-exchange spot spread, partial-fill hedge simulation, optional triangular route based on executable depth and actual fees; basis/funding later.
-
-## Candidate existing technology to evaluate
-Hummingbot strategy architecture reference; CCXT fixtures; Rust strategy plug-ins remain ADR subject.
-
-## First activation proof / STOP
-All three legs costed; one-leg timeout triggers bounded recovery.
-
-### Design-time interface contract
-Produce a typed input/output specification, ownership and failure-state table, fixture/provenance specification, numerical acceptance metrics if appropriate, upstream license/terms record, rollback/reconciliation requirements and one narrowly scoped WO before implementing. Default mode: documentation or deterministic offline research. No live credentials or orders, no trading implementation under this proposal.
+## Typed design, reference and first future harness
+`CexOpportunityV0`, `TriangularRouteV0` and `CrossExchangeHedgePlanV0` integrate R2/R3/R4 clock, policy, risk, ledger and deterministic replay. Reusable architecture reference: Hummingbot XEMM https://hummingbot.org/strategies/v1-strategies/cross-exchange-market-making/ ; unified adapter baseline CCXT Pro https://docs.ccxt.com/docs/pro-manual . Future synthetic LOT_DUST_MIN_NOTIONAL, WRONG_TRADE_DIRECTION, VENUE_BALANCE_SHORTFALL, PARTIAL_LEG_UNKNOWN_HEDGE, MAKER_CANCEL_FILL_RACE, HEDGE_REJECTED and MODEL_OR_DATA_LOOKAHEAD. **STOP** if actual quote/depth/fees/asset identity/venue balances/independent risk cannot be proved. An actual order, paper connector or source implementation requires later approved WOs and independent FV-BOOT-001 FULL.

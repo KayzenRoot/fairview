@@ -1,19 +1,12 @@
-# CEX adapter pair | module `cex`
+# CEX Spot adapter pair | module `cex`
 
-State: **PLANNED, NOT IMPLEMENTED**. Authority: proposed FV-DISC-001 modular map; separate admitted Work Order required to add source/tests.
+**PLANNED, NOT IMPLEMENTED.** Existing module preserved. Reserved paths: `src/cex/`, `tests/cex/`. Existing dependencies: `risk`, `market-data`, `clock`, `execution`.
 
-Reserved source ownership: `src/cex/`.
-Harness ownership: `tests/cex/`.
-Dependency graph: `risk`, `market-data`, `clock`, `execution`.
+## Single responsibility
+Two *separately eligible* spot exchange adapters with distinct `CexConnectorEvidenceV0`, `CexSpotInstrumentV0`, `CexOrderBookIntegrityV0` and `CexPortfolioReservationV0` typed contracts. Preserve exact issuer/base/quote, venue-local cash/inventory, contract tick/lot/min-notional and actual maker/taker fee tier. Exact Binance Spot U/u depth resnapshot and Kraken Spot v2 CRC32 top-ten book behavior require per-provider negative harnesses, not a generic CCXT-only accuracy claim.
 
-## Responsibility and scope
-Two venue-specific authenticated spot adapters, depth subscriptions, order tracking, time sync and fee schedules; trade permissions only much later.
+## Candidate existing technology
+CCXT REST/CCXT Pro research adapter and their documented per-exchange stream limitations: https://docs.ccxt.com/docs/manual ; https://docs.ccxt.com/docs/pro-manual . Native Binance Spot official depth https://github.com/binance/binance-spot-api-docs/blob/master/web-socket-streams.md and Kraken Spot v2 book/executions https://docs.kraken.com/exchange/api-reference/spot-websocket-v2/book ; https://docs.kraken.com/exchange/api-reference/spot-websocket-v2/executions are documentary candidates ONLY. No exact provider entitlements or accounts selected.
 
-## Candidate existing technology to evaluate
-CCXT/CCXT Pro as reference or adapter candidate; native APIs for measurable critical hot paths.
-
-## First activation proof / STOP
-Mock exchange rate limits, partial fills, stale order book, withdrawal-disabled keys.
-
-### Design-time interface contract
-Produce a typed input/output specification, ownership and failure-state table, fixture/provenance specification, numerical acceptance metrics if appropriate, upstream license/terms record, rollback/reconciliation requirements and one narrowly scoped WO before implementing. Default mode: documentation or deterministic offline research. No live credentials or orders, no trading implementation under this proposal.
+## Activation harness and STOP
+Later pure mock BINANCE_SNAPSHOT_GAP, KRAKEN_CRC_MISMATCH, KRAKEN_MULTI_LEVEL_UPDATE, SYMBOL_ALIAS_COLLISION, PRIVATE_STREAM_GAP, API_RATE_LIMIT, SPOT_FUTURES_MIXUP and UNLICENSED_FEED_EXPORT before any approved read-only/demo adapter. Full 20-case design matrix in `docs/architecture/CEX-CONNECTORS-STRATEGIES-R6.md`. **STOP** on stale/unverified book, incomplete permissions/data rights, missing account reconciliation or risk deny. No runtime implementation in this planning PR.
