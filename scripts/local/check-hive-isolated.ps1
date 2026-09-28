@@ -110,6 +110,11 @@ try {
         try { $receipt=Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json -ErrorAction Stop }
         catch { throw 'WINDOW_RECEIPT_INVALID' }
         Assert-HiveWindowReceipt -Receipt $receipt -ApiContainerId $api -PostgresContainerId $pg -CanonicalDataRoot $canonicalData -Now ([datetimeoffset]::UtcNow)
+        if((HostPath ([string]$receipt.backup_file)).StartsWith((HostPath $RepoRoot)+'/') -or
+            (HostPath ([string]$receipt.backup_file)) -eq 'd:/hive' -or
+            (HostPath ([string]$receipt.backup_file)).StartsWith('d:/hive/')) {
+            throw 'WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE'
+        }
         if(-not (Test-Path -LiteralPath ([string]$receipt.backup_file) -PathType Leaf)) {
             throw 'WINDOW_BACKUP_FILE_UNAVAILABLE'
         }
@@ -120,12 +125,18 @@ try {
         # docker inspect returns the environment only in memory. Never display it.
         $configEnvironment=Native 'docker' @('inspect','--format','{{json .Config.Env}}',$api) | ConvertFrom-Json
         Assert-HiveAutoDiscoveryDisabled -Environment $configEnvironment
+        $apiStartedAt=Native 'docker' @('inspect','--format','{{.State.StartedAt}}',$api)
+        $postgresStartedAt=Native 'docker' @('inspect','--format','{{.State.StartedAt}}',$pg)
         $before=Get-HiveDatabaseWriteStats $pg
         if([long]$before.other_active -ne 0) { throw 'WINDOW_DB_ACTIVE_SESSIONS' }
         Write-Host '[INFO] Isolated auto-discovery disabled; watching DB write counters in operator-exclusive window.'
         Start-Sleep -Seconds $ObserveSeconds
         if((Container 'api') -ne $api -or (Container 'postgres') -ne $pg) {
             throw 'WINDOW_CONTAINER_ID_DRIFT'
+        }
+        if((Native 'docker' @('inspect','--format','{{.State.StartedAt}}',$api)) -cne $apiStartedAt -or
+            (Native 'docker' @('inspect','--format','{{.State.StartedAt}}',$pg)) -cne $postgresStartedAt) {
+            throw 'WINDOW_CONTAINER_RESTARTED'
         }
         $configEnvironment=Native 'docker' @('inspect','--format','{{json .Config.Env}}',$api) | ConvertFrom-Json
         Assert-HiveAutoDiscoveryDisabled -Environment $configEnvironment

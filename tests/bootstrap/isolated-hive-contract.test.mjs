@@ -45,3 +45,5 @@ test("Verify rejects writes before smoke unless discovery is off and exclusive w
  for(const marker of ["WINDOW_DISCOVERY_STILL_ENABLED","WINDOW_OPERATOR_CONSENT_NOT_PROVEN","WINDOW_DB_WRITES_OBSERVED","WINDOW_DB_STATS_UNTRUSTWORTHY"])assert(pure.includes(marker));
  assert(fixture.includes("PS51_ISOLATED_WRITER_WINDOW_FAIL_CLOSED"));
 });
+
+test("even an in-place Docker restart and backup archive under public Git are rejected",()=>{assert(code.includes("WINDOW_CONTAINER_RESTARTED"));assert(code.includes("WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE"));assert(code.includes("{{.State.StartedAt}}"));});
