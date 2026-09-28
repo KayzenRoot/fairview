@@ -77,3 +77,39 @@ function Assert-HiveCorpusFresh {
         $Corpus.status -ne 'COMPLETED' -or
         [string]$Corpus.repository_index_run_id -cne $IndexRunId) { throw 'CORPUS_INDEX_GENERATION_STALE' }
 }
+
+
+# R8 follow-up: choose a pure, fail-closed read-only corpus action. No hidden index retries.
+function Get-HiveCorpusAction {
+    [CmdletBinding()]
+    param([AllowNull()][object]$Status,
+        [Parameter(Mandatory=$true)][string]$ProjectId,
+        [Parameter(Mandatory=$true)][string]$IndexRunId)
+    if($null -eq $Status -or [string]$Status.project_id -ne $ProjectId -or
+        [string]::IsNullOrWhiteSpace($IndexRunId)) {
+        throw 'CORPUS_STATUS_PROJECT_OR_INDEX_MISMATCH'
+    }
+    $latest=$Status.latest_run
+    if($Status.state -eq 'CURRENT' -and $null -ne $latest -and
+        $latest.status -eq 'COMPLETED' -and
+        [string]$latest.project_id -eq $ProjectId -and
+        [string]$latest.repository_index_run_id -eq $IndexRunId -and
+        [int]$Status.chunk_count -gt 0 -and
+        [int]$Status.repository_reference_count -gt 0 -and
+        [int]$latest.chunk_count -gt 0 -and
+        [int]$latest.repository_reference_count -gt 0) {
+        return 'REUSE'
+    }
+    if($Status.state -eq 'BLOCKED' -and
+        $null -eq $Status.last_successful_sync -and
+        [int]$Status.chunk_count -eq 0 -and [int]$Status.repository_reference_count -eq 0) {
+        if($null -eq $latest) { return 'SYNC_ONCE' }
+        if($latest.status -eq 'BLOCKED' -and
+            [string]$latest.project_id -eq $ProjectId -and
+            [string]$latest.repository_index_run_id -eq $IndexRunId -and
+            $latest.error -eq 'repository_index_stale' -and
+            [int]$latest.chunk_count -eq 0 -and
+            [int]$latest.repository_reference_count -eq 0) { return 'SYNC_ONCE' }
+    }
+    throw 'CORPUS_UNSAFE_TO_RETRY_OR_REUSE'
+}

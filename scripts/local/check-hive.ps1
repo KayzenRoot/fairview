@@ -50,11 +50,30 @@ try {
     $project=Post "/api/v1/projects/$($cachedProject.project_id)/inspect"
     Assert-HiveProjectFresh -Project $project -ProjectId ([string]$cachedProject.project_id) -RelativePath $ProjectRelativePath -ExpectedHead $expectedHead
     $id=$project.project_id
-    $index=Post "/api/v1/projects/$id/index"
-    if ($index.status -ne 'COMPLETED') { throw "REPO_INDEX_$($index.status):$($index.error)" }
+    # Fail semantic configuration BEFORE any index/corpus mutation; FULL requires a real provider.
+    $semantic=Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects/$id/retrieval/semantic" -Method Get -TimeoutSec 10
+    if ($RequireSemantic -and -not ($semantic.enabled -and $semantic.configured)) {
+        throw 'SEMANTIC_PROVIDER_NOT_CONFIGURED'
+    }
+    # A real exact-HEAD index ALREADY EXISTS after the first R8 operator run.
+    # A second POST /index is forbidden. A stale/absent run needs an explicit new authority.
+    try { $index=Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects/$id/index/status" -Method Get -TimeoutSec 10 }
+    catch { throw 'INDEX_NOT_VERIFIED_NO_REINDEX_AUTHORIZED' }
     Assert-HiveIndexFresh -Index $index -ProjectId ([string]$id) -ExpectedHead $expectedHead
-    $corpus=Post "/api/v1/projects/$id/retrieval/corpus/sync"
-    if ($corpus.status -ne 'COMPLETED') { throw "CORPUS_SYNC_$($corpus.status):$($corpus.error)" }
+    Write-Host '[PASS] existing exact-HEAD HIVE repository index reused; no new index POST.'
+    $status=Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects/$id/retrieval/corpus" -Method Get -TimeoutSec 10
+    $action=Get-HiveCorpusAction -Status $status -ProjectId ([string]$id) -IndexRunId ([string]$index.run_id)
+    if($action -eq 'REUSE') {
+        $corpus=$status.latest_run
+        Write-Host '[PASS] existing CURRENT corpus reused; no corpus POST.'
+    } else {
+        # ONE conditional correction ONLY: prior BLOCKED repository_index_stale
+        # from the mode-160000 GEF gitlink or an empty initial corpus.
+        # The isolated doctor has already verified operator-backed exclusivity.
+        $corpus=Post "/api/v1/projects/$id/retrieval/corpus/sync"
+        if ($corpus.status -ne 'COMPLETED') { throw "CORPUS_SYNC_$($corpus.status):$($corpus.error)" }
+        Write-Host '[PASS] one justified corpus correction completed; never retry automatically.'
+    }
     Assert-HiveCorpusFresh -Corpus $corpus -ProjectId ([string]$id) -IndexRunId ([string]$index.run_id)
     if ([int]$corpus.chunk_count -lt 1 -or [int]$corpus.repository_reference_count -lt 1) { throw 'CORPUS_EMPTY_OR_NO_REPOSITORY_REFERENCES' }
     $query=@{query='Fairview';top_k=3}
@@ -65,9 +84,20 @@ try {
     Write-Host "[PASS] HIVE health, registry READY, index, corpus, lexical and hybrid queries; project ID $id"
     $semantic=Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects/$id/retrieval/semantic" -Method Get -TimeoutSec 10
     if ($RequireSemantic) {
-        if (-not ($semantic.enabled -and $semantic.configured)) { throw 'SEMANTIC_PROVIDER_NOT_CONFIGURED: configure real local/approved embedding provider, then rerun' }
-        $sync=Post "/api/v1/projects/$id/retrieval/semantic/sync"
-        if ($sync.status -ne 'COMPLETED') { throw "SEMANTIC_SYNC_$($sync.status)" }
+        if (-not ($semantic.enabled -and $semantic.configured)) { throw 'SEMANTIC_PROVIDER_NOT_CONFIGURED' }
+        if ($semantic.state -eq 'CURRENT' -and
+            [string]$semantic.current_corpus_run_id -eq [string]$corpus.run_id -and
+            [int]$semantic.embedded_chunk_count -gt 0 -and [int]$semantic.missing_chunk_count -eq 0) {
+            Write-Host '[PASS] current semantic embeddings reused; no provider sync.'
+        } else {
+            if ($semantic.state -eq 'SYNCING' -or ($semantic.latest_run -and $semantic.latest_run.status -eq 'RUNNING')) {
+                throw 'SEMANTIC_CONCURRENT_SYNC_FORBIDDEN'
+            }
+            # Exactly one provider-backed sync within the witnessed operator-exclusive window.
+            $sync=Post "/api/v1/projects/$id/retrieval/semantic/sync"
+            if ($sync.status -ne 'COMPLETED') { throw "SEMANTIC_SYNC_$($sync.status)" }
+            Write-Host '[PASS] one authorized current-corpus semantic sync; no retry.'
+        }
         $semantic=Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects/$id/retrieval/semantic" -Method Get -TimeoutSec 10
         if ($semantic.state -ne 'CURRENT') { throw "SEMANTIC_STATE_$($semantic.state)" }
         if ([string]$semantic.current_corpus_run_id -ne [string]$corpus.run_id -or
