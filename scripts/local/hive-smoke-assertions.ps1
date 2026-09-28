@@ -108,7 +108,8 @@ function Get-HiveCorpusAction {
     param([AllowNull()][object]$Status,
         [Parameter(Mandatory=$true)][string]$ProjectId,
         [Parameter(Mandatory=$true)][string]$IndexRunId,
-        [string]$PriorIndexRunId)
+        [string]$PriorIndexRunId,
+        [string]$AuthorizedPriorRunId)
     if($null -eq $Status -or [string]$Status.project_id -ne $ProjectId -or
         [string]::IsNullOrWhiteSpace($IndexRunId)) {
         throw 'CORPUS_STATUS_PROJECT_OR_INDEX_MISMATCH'
@@ -131,6 +132,8 @@ function Get-HiveCorpusAction {
         if($null -eq $latest) { return 'SYNC_ONCE' }
         if($latest.status -eq 'BLOCKED' -and
             [string]$latest.project_id -eq $ProjectId -and
+            [string]$latest.run_id -cmatch '^[0-9a-fA-F-]{36}$' -and
+            [string]$latest.run_id -ceq $AuthorizedPriorRunId -and
             ([string]$latest.repository_index_run_id -eq $IndexRunId -or
              (-not [string]::IsNullOrWhiteSpace($PriorIndexRunId) -and
               [string]$latest.repository_index_run_id -eq $PriorIndexRunId)) -and
