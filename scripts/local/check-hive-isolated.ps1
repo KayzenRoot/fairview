@@ -7,6 +7,7 @@ param(
     [ValidateSet('Inspect','Verify')][string]$Mode='Inspect',
     [string]$ComposeProject='hive-fairview-dev',
     [switch]$RequireSemantic,
+    [switch]$AllowHeadAdvanceIndex,
     [string]$ExclusiveWindowReceipt,
     [ValidateRange(120,360)][int]$ObserveSeconds=120
 )
@@ -110,6 +111,14 @@ try {
         try { $receipt=Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json -ErrorAction Stop }
         catch { throw 'WINDOW_RECEIPT_INVALID' }
         Assert-HiveWindowReceipt -Receipt $receipt -ApiContainerId $api -PostgresContainerId $pg -CanonicalDataRoot $canonicalData -Now ([datetimeoffset]::UtcNow)
+        if($AllowHeadAdvanceIndex.IsPresent) {
+            $target=Native 'git' @('-C',$RepoRoot,'rev-parse','HEAD')
+            if($receipt.operator_authorized_one_head_advance_index -cne $true -or
+                [string]$receipt.prior_index_head -cnotmatch '^[0-9a-f]{40}$' -or
+                [string]$receipt.target_fairview_head -cne $target) {
+                throw 'WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED'
+            }
+        }
         if((HostPath ([string]$receipt.backup_file)).StartsWith((HostPath $RepoRoot)+'/') -or
             (HostPath ([string]$receipt.backup_file)) -eq 'd:/hive' -or
             (HostPath ([string]$receipt.backup_file)).StartsWith('d:/hive/')) {
@@ -149,6 +158,7 @@ try {
             '-BaseUrl',$ApiBaseUrl.AbsoluteUri.TrimEnd('/'),
             '-ProjectRelativePath','Fairview')
         if($RequireSemantic.IsPresent) { $smokeArguments+= '-RequireSemantic' }
+        if($AllowHeadAdvanceIndex.IsPresent) { $smokeArguments+= @('-AllowHeadAdvanceIndex','-AuthorizedPriorIndexHead',[string]$receipt.prior_index_head) }
         $oldPreference=$ErrorActionPreference
         try {
             $ErrorActionPreference='Continue'

@@ -47,3 +47,15 @@ test("Verify rejects writes before smoke unless discovery is off and exclusive w
 });
 
 test("even an in-place Docker restart and backup archive under public Git are rejected",()=>{assert(code.includes("WINDOW_CONTAINER_RESTARTED"));assert(code.includes("WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE"));assert(code.includes("{{.State.StartedAt}}"));});
+
+test("index main advancement needs exact prior SHA and off-Git explicit operator approval",()=>{
+ const runner=fs.readFileSync(new URL("../../scripts/local/invoke-hive-smoke.ps1",import.meta.url),"utf8");
+ for(const source of [code,runner]) {
+  assert(source.includes("AllowHeadAdvanceIndex"));
+  assert(source.includes("prior_index_head")||source.includes("AuthorizedPriorIndexHead"));
+  assert(source.includes("if($AllowHeadAdvanceIndex.IsPresent)"));
+ }
+ assert(code.includes("operator_authorized_one_head_advance_index"));
+ assert(code.includes("target_fairview_head"));
+ assert(code.includes("WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED"));
+});

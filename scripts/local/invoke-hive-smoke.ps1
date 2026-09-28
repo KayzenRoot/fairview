@@ -4,7 +4,9 @@ param(
     [Parameter(Mandatory=$true)][string]$SmokeScriptPath,
     [Parameter(Mandatory=$true)][uri]$BaseUrl,
     [string]$ProjectRelativePath='Fairview',
-    [switch]$RequireSemantic
+    [switch]$RequireSemantic,
+    [switch]$AllowHeadAdvanceIndex,
+    [string]$AuthorizedPriorIndexHead
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
@@ -19,6 +21,10 @@ try {
     # powershell.exe -File parses native CLI arguments as text. An absent [switch]
     # MUST be entirely omitted rather than forwarded as -RequireSemantic:$false.
     if($RequireSemantic.IsPresent) { $arguments+= '-RequireSemantic' }
+    if($AllowHeadAdvanceIndex.IsPresent) {
+        if($AuthorizedPriorIndexHead -cnotmatch '^[0-9a-f]{40}$') { throw 'INDEX_PRIOR_HEAD_REQUIRED' }
+        $arguments+= @('-AllowHeadAdvanceIndex','-AuthorizedPriorIndexHead',$AuthorizedPriorIndexHead)
+    }
     $previous=$ErrorActionPreference
     try {
         $ErrorActionPreference='Continue'
