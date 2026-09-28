@@ -99,3 +99,43 @@ test("Round 2 time and market-data ADRs are proposed and docs stay bootstrap-own
   const sourceChange=calculateImpact(r,["src/clock/clock.rs"]);
   assert(sourceChange.planned.includes("clock")&&sourceChange.planned.includes("market-data")&&sourceChange.planned.includes("risk"));
 });
+
+
+test("Round 3 ledger-risk-execution contract documents unknown broker effects and 15 adverse fixtures",()=>{
+  const design=fs.readFileSync(new URL("../../docs/architecture/LEDGER-RISK-EXECUTION-R3.md",import.meta.url),"utf8");
+  for(const token of ["OrderIntentV0","RiskDecisionV0","OrderAttemptV0","VenueExecutionEventV0","ReconciliationReceiptV0","HedgePlanV0","MAY_HAVE_SENT","UNKNOWN_NEEDS_RECONCILIATION","DISCREPANCY_LOCKED","CANCEL_REQUESTED","CANCELED_CONFIRMED"]){
+    assert(design.includes(token),"R3_MISSING_CONTRACT_OR_STATE "+token);
+  }
+  for(const scenario of ["DUPLICATE_INTENT","CRASH_BEFORE_TRANSMIT","LOST_ACK_AFTER_FILL","CANCEL_RACE_FILL","PARTIAL_A_UNKNOWN_B","REJECTED_HEDGE","STALE_FEED","MISSING_PORTFOLIO","KILL_SWITCH_PERSIST","DUPLICATE_FILL_EVENT","ORDER_EVENT_REORDER","SESSION_GAP","QUEUE_BACKPRESSURE","CLOCK_EPOCH_CHANGE","UNLICENSED_RECOVERY"]){
+    const row=design.split(/\r?\n/).find(line=>line.startsWith("| "+scenario+" | "));
+    assert(row&&row.split("|").length>=4,"R3_MISSING_DESIGN_FIXTURE "+scenario);
+  }
+  for(const id of ["ledger","risk","execution"]){
+    assert.equal(r.modules.find(m=>m.id===id)?.state,"planned","R3_PREMATURE_MODULE_ACTIVATION "+id);
+    const charter=fs.readFileSync(new URL("../../docs/architecture/modules/"+id+".md",import.meta.url),"utf8");
+    assert(charter.includes("PLANNED, NOT IMPLEMENTED"));
+    assert(charter.includes("STOP"));
+  }
+  assert.equal(r.modules.length,20);
+  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap"]);
+});
+test("Round 3 ADRs remain proposals and changed future trading source fails closed",()=>{
+  const names=["FV-ADR-004-PROPOSED-DURABLE-ORDER-LEDGER.md","FV-ADR-005-PROPOSED-INDEPENDENT-RISK-KERNEL.md","FV-ADR-006-PROPOSED-ORDER-STATE-AND-HEDGE.md"];
+  const docs=["docs/architecture/LEDGER-RISK-EXECUTION-R3.md",...names.map(name=>"docs/architecture/adrs/"+name)];
+  for(const name of names){
+    const adr=fs.readFileSync(new URL("../../docs/architecture/adrs/"+name,import.meta.url),"utf8");
+    assert(adr.includes("PROPOSED_NOT_ADOPTED"),"R3_ADR_WRONGLY_ADOPTED "+name);
+  }
+  for(const path of docs){
+    const impacted=calculateImpact(r,[path]);
+    assert.deepEqual(impacted.active,["bootstrap"]);
+    assert.deepEqual(impacted.planned,[]);
+    assert.deepEqual(impacted.unknown,[]);
+  }
+  for(const id of ["ledger","risk","execution"]){
+    const impact=calculateImpact(r,["src/"+id+"/pending.rs"]);
+    assert(impact.planned.includes(id),"R3_MISSING_OWNERSHIP "+id);
+    assert(impact.planned.includes("integration"),"R3_MISSING_INTEGRATION_IMPACT "+id);
+    assert.deepEqual(impact.unknown,[]);
+  }
+});
