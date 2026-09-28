@@ -60,3 +60,15 @@ test("direct index advance and corpus sync demand a live window and durable one-
  const fixture=fs.readFileSync(new URL("../../tests/bootstrap/smoke-assertions-ps51.ps1",import.meta.url),"utf8");
  assert(fixture.includes("PS51_ONE_SHOT_CORPUS_AND_FIRST_NEW_SEMANTIC_SYNC"));
 });
+
+test("corpus journal cannot be relocated by reissuing the receipt",()=>{
+ const window=fs.readFileSync(new URL("../../scripts/local/hive-window-assertions.ps1",import.meta.url),"utf8");
+ const fixture=fs.readFileSync(new URL("../../tests/bootstrap/hive-window-assertions-ps51.ps1",import.meta.url),"utf8");
+ assert(smoke.includes("GetFolderPath("));
+ assert(smoke.includes("LocalApplicationData"));
+ assert(smoke.includes("Get-HiveCorpusJournalPath"));
+ assert(!smoke.includes("Split-Path -Path $ExclusiveWindowReceipt -Parent"));
+ assert(window.includes("PSObject.Properties['prior_corpus_run_id']"));
+ assert(smoke.includes("PSObject.Properties['prior_corpus_run_id']"));
+ assert(fixture.includes("PS51_INITIAL_CORPUS_OMITTED_PRIOR_AND_STABLE_PRIVATE_JOURNAL"));
+});
