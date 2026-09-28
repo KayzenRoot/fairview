@@ -1,0 +1,5 @@
+# FV-ADR-005 | Independent Risk Kernel
+
+**Status: PROPOSED_NOT_ADOPTED.** Propose a pure deterministic Rust risk evaluator with exact-decimal units and revocation/kill generations. It must independently deny missing entitlement, stale or ambiguous prices, clock gaps, absent reconciled cash/position, leverage/notional/drawdown violations, excessive slippage, unknown potential external fills and unlicensed recovery. Bind each `RiskDecisionV0` to exact venue/account/instrument/quantity/config and expiry. Every new hedge is independently evaluated; emergency action never grants unlimited risk.
+
+A persistent kill switch must survive process restart and remain authoritative if web UI, AI or strategy processes disconnect. A protective unwind is still bounded and venue-permitted. Tokio bounded channels are only optional I/O transport outside the pure risk logic: https://tokio.rs/tokio/tutorial/channels . Negative fixtures and separate approved source WO/independent audit precede activation. No selected account, capital limit or real strategy permission is implied.

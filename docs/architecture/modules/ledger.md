@@ -1,19 +1,9 @@
 # Durable order-event ledger | module `ledger`
 
-State: **PLANNED, NOT IMPLEMENTED**. Authority: proposed FV-DISC-001 modular map; separate admitted Work Order required to add source/tests.
+**PLANNED, NOT IMPLEMENTED.** FV-DISC-001 Round 3. Reserved `src/ledger/`, `tests/ledger/`; dependency `policy`. Separate DB from HIVE.
 
-Reserved source ownership: `src/ledger/`.
-Harness ownership: `tests/ledger/`.
-Dependency graph: `policy`.
+**Responsibility:** append-only scoped intent, admission, MAY_HAVE_SENT attempt, acknowledgment, execution, cancellation and reconciliation receipts. Local at-most-once intent under scoped PostgreSQL uniqueness is not broker exactly-once. On unknown external outcome, block auto resend and demand authenticated order/fill/position proof.
 
-## Responsibility and scope
-Append-only intent/ack/fill/cancel/reject events with idempotency, attribution and startup reconciliation receipts; isolate from HIVE.
+**Technology candidate:** PostgreSQL transactions, unique indexes, WAL and possible future transaction outbox. Official sources: https://www.postgresql.org/docs/18/sql-insert.html ; https://www.postgresql.org/docs/18/wal-intro.html .
 
-## Candidate existing technology to evaluate
-PostgreSQL transactional event tables initially; formal outbox only if measured needs justify it.
-
-## First activation proof / STOP
-Crash between order send and acknowledgement must not create an uncontrolled duplicate.
-
-### Design-time interface contract
-Produce a typed input/output specification, ownership and failure-state table, fixture/provenance specification, numerical acceptance metrics if appropriate, upstream license/terms record, rollback/reconciliation requirements and one narrowly scoped WO before implementing. Default mode: documentation or deterministic offline research. No live credentials or orders, no trading implementation under this proposal.
+**Future harness:** DUPLICATE_INTENT, CRASH_BEFORE_TRANSMIT, LOST_ACK_AFTER_FILL, DUPLICATE_FILL_EVENT, SESSION_GAP and independent backup/restore tests. **STOP** at any unknown remote effect, missing licence, release gate or independent review. Design contract in `docs/architecture/LEDGER-RISK-EXECUTION-R3.md`.

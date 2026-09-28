@@ -1,19 +1,9 @@
 # Independent risk kernel | module `risk`
 
-State: **PLANNED, NOT IMPLEMENTED**. Authority: proposed FV-DISC-001 modular map; separate admitted Work Order required to add source/tests.
+**PLANNED, NOT IMPLEMENTED.** FV-DISC-001 Round 3. Reserved `src/risk/`, `tests/risk/`; existing dependencies `market-data`, `clock`, `policy`.
 
-Reserved source ownership: `src/risk/`.
-Harness ownership: `tests/risk/`.
-Dependency graph: `market-data`, `clock`, `policy`.
+**Responsibility:** deterministic bounded admission for each proposed and recovery intent. Check entitlement, fresh execution quote, clock/sequence health, reconciled cash/collateral, known and unknown possible fills, exact exposure, fee/slippage and all limits. Persistent scoped kill/revocation must survive crashes and ignore AI, web and strategy bypass attempts. Emergency unwind is a separately licensed and bounded risk decision.
 
-## Responsibility and scope
-Pretrade notional, exposure, drawdown, stale feed, policy, circuit breakers and kill switch; cannot be overridden by AI/UI/strategy.
+**Technology candidate:** pure Rust fixed-decimal core, optional bounded Tokio I/O after a specific ADR: https://tokio.rs/tokio/tutorial/channels .
 
-## Candidate existing technology to evaluate
-Deterministic Rust module proposed after dedicated ADR; isolated deny-by-default fixtures.
-
-## First activation proof / STOP
-Negative tests prove rejection, recovery and immediate bounded halt.
-
-### Design-time interface contract
-Produce a typed input/output specification, ownership and failure-state table, fixture/provenance specification, numerical acceptance metrics if appropriate, upstream license/terms record, rollback/reconciliation requirements and one narrowly scoped WO before implementing. Default mode: documentation or deterministic offline research. No live credentials or orders, no trading implementation under this proposal.
+**Future harness:** STALE_FEED, MISSING_PORTFOLIO, PARTIAL_A_UNKNOWN_B, KILL_SWITCH_PERSIST, CLOCK_EPOCH_CHANGE, UNLICENSED_RECOVERY. **STOP** if evidence is missing or risk service unavailable. Design contract in `docs/architecture/LEDGER-RISK-EXECUTION-R3.md`.
