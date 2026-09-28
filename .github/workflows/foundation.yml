@@ -114,7 +114,7 @@ jobs:
       - name: Parse PowerShell scripts without installing any service
         shell: pwsh
         run: |
-          $files = @('scripts/local/setup-windows.ps1', 'scripts/local/check-hive.ps1', 'scripts/local/verify-checkpoint.ps1', 'scripts/local/check-hive-isolated.ps1', 'scripts/local/invoke-hive-smoke.ps1', 'scripts/local/hive-project-list.ps1', 'tests/bootstrap/fixtures/smoke-switch-child.ps1', 'tests/bootstrap/project-list-ps51.ps1')
+          $files = @('scripts/local/setup-windows.ps1', 'scripts/local/check-hive.ps1', 'scripts/local/verify-checkpoint.ps1', 'scripts/local/check-hive-isolated.ps1', 'scripts/local/invoke-hive-smoke.ps1', 'scripts/local/hive-project-list.ps1', 'scripts/local/hive-smoke-assertions.ps1', 'tests/bootstrap/fixtures/smoke-switch-child.ps1', 'tests/bootstrap/project-list-ps51.ps1', 'tests/bootstrap/smoke-assertions-ps51.ps1')
           foreach ($file in $files) {
             $tokens = $null; $errors = $null
             [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$tokens, [ref]$errors) | Out-Null
@@ -126,6 +126,12 @@ jobs:
           $helper = (Resolve-Path 'scripts/local/hive-project-list.ps1').Path
           & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File 'tests/bootstrap/project-list-ps51.ps1' -HelperPath $helper
           if ($LASTEXITCODE -ne 0) { throw 'PS51_PROJECT_LIST_REGRESSION' }
+      - name: Actual Windows PowerShell 5.1 fail-closed retrieval assertions
+        shell: pwsh
+        run: |
+          $helper = (Resolve-Path 'scripts/local/hive-smoke-assertions.ps1').Path
+          & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File 'tests/bootstrap/smoke-assertions-ps51.ps1' -HelperPath $helper
+          if ($LASTEXITCODE -ne 0) { throw 'PS51_RETRIEVAL_ASSERTIONS_REGRESSION' }
       - name: Actual Windows PowerShell 5.1 child-switch and exit propagation regression
         shell: pwsh
         run: |
