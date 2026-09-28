@@ -127,17 +127,58 @@ function Assert-HiveCorpusCorrectionReceipt {
     return $prior
 }
 
-# Pure stable journal path selector; receipt directories and restore-tested DB data roots
-# must never control the durable attempt identity.
+# One common machine-wide reservation namespace selector; never use receipt folders,
+# local profiles, database snapshots, or checkout-relative locations.
+function Get-HiveMutationJournalPath {
+    [CmdletBinding()]
+    param([Parameter(Mandatory=$true)][string]$JournalRoot,
+        [Parameter(Mandatory=$true)][string]$ProjectId,
+        [Parameter(Mandatory=$true)][ValidateSet('index','corpus','semantic')][string]$Kind,
+        [Parameter(Mandatory=$true)][string]$GenerationId)
+    if([string]::IsNullOrWhiteSpace($JournalRoot) -or
+        $ProjectId -cnotmatch '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') {
+        throw 'MUTATION_JOURNAL_IDENTITY_INVALID'
+    }
+    if($Kind -eq 'semantic') {
+        if($GenerationId -cnotmatch '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') {
+            throw 'MUTATION_JOURNAL_IDENTITY_INVALID'
+        }
+    } elseif($GenerationId -cnotmatch '^[0-9a-f]{40}$') {
+        throw 'MUTATION_JOURNAL_IDENTITY_INVALID'
+    }
+    return (Join-Path $JournalRoot ("fv-r8-"+$Kind+"-"+$ProjectId.ToLowerInvariant()+"-"+$GenerationId.ToLowerInvariant()+".once.json"))
+}
+
+# Actual atomic write, separately testable against Windows TEMP only.
+# A failed/partial CreateNew marker is deliberately retained as an attempted write.
+function New-HiveMutationAttemptMarker {
+    [CmdletBinding()]
+    param([Parameter(Mandatory=$true)][string]$JournalPath,
+        [Parameter(Mandatory=$true)][string]$JsonBody)
+    $bytes=[System.Text.Encoding]::UTF8.GetBytes($JsonBody)
+    $stream=$null
+    try {
+        $stream=[System.IO.File]::Open($JournalPath,
+            [System.IO.FileMode]::CreateNew,[System.IO.FileAccess]::Write,[System.IO.FileShare]::None)
+        $stream.Write($bytes,0,$bytes.Length)
+        $stream.Flush($true)
+    } catch {
+        throw 'MUTATION_ATTEMPT_ALREADY_RESERVED_OR_JOURNAL_UNAVAILABLE'
+    } finally {
+        if($null -ne $stream) { $stream.Dispose() }
+    }
+}
+
+# Backwards-compatible pure selector for existing R8 corpus fixtures.
 function Get-HiveCorpusJournalPath {
     [CmdletBinding()]
     param([Parameter(Mandatory=$true)][string]$JournalRoot,
         [Parameter(Mandatory=$true)][string]$ProjectId,
         [Parameter(Mandatory=$true)][string]$ExpectedHead)
-    if([string]::IsNullOrWhiteSpace($JournalRoot) -or
+    if($ExpectedHead -cnotmatch '^[0-9a-f]{40}$' -or
         $ProjectId -cnotmatch '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' -or
-        $ExpectedHead -cnotmatch '^[0-9a-f]{40}$') {
+        [string]::IsNullOrWhiteSpace($JournalRoot)) {
         throw 'CORPUS_JOURNAL_IDENTITY_INVALID'
     }
-    return (Join-Path $JournalRoot ("fv-r8-corpus-"+$ProjectId+"-"+$ExpectedHead+".once.json"))
+    return (Get-HiveMutationJournalPath -JournalRoot $JournalRoot -ProjectId $ProjectId -Kind corpus -GenerationId $ExpectedHead)
 }
