@@ -51,7 +51,7 @@ function Container([string]$Service) {
 }
 function Get-HiveDatabaseWriteStats([string]$PostgresContainerId) {
     # Read-only SQL via container-local Unix socket. No credentials or env values printed.
-    $sql="SELECT row_to_json(s) FROM (SELECT d.datname, d.tup_inserted::text AS tup_inserted, d.tup_updated::text AS tup_updated, d.tup_deleted::text AS tup_deleted, COALESCE(d.stats_reset::text,'never') AS stats_reset, (SELECT count(*) FROM pg_stat_activity a WHERE a.datname=current_database() AND a.pid<>pg_backend_pid() AND a.state='active') AS other_active FROM pg_stat_database d WHERE d.datname=current_database()) s;"
+    $sql="SELECT row_to_json(s) FROM (SELECT d.datname, pg_current_wal_lsn()::text AS wal_lsn, d.tup_inserted::text AS tup_inserted, d.tup_updated::text AS tup_updated, d.tup_deleted::text AS tup_deleted, COALESCE(d.stats_reset::text,'never') AS stats_reset, (SELECT count(*) FROM pg_stat_activity a WHERE a.datname=current_database() AND a.pid<>pg_backend_pid() AND a.state='active') AS other_active FROM pg_stat_database d WHERE d.datname=current_database()) s;"
     $command='exec psql -X -qAt -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "'+$sql+'"'
     $raw=Native 'docker' @('exec',$PostgresContainerId,'sh','-c',$command)
     if([string]::IsNullOrWhiteSpace($raw)) { throw 'WINDOW_DB_STATS_UNAVAILABLE' }
@@ -117,15 +117,12 @@ try {
             $target=Native 'git' @('-C',$RepoRoot,'rev-parse','HEAD')
             $authorizedPriorHead=Assert-HiveHeadAdvanceReceipt -Receipt $receipt -ExpectedHead $target
         }
-        if((HostPath ([string]$receipt.backup_file)).StartsWith((HostPath $RepoRoot)+'/') -or
-            (HostPath ([string]$receipt.backup_file)) -eq 'd:/hive' -or
-            (HostPath ([string]$receipt.backup_file)).StartsWith('d:/hive/')) {
-            throw 'WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE'
-        }
-        if(-not (Test-Path -LiteralPath ([string]$receipt.backup_file) -PathType Leaf)) {
+        # Validate actual absolute archive path and reject reparse links before hashing.
+        $trustedBackup=Get-HiveTrustedBackupPath -BackupPath ([string]$receipt.backup_file) -RepoRoot $RepoRoot
+        if(-not (Test-Path -LiteralPath $trustedBackup -PathType Leaf)) {
             throw 'WINDOW_BACKUP_FILE_UNAVAILABLE'
         }
-        $actualBackupHash=(Get-FileHash -LiteralPath ([string]$receipt.backup_file) -Algorithm SHA256).Hash
+        $actualBackupHash=(Get-FileHash -LiteralPath $trustedBackup -Algorithm SHA256).Hash
         if($actualBackupHash -ine [string]$receipt.backup_sha256) {
             throw 'WINDOW_BACKUP_DIGEST_MISMATCH'
         }
