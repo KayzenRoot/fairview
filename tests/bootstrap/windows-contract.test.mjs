@@ -37,9 +37,9 @@ test("one-shot descendant advancement is witnessed, ancestral, and forwarded saf
  const doctor=fs.readFileSync(new URL("../../scripts/local/check-hive-isolated.ps1",import.meta.url),"utf8");
  const runner=fs.readFileSync(new URL("../../scripts/local/invoke-hive-smoke.ps1",import.meta.url),"utf8");
  for(const code of [smoke,doctor,runner])assert(code.includes("AllowHeadAdvanceIndex"));
- assert(doctor.includes("operator_authorized_one_head_advance_index"));
- assert(doctor.includes("target_fairview_head"));
- assert(doctor.includes("WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED"));
+ assert(fs.readFileSync(new URL("../../scripts/local/hive-window-assertions.ps1",import.meta.url),"utf8").includes("operator_authorized_one_head_advance_index"));
+ assert(fs.readFileSync(new URL("../../scripts/local/hive-window-assertions.ps1",import.meta.url),"utf8").includes("target_fairview_head"));
+ assert(fs.readFileSync(new URL("../../scripts/local/hive-window-assertions.ps1",import.meta.url),"utf8").includes("WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED"));
  assert(smoke.includes("merge-base --is-ancestor"));
  assert(smoke.includes("Get-HiveIndexAction"));
  assert(smoke.includes("PriorIndexRunId $priorIndexRunId"));

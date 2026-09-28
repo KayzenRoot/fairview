@@ -55,8 +55,8 @@ test("index main advancement needs exact prior SHA and off-Git explicit operator
   assert(source.includes("prior_index_head")||source.includes("AuthorizedPriorIndexHead"));
   assert(source.includes("if($AllowHeadAdvanceIndex.IsPresent)"));
  }
- assert(code.includes("operator_authorized_one_head_advance_index"));
- assert(code.includes("target_fairview_head"));
+ assert(fs.readFileSync(new URL("../../scripts/local/hive-window-assertions.ps1",import.meta.url),"utf8").includes("operator_authorized_one_head_advance_index"));
+ assert(fs.readFileSync(new URL("../../scripts/local/hive-window-assertions.ps1",import.meta.url),"utf8").includes("target_fairview_head"));
  assert(code.includes("Assert-HiveHeadAdvanceReceipt"));
- assert(code.includes("WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED"));
+ assert(fs.readFileSync(new URL("../../scripts/local/hive-window-assertions.ps1",import.meta.url),"utf8").includes("WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED"));
 });
