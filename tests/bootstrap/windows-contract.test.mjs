@@ -67,9 +67,30 @@ test("corpus journal cannot be relocated by reissuing the receipt",()=>{
  assert(smoke.includes("GetFolderPath("));
  assert(smoke.includes("CommonApplicationData"));
  assert(!smoke.includes("LocalApplicationData"));
- assert(smoke.includes("Get-HiveCorpusJournalPath"));
+ assert(smoke.includes("Get-HiveMutationJournalPath"));
  assert(!smoke.includes("Split-Path -Path $ExclusiveWindowReceipt -Parent"));
  assert(window.includes("PSObject.Properties['prior_corpus_run_id']"));
  assert(smoke.includes("PSObject.Properties['prior_corpus_run_id']"));
  assert(fixture.includes("PS51_INITIAL_CORPUS_OMITTED_PRIOR_AND_STABLE_PRIVATE_JOURNAL"));
+});
+
+test("atomic journal reserves all three R8 mutation kinds before every permitted POST",()=>{
+ const helper=fs.readFileSync(new URL("../../scripts/local/hive-window-assertions.ps1",import.meta.url),"utf8");
+ const fixture=fs.readFileSync(new URL("../../tests/bootstrap/hive-window-assertions-ps51.ps1",import.meta.url),"utf8");
+ for(const kind of ["index","corpus","semantic"])assert(helper.includes("'"+kind+"'"));
+ for(const m of ["CommonApplicationData","Write-HiveMutationAttemptJournal","New-HiveMutationAttemptMarker"])
+   assert(smoke.includes(m));
+ assert(!smoke.includes("LocalApplicationData"));
+ const indexJournal=smoke.indexOf("Write-HiveMutationAttemptJournal -Kind index -ProjectId");
+ const indexPost=smoke.indexOf('Post "/api/v1/projects/$id/index"');
+ const corpusJournal=smoke.indexOf("Write-CorpusAttemptJournal -ProjectId");
+ const corpusPost=smoke.indexOf('Post "/api/v1/projects/$id/retrieval/corpus/sync"');
+ const semanticJournal=smoke.indexOf("Write-HiveMutationAttemptJournal -Kind semantic -ProjectId");
+ const semanticPost=smoke.indexOf('Post "/api/v1/projects/$id/retrieval/semantic/sync"');
+ assert(indexJournal>=0&&indexPost>indexJournal);
+ assert(corpusJournal>=0&&corpusPost>corpusJournal);
+ assert(semanticJournal>=0&&semanticPost>semanticJournal);
+ assert(helper.includes("[System.IO.FileMode]::CreateNew"));
+ assert(helper.includes("New-HiveMutationAttemptMarker"));
+ assert(fixture.includes("PS51_SHARED_MUTATION_JOURNAL_CREATE_NEW_REJECTS_DUPLICATE"));
 });
