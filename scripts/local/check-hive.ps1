@@ -54,39 +54,38 @@ function Assert-MutationWindow([bool]$ForIndexAdvance) {
     if($code -ne 0) { throw 'MUTATION_EXCLUSIVE_WINDOW_PROOF_FAILED' }
     $script:WindowVerifiedForMutations=$true
 }
-function Write-CorpusAttemptJournal([string]$ProjectId,[string]$Head,[string]$IndexRunId,[string]$PriorCorpusRunId) {
-    # Stable OS-known machine-wide root is independent of Windows login, receipt location
-    # and HIVE's isolated data backup/restore path.
+function Write-HiveMutationAttemptJournal {
+    [CmdletBinding()]
+    param([Parameter(Mandatory=$true)][ValidateSet('index','corpus','semantic')][string]$Kind,
+        [Parameter(Mandatory=$true)][string]$ProjectId,
+        [Parameter(Mandatory=$true)][string]$GenerationId,
+        [string]$IndexRunId='',
+        [string]$PriorCorpusRunId='')
+    # OS-known machine-wide root is independent of Windows account, receipt location
+    # and any movable isolated HIVE PostgreSQL/CAS backup snapshot.
     $localRoot=[System.Environment]::GetFolderPath(
         [System.Environment+SpecialFolder]::CommonApplicationData)
-    if([string]::IsNullOrWhiteSpace($localRoot)) { throw 'CORPUS_JOURNAL_PRIVATE_ROOT_UNAVAILABLE' }
+    if([string]::IsNullOrWhiteSpace($localRoot)) { throw 'MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE' }
     $dir=Join-Path $localRoot 'Fairview\R8-Attempts'
     $repo=(Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
     $norm=$dir.Replace('\','/').TrimEnd('/').ToLowerInvariant()
     $gitNorm=$repo.Replace('\','/').TrimEnd('/').ToLowerInvariant()
-    if($norm.StartsWith($gitNorm+'/') -or $norm -eq 'd:/hive' -or $norm.StartsWith('d:/hive/')) {
-        throw 'CORPUS_JOURNAL_PRIVATE_ROOT_UNAVAILABLE'
+    if($norm -eq $gitNorm -or $norm.StartsWith($gitNorm+'/') -or
+       $norm -eq 'd:/hive' -or $norm.StartsWith('d:/hive/')) {
+        throw 'MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE'
     }
     if(-not (Test-Path -LiteralPath $dir -PathType Container)) {
         try { $null=New-Item -Path $dir -ItemType Directory -ErrorAction Stop }
-        catch { throw 'CORPUS_JOURNAL_PRIVATE_ROOT_UNAVAILABLE' }
+        catch { throw 'MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE' }
     }
-    $journal=Get-HiveCorpusJournalPath -JournalRoot $dir -ProjectId $ProjectId -ExpectedHead $Head
-    $body=@{schema_version=1;project_id=$ProjectId;head=$Head;
-        index_run_id=$IndexRunId;prior_corpus_run_id=$PriorCorpusRunId;
-        attempted_at_utc=[datetime]::UtcNow.ToString('o')} | ConvertTo-Json -Compress
-    $bytes=[System.Text.Encoding]::UTF8.GetBytes($body)
-    $stream=$null
-    try {
-        $stream=[System.IO.File]::Open($journal,
-            [System.IO.FileMode]::CreateNew,[System.IO.FileAccess]::Write,[System.IO.FileShare]::None)
-        $stream.Write($bytes,0,$bytes.Length)
-        $stream.Flush($true)
-    } catch [System.IO.IOException] {
-        throw 'CORPUS_CORRECTION_ALREADY_ATTEMPTED_OR_JOURNAL_UNAVAILABLE'
-    } finally {
-        if($null -ne $stream) { $stream.Dispose() }
-    }
+    $journal=Get-HiveMutationJournalPath -JournalRoot $dir -ProjectId $ProjectId -Kind $Kind -GenerationId $GenerationId
+    $payload=@{schema_version=1;mutation_kind=$Kind;project_id=$ProjectId;
+        target_generation=$GenerationId;index_run_id=$IndexRunId;
+        prior_corpus_run_id=$PriorCorpusRunId;attempted_at_utc=[datetime]::UtcNow.ToString('o')} | ConvertTo-Json -Compress
+    New-HiveMutationAttemptMarker -JournalPath $journal -JsonBody $payload
+}
+function Write-CorpusAttemptJournal([string]$ProjectId,[string]$Head,[string]$IndexRunId,[string]$PriorCorpusRunId) {
+    Write-HiveMutationAttemptJournal -Kind corpus -ProjectId $ProjectId -GenerationId $Head -IndexRunId $IndexRunId -PriorCorpusRunId $PriorCorpusRunId
 }
 function Get-LocalFairviewHead {
     $repo=(Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
@@ -169,6 +168,7 @@ try {
             $ancestry=$LASTEXITCODE
         } finally { $ErrorActionPreference=$previous }
         if($ancestry -ne 0) { throw 'INDEX_HEAD_ADVANCE_NOT_PROVEN_ANCESTOR' }
+        Write-HiveMutationAttemptJournal -Kind index -ProjectId ([string]$id) -GenerationId $expectedHead -IndexRunId $priorIndexRunId
         $index=Post "/api/v1/projects/$id/index"
         if($index.status -ne 'COMPLETED') { throw "REPO_INDEX_$($index.status):$($index.error)" }
         Write-Host '[PASS] one approved descendant incremental index; never automatically retry.'
@@ -216,6 +216,7 @@ try {
             # The helper rejects previous FAILED/BLOCKED attempts and concurrent sync.
             # SEMANTIC_CONCURRENT_SYNC_FORBIDDEN is enforced BEFORE the single POST.
             Assert-MutationWindow -ForIndexAdvance $false
+            Write-HiveMutationAttemptJournal -Kind semantic -ProjectId ([string]$id) -GenerationId ([string]$corpus.run_id) -IndexRunId ([string]$index.run_id)
             $sync=Post "/api/v1/projects/$id/retrieval/semantic/sync"
             if ($sync.status -ne 'COMPLETED') { throw "SEMANTIC_SYNC_$($sync.status)" }
             Write-Host '[PASS] one authorized current-corpus semantic sync; no retry.'
