@@ -41,3 +41,39 @@ function Assert-HiveSemanticContribution {
     }
     if(-not $contributing) { throw 'HYBRID_SEMANTIC_NO_CONTRIBUTION' }
 }
+
+
+# Published HIVE registry/index/corpus types expose exact Git generation and source-run lineage.
+function Assert-HiveProjectFresh {
+    [CmdletBinding()]
+    param([AllowNull()][object]$Project,
+        [Parameter(Mandatory=$true)][string]$ProjectId,
+        [Parameter(Mandatory=$true)][string]$RelativePath,
+        [Parameter(Mandatory=$true)][string]$ExpectedHead)
+    if($ExpectedHead -cnotmatch '^[0-9a-f]{40}$') { throw 'LOCAL_GIT_HEAD_INVALID' }
+    if($null -eq $Project -or [string]$Project.project_id -ne $ProjectId -or
+        [string]$Project.relative_path -cne $RelativePath) { throw 'HIVE_PROJECT_IDENTITY_MISMATCH' }
+    if($Project.state -ne 'READY' -or $Project.repository_accessible -ne $true -or
+        $Project.working_tree_clean -ne $true) { throw 'HIVE_PROJECT_NOT_FRESH_READY' }
+    if([string]$Project.git_head_sha -cne $ExpectedHead) { throw 'HIVE_PROJECT_HEAD_STALE' }
+}
+function Assert-HiveIndexFresh {
+    [CmdletBinding()]
+    param([AllowNull()][object]$Index,
+        [Parameter(Mandatory=$true)][string]$ProjectId,
+        [Parameter(Mandatory=$true)][string]$ExpectedHead)
+    if($null -eq $Index -or [string]$Index.project_id -ne $ProjectId -or
+        [string]::IsNullOrWhiteSpace([string]$Index.run_id)) { throw 'HIVE_INDEX_IDENTITY_MISMATCH' }
+    if($Index.status -ne 'COMPLETED' -or
+        [string]$Index.repository_head_sha -cne $ExpectedHead) { throw 'HIVE_INDEX_HEAD_STALE' }
+}
+function Assert-HiveCorpusFresh {
+    [CmdletBinding()]
+    param([AllowNull()][object]$Corpus,
+        [Parameter(Mandatory=$true)][string]$ProjectId,
+        [Parameter(Mandatory=$true)][string]$IndexRunId)
+    if($null -eq $Corpus -or [string]$Corpus.project_id -ne $ProjectId) { throw 'CORPUS_PROJECT_MISMATCH' }
+    if([string]::IsNullOrWhiteSpace($IndexRunId) -or
+        $Corpus.status -ne 'COMPLETED' -or
+        [string]$Corpus.repository_index_run_id -cne $IndexRunId) { throw 'CORPUS_INDEX_GENERATION_STALE' }
+}

@@ -47,3 +47,24 @@ Expect-HiveFailure { Assert-HiveSemanticContribution -Response $fake } 'HYBRID_S
 $fallback=[pscustomobject]@{state='LEXICAL_FALLBACK_SEMANTIC_UNAVAILABLE';semantic_state='CURRENT';fallback_reason='blocked';results=@($good)}
 Expect-HiveFailure { Assert-HiveSemanticContribution -Response $fallback } 'HYBRID_SEMANTIC_FALLBACK_ONLY'
 Write-Output '[PASS] PS51_RETRIEVAL_NULL_PROVENANCE_SEMANTIC_CONTRIBUTION'
+
+
+# Freshness fixtures run in the existing real Windows PowerShell 5.1 CI job.
+$head='c'*40
+$stale='d'*40
+$freshProject=[pscustomobject]@{project_id=$project;relative_path='Fairview';state='READY';git_head_sha=$head;repository_accessible=$true;working_tree_clean=$true}
+$freshIndex=[pscustomobject]@{project_id=$project;run_id=$run;repository_head_sha=$head;status='COMPLETED'}
+$freshCorpus=[pscustomobject]@{project_id=$project;repository_index_run_id=$run;status='COMPLETED'}
+Assert-HiveProjectFresh -Project $freshProject -ProjectId $project -RelativePath 'Fairview' -ExpectedHead $head
+Assert-HiveIndexFresh -Index $freshIndex -ProjectId $project -ExpectedHead $head
+Assert-HiveCorpusFresh -Corpus $freshCorpus -ProjectId $project -IndexRunId $run
+Expect-HiveFailure { Assert-HiveProjectFresh -Project $freshProject -ProjectId $project -RelativePath 'Fairview' -ExpectedHead $stale } 'HIVE_PROJECT_HEAD_STALE'
+Expect-HiveFailure { Assert-HiveProjectFresh -Project $freshProject -ProjectId $other -RelativePath 'Fairview' -ExpectedHead $head } 'HIVE_PROJECT_IDENTITY_MISMATCH'
+$dirty=[pscustomobject]@{project_id=$project;relative_path='Fairview';state='READY';git_head_sha=$head;repository_accessible=$true;working_tree_clean=$false}
+Expect-HiveFailure { Assert-HiveProjectFresh -Project $dirty -ProjectId $project -RelativePath 'Fairview' -ExpectedHead $head } 'HIVE_PROJECT_NOT_FRESH_READY'
+$wrongIndex=[pscustomobject]@{project_id=$project;run_id=$run;repository_head_sha=$stale;status='COMPLETED'}
+Expect-HiveFailure { Assert-HiveIndexFresh -Index $wrongIndex -ProjectId $project -ExpectedHead $head } 'HIVE_INDEX_HEAD_STALE'
+Expect-HiveFailure { Assert-HiveIndexFresh -Index $freshIndex -ProjectId $other -ExpectedHead $head } 'HIVE_INDEX_IDENTITY_MISMATCH'
+Expect-HiveFailure { Assert-HiveCorpusFresh -Corpus $freshCorpus -ProjectId $other -IndexRunId $run } 'CORPUS_PROJECT_MISMATCH'
+Expect-HiveFailure { Assert-HiveCorpusFresh -Corpus $freshCorpus -ProjectId $project -IndexRunId $other } 'CORPUS_INDEX_GENERATION_STALE'
+Write-Output '[PASS] PS51_HIVE_PROJECT_INDEX_CORPUS_HEAD_LINEAGE'
