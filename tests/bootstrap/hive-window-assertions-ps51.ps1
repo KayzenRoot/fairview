@@ -91,3 +91,29 @@ $journalFromReceiptB=Get-HiveCorpusJournalPath -JournalRoot $stableJournalRoot -
 if($journalFromReceiptA -cne $journalFromReceiptB){throw 'JOURNAL_ROOT_MUST_NOT_DEPEND_ON_RECEIPT_LOCATION'}
 ExpectBlocked { Get-HiveCorpusJournalPath -JournalRoot $stableJournalRoot -ProjectId $realProject -ExpectedHead 'bad' } 'CORPUS_JOURNAL_IDENTITY_INVALID'
 Write-Output '[PASS] PS51_INITIAL_CORPUS_OMITTED_PRIOR_AND_STABLE_PRIVATE_JOURNAL'
+
+
+# Verify all three persistent namespaces and exercise the SAME CreateNew helper used by
+# production, but ONLY against a disposable Windows TEMP folder, never host ProgramData.
+$semanticRun='00000000-0000-0000-0000-000000000012'
+$indexMarker=Get-HiveMutationJournalPath -JournalRoot $stableJournalRoot -ProjectId $realProject -Kind index -GenerationId $newHead
+$corpusMarker=Get-HiveMutationJournalPath -JournalRoot $stableJournalRoot -ProjectId $realProject -Kind corpus -GenerationId $newHead
+$semanticMarker=Get-HiveMutationJournalPath -JournalRoot $stableJournalRoot -ProjectId $realProject -Kind semantic -GenerationId $semanticRun
+if(($indexMarker -ceq $corpusMarker) -or ($indexMarker -ceq $semanticMarker) -or
+    ($corpusMarker -ceq $semanticMarker)) { throw 'MUTATION_MARKER_NAMESPACE_COLLISION' }
+if((Get-HiveMutationJournalPath -JournalRoot $stableJournalRoot -ProjectId $realProject.ToUpperInvariant() -Kind index -GenerationId $newHead) -cne $indexMarker) {
+    throw 'MUTATION_JOURNAL_MUST_BE_PROJECT_CASE_INDEPENDENT'
+}
+ExpectBlocked { Get-HiveMutationJournalPath -JournalRoot $stableJournalRoot -ProjectId $realProject -Kind semantic -GenerationId 'not-a-corpus-run' } 'MUTATION_JOURNAL_IDENTITY_INVALID'
+$temporary=Join-Path ([System.IO.Path]::GetTempPath()) ('fairview-r8-journal-fixture-'+[guid]::NewGuid().ToString('N'))
+try {
+    $null=New-Item -Path $temporary -ItemType Directory -ErrorAction Stop
+    $marker=Get-HiveMutationJournalPath -JournalRoot $temporary -ProjectId $realProject -Kind index -GenerationId $newHead
+    New-HiveMutationAttemptMarker -JournalPath $marker -JsonBody '{"test":"first-write"}'
+    if(-not (Test-Path -LiteralPath $marker -PathType Leaf)) { throw 'MUTATION_JOURNAL_FIRST_WRITE_NOT_DURABLE' }
+    ExpectBlocked { New-HiveMutationAttemptMarker -JournalPath $marker -JsonBody '{"test":"second-write"}' } 'MUTATION_ATTEMPT_ALREADY_RESERVED_OR_JOURNAL_UNAVAILABLE'
+    if((Get-Content -LiteralPath $marker -Raw) -cne '{"test":"first-write"}') { throw 'MUTATION_JOURNAL_DUPLICATE_OVERWROTE_FIRST' }
+} finally {
+    if(Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Recurse -Force }
+}
+Write-Output '[PASS] PS51_SHARED_MUTATION_JOURNAL_CREATE_NEW_REJECTS_DUPLICATE'
