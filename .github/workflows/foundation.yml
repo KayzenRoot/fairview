@@ -148,10 +148,27 @@ jobs:
           $on = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview -RequireSemantic
           if ($LASTEXITCODE -ne 0 -or ($on -join "`n") -notmatch 'SEMANTIC_PRESENT') { throw 'PS51_PRESENT_SWITCH_REGRESSION' }
           $prior = 'a' * 40
-          $advance = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview -AllowHeadAdvanceIndex -AuthorizedPriorIndexHead $prior
-          if ($LASTEXITCODE -ne 0 -or ($advance -join "`n") -notmatch ('ADVANCE_PRESENT:'+$prior)) { throw 'PS51_HEAD_ADVANCE_SWITCH_REGRESSION' }
+          $target = 'b' * 40
+          $advance = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview -AllowHeadAdvanceIndex -AuthorizedPriorIndexHead $prior -AuthorizedTargetHead $target
+          if ($LASTEXITCODE -ne 0 -or ($advance -join [Environment]::NewLine) -notmatch ('ADVANCE_PRESENT:'+$prior+':'+$target)) { throw 'PS51_HEAD_ADVANCE_SWITCH_REGRESSION' }
           $noAdvance = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview
           if ($LASTEXITCODE -ne 0 -or ($noAdvance -join "`n") -notmatch 'ADVANCE_ABSENT') { throw 'PS51_HEAD_ADVANCE_ABSENT_REGRESSION' }
+          $oldPreference = $ErrorActionPreference
+          try {
+            $ErrorActionPreference = 'Continue'
+            $missingPrior = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview -AllowHeadAdvanceIndex -AuthorizedTargetHead $target 2>&1
+            $missingPriorExit = $LASTEXITCODE
+            $invalidPrior = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview -AllowHeadAdvanceIndex -AuthorizedPriorIndexHead invalid -AuthorizedTargetHead $target 2>&1
+            $invalidPriorExit = $LASTEXITCODE
+            $missingTarget = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview -AllowHeadAdvanceIndex -AuthorizedPriorIndexHead $prior 2>&1
+            $missingTargetExit = $LASTEXITCODE
+            $invalidTarget = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview -AllowHeadAdvanceIndex -AuthorizedPriorIndexHead $prior -AuthorizedTargetHead invalid 2>&1
+            $invalidTargetExit = $LASTEXITCODE
+          } finally { $ErrorActionPreference = $oldPreference }
+          if($missingPriorExit -eq 0 -or ($missingPrior -join [Environment]::NewLine) -notmatch 'INDEX_PRIOR_HEAD_REQUIRED') { throw 'PS51_MISSING_PRIOR_HEAD_NOT_BLOCKED' }
+          if($invalidPriorExit -eq 0 -or ($invalidPrior -join [Environment]::NewLine) -notmatch 'INDEX_PRIOR_HEAD_REQUIRED') { throw 'PS51_INVALID_PRIOR_HEAD_NOT_BLOCKED' }
+          if($missingTargetExit -eq 0 -or ($missingTarget -join [Environment]::NewLine) -notmatch 'INDEX_TARGET_HEAD_REQUIRED') { throw 'PS51_MISSING_TARGET_HEAD_NOT_BLOCKED' }
+          if($invalidTargetExit -eq 0 -or ($invalidTarget -join [Environment]::NewLine) -notmatch 'INDEX_TARGET_HEAD_REQUIRED') { throw 'PS51_INVALID_TARGET_HEAD_NOT_BLOCKED' }
           $oldPreference = $ErrorActionPreference
           try {
             $ErrorActionPreference = 'Continue'

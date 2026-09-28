@@ -58,3 +58,15 @@ ExpectBlocked { Assert-HiveHeadAdvanceReceipt -Receipt $advanceReceipt -Expected
 $rejected=[pscustomobject]@{operator_authorized_one_head_advance_index=$false;prior_index_head=$oldHead;target_fairview_head=$newHead}
 ExpectBlocked { Assert-HiveHeadAdvanceReceipt -Receipt $rejected -ExpectedHead $newHead } 'WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED'
 Write-Output '[PASS] PS51_HEAD_ADVANCE_RECEIPT_MISSING_FALSE_WRONG_VALID'
+
+
+# JSON string values are not valid operator consent, even when text spells True.
+$stringConsent=[pscustomobject]@{};$receipt.psobject.Properties | ForEach-Object { $stringConsent | Add-Member -NotePropertyName $_.Name -NotePropertyValue $_.Value }
+$stringConsent.operator_confirmed_exclusive_window='True'
+ExpectBlocked { Assert-HiveWindowReceipt -Receipt $stringConsent -ApiContainerId $api -PostgresContainerId $pg -CanonicalDataRoot $root -Now $now } 'WINDOW_OPERATOR_CONSENT_NOT_PROVEN'
+$stringRestore=[pscustomobject]@{};$receipt.psobject.Properties | ForEach-Object { $stringRestore | Add-Member -NotePropertyName $_.Name -NotePropertyValue $_.Value }
+$stringRestore.postgres_restore_verified='True'
+ExpectBlocked { Assert-HiveWindowReceipt -Receipt $stringRestore -ApiContainerId $api -PostgresContainerId $pg -CanonicalDataRoot $root -Now $now } 'WINDOW_RESTORABLE_BACKUP_NOT_PROVEN'
+$stringAdvance=[pscustomobject]@{operator_authorized_one_head_advance_index='True';prior_index_head=$oldHead;target_fairview_head=$newHead}
+ExpectBlocked { Assert-HiveHeadAdvanceReceipt -Receipt $stringAdvance -ExpectedHead $newHead } 'WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED'
+Write-Output '[PASS] PS51_TYPED_OPERATOR_CONSENT_ONLY'
