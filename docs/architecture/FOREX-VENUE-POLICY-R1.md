@@ -84,4 +84,4 @@ A policy record expires on a changed vendor ToS, revoked app, venue symbol/instr
 | Authorized loss/notional limits and independent auditor | OPEN | Separate signed operator scope, high-assurance gate and negative tests |
 
 ### Round 1 STOP / handoff
-This document and ADR do not choose a production venue. Await operator-specific eligibility and written permissions, formalize each data-rights contract, then admit separately reviewed read-only/demo WOs. FV-BOOT-001 R8 FULL and independent review remain mandatory prerequisites for product implementation. There are no account creation, API calls, price capture or real orders in this research.
+This document and ADR do not choose a production venue. Await operator-specific eligibility and written permissions, formalize each data-rights contract, then admit separately reviewed read-only/demo WOs. FV-BOOT-001 R8 FULL and independent review remain mandatory prerequisites for product implementation. There are no real orders, account creation, API calls or price capture in this research.
