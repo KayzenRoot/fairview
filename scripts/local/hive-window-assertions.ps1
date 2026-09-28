@@ -114,7 +114,10 @@ function Assert-HiveCorpusCorrectionReceipt {
         [string]$Receipt.target_fairview_head -cne $ExpectedHead) {
         throw 'CORPUS_CORRECTION_NOT_OPERATOR_AUTHORIZED'
     }
-    $prior=[string]$Receipt.prior_corpus_run_id
+    $prior=''
+    if($null -ne $Receipt.PSObject.Properties['prior_corpus_run_id']) {
+        $prior=[string]$Receipt.prior_corpus_run_id
+    }
     if($null -eq $LatestRun) {
         if(-not [string]::IsNullOrWhiteSpace($prior)) { throw 'CORPUS_PRIOR_RUN_ID_MISMATCH' }
     } elseif($prior -cnotmatch '^[0-9a-fA-F-]{36}$' -or
@@ -122,4 +125,19 @@ function Assert-HiveCorpusCorrectionReceipt {
         throw 'CORPUS_PRIOR_RUN_ID_MISMATCH'
     }
     return $prior
+}
+
+# Pure stable journal path selector; receipt directories and restore-tested DB data roots
+# must never control the durable attempt identity.
+function Get-HiveCorpusJournalPath {
+    [CmdletBinding()]
+    param([Parameter(Mandatory=$true)][string]$JournalRoot,
+        [Parameter(Mandatory=$true)][string]$ProjectId,
+        [Parameter(Mandatory=$true)][string]$ExpectedHead)
+    if([string]::IsNullOrWhiteSpace($JournalRoot) -or
+        $ProjectId -cnotmatch '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' -or
+        $ExpectedHead -cnotmatch '^[0-9a-f]{40}$') {
+        throw 'CORPUS_JOURNAL_IDENTITY_INVALID'
+    }
+    return (Join-Path $JournalRoot ("fv-r8-corpus-"+$ProjectId+"-"+$ExpectedHead+".once.json"))
 }
