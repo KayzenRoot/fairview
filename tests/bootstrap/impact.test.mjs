@@ -257,3 +257,45 @@ test("Round 6 ADRs are proposals, and future CEX source remains blocked by plann
   assert(strategy.planned.includes("integration"));
   assert.deepEqual(strategy.unknown,[]);
 });
+
+
+test("Round 7 DEX and Uniswap documentation preserves chain/pool/block/exposure proofs",()=>{
+  const design=fs.readFileSync(new URL("../../docs/architecture/DEX-UNISWAP-FEASIBILITY-R7.md",import.meta.url),"utf8");
+  for(const field of ["DexPoolEvidenceV0","DexBlockAnchorV0","DexQuoteEnvelopeV0","DexGasCostV0","DexFeasibilityV0","CexDexExposurePlanV0","CEX_DEX_SPREAD","DEX_POOL_ROUTE","block_hash","parent_hash","UNKNOWN"]){
+    assert(design.includes(field),"R7_MISSING_CONTRACT_OR_RISK_FIELD "+field);
+  }
+  for(const scenario of ["WRONG_CHAIN_ID","FAKE_TOKEN_SYMBOL","WRONG_POOL_VERSION","UNKNOWN_V4_HOOK","MIXED_BLOCK_STATE","BLOCK_PARENT_REORG","RPC_FORK_DISAGREEMENT","STALE_SUBGRAPH","INSUFFICIENT_TICK_LIQUIDITY","POOL_FEE_UNMODELED","TOKEN_TRANSFER_FEE","UNBOUNDED_GAS_COST","BASE_FEE_SPIKE","SWAP_REVERT","SLIPPAGE_STATE_DRIFT","SANDWICH_ADVERSE_SELECTION","CEX_LEG_UNKNOWN","INSTANT_BRIDGE_ASSUMPTION","PREMATURE_FINALITY","UNLICENSED_RPC_ARCHIVE"]){
+    const row=design.split(/\r?\n/).find(line=>line.startsWith("| "+scenario+" | "));
+    assert(row&&row.split("|").length>=4,"R7_MISSING_ADVERSE_DESIGN_FIXTURE "+scenario);
+  }
+  for(const id of ["defi","strategy-defi"]){
+    assert.equal(r.modules.find(m=>m.id===id)?.state,"planned","R7_PREMATURE_ACTIVATION "+id);
+    const charter=fs.readFileSync(new URL("../../docs/architecture/modules/"+id+".md",import.meta.url),"utf8");
+    assert(charter.includes("PLANNED, NOT IMPLEMENTED"));
+    assert(charter.includes("STOP"));
+  }
+  assert.equal(r.modules.length,20);
+  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap"]);
+});
+test("Round 7 proposed DEX ADRs and future source impact remain governed by bootstrap",()=>{
+  const names=["FV-ADR-013-PROPOSED-DEX-POOL-OBSERVATION.md","FV-ADR-014-PROPOSED-CEX-DEX-FEASIBILITY.md"];
+  for(const name of names){
+    const adr=fs.readFileSync(new URL("../../docs/architecture/adrs/"+name,import.meta.url),"utf8");
+    assert(adr.includes("PROPOSED_NOT_ADOPTED"),"R7_PREMATURE_ADR "+name);
+  }
+  for(const path of ["docs/architecture/DEX-UNISWAP-FEASIBILITY-R7.md",...names.map(name=>"docs/architecture/adrs/"+name)]){
+    const impact=calculateImpact(r,[path]);
+    assert.deepEqual(impact.active,["bootstrap"]);
+    assert.deepEqual(impact.planned,[]);
+    assert.deepEqual(impact.unknown,[]);
+  }
+  const adapter=calculateImpact(r,["src/defi/uniswap_pool_observation.rs"]);
+  assert(adapter.planned.includes("defi"));
+  assert(adapter.planned.includes("strategy-defi"));
+  assert(adapter.planned.includes("integration"));
+  assert.deepEqual(adapter.unknown,[]);
+  const strategy=calculateImpact(r,["src/strategy-defi/cex_dex_spread.rs"]);
+  assert(strategy.planned.includes("strategy-defi"));
+  assert(strategy.planned.includes("integration"));
+  assert.deepEqual(strategy.unknown,[]);
+});
