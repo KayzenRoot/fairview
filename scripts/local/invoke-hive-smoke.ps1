@@ -4,7 +4,13 @@ param(
     [Parameter(Mandatory=$true)][string]$SmokeScriptPath,
     [Parameter(Mandatory=$true)][uri]$BaseUrl,
     [string]$ProjectRelativePath='Fairview',
-    [switch]$RequireSemantic
+    [switch]$RequireSemantic,
+    [switch]$AllowHeadAdvanceIndex,
+    [string]$AuthorizedPriorIndexHead,
+    [string]$AuthorizedTargetHead,
+    [string]$HiveCheckout,
+    [string]$IsolatedDataRoot,
+    [string]$ExclusiveWindowReceipt
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
@@ -19,6 +25,19 @@ try {
     # powershell.exe -File parses native CLI arguments as text. An absent [switch]
     # MUST be entirely omitted rather than forwarded as -RequireSemantic:$false.
     if($RequireSemantic.IsPresent) { $arguments+= '-RequireSemantic' }
+    if(-not [string]::IsNullOrWhiteSpace($ExclusiveWindowReceipt)) {
+        if([string]::IsNullOrWhiteSpace($HiveCheckout) -or [string]::IsNullOrWhiteSpace($IsolatedDataRoot)) {
+            throw 'SMOKE_EXCLUSIVE_WINDOW_PATHS_REQUIRED'
+        }
+        $arguments+= @('-ExclusiveWindowReceipt',$ExclusiveWindowReceipt,
+            '-HiveCheckout',$HiveCheckout,'-IsolatedDataRoot',$IsolatedDataRoot)
+    }
+    if($AllowHeadAdvanceIndex.IsPresent) {
+        if($AuthorizedPriorIndexHead -cnotmatch '^[0-9a-f]{40}$') { throw 'INDEX_PRIOR_HEAD_REQUIRED' }
+        if($AuthorizedTargetHead -cnotmatch '^[0-9a-f]{40}$' -or
+            $AuthorizedTargetHead -ceq $AuthorizedPriorIndexHead) { throw 'INDEX_TARGET_HEAD_REQUIRED' }
+        $arguments+= @('-AllowHeadAdvanceIndex','-AuthorizedPriorIndexHead',$AuthorizedPriorIndexHead,'-AuthorizedTargetHead',$AuthorizedTargetHead)
+    }
     $previous=$ErrorActionPreference
     try {
         $ErrorActionPreference='Continue'

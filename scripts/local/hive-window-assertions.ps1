@@ -25,13 +25,17 @@ function Assert-HiveWindowReceipt {
         [string]$Receipt.data_root -cne $CanonicalDataRoot) {
         throw 'WINDOW_RECEIPT_ISOLATION_IDENTITY_MISMATCH'
     }
-    if($Receipt.operator_confirmed_no_other_writers -cne $true -or
-        $Receipt.operator_confirmed_exclusive_window -cne $true) {
+    if(-not ($Receipt.operator_confirmed_no_other_writers -is [bool]) -or
+        -not ($Receipt.operator_confirmed_exclusive_window -is [bool]) -or
+        $Receipt.operator_confirmed_no_other_writers -ne $true -or
+        $Receipt.operator_confirmed_exclusive_window -ne $true) {
         throw 'WINDOW_OPERATOR_CONSENT_NOT_PROVEN'
     }
-    if($Receipt.postgres_restore_verified -cne $true -or
+    if(-not ($Receipt.postgres_restore_verified -is [bool]) -or
+        -not ($Receipt.cas_manifest_verified -is [bool]) -or
+        $Receipt.postgres_restore_verified -ne $true -or
         [int]$Receipt.postgres_restored_tables -lt 1 -or
-        $Receipt.cas_manifest_verified -cne $true) {
+        $Receipt.cas_manifest_verified -ne $true) {
         throw 'WINDOW_RESTORABLE_BACKUP_NOT_PROVEN'
     }
     if([string]$Receipt.backup_file -eq '' -or
@@ -39,7 +43,12 @@ function Assert-HiveWindowReceipt {
         throw 'WINDOW_BACKUP_DIGEST_INVALID'
     }
     $date=[datetimeoffset]::MinValue
-    if(-not [datetimeoffset]::TryParse([string]$Receipt.created_at_utc,[ref]$date)) {
+    # An offset-less local timestamp must never masquerade as a fresh UTC witness.
+    $timestamp=[string]$Receipt.created_at_utc
+    if($timestamp -cnotmatch '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{1,7})?(?:Z|[+-][0-9]{2}:[0-9]{2})$') {
+        throw 'WINDOW_RECEIPT_TIMESTAMP_INVALID'
+    }
+    if(-not [datetimeoffset]::TryParse($timestamp,[ref]$date)) {
         throw 'WINDOW_RECEIPT_TIMESTAMP_INVALID'
     }
     $minutes=($Now.ToUniversalTime()-$date.ToUniversalTime()).TotalMinutes
@@ -60,6 +69,15 @@ function Assert-HiveDatabaseQuiet {
     if([long]$Before.other_active -ne 0 -or [long]$After.other_active -ne 0) {
         throw 'WINDOW_DB_ACTIVE_SESSIONS'
     }
+    # WAL detects logged TRUNCATE and DDL which tuple counters alone can miss.
+    # A quiet observation is NOT an exclusive lease: operator consent still required.
+    if($null -eq $Before.PSObject.Properties['wal_lsn'] -or
+        $null -eq $After.PSObject.Properties['wal_lsn'] -or
+        [string]$Before.wal_lsn -cnotmatch '^[0-9a-fA-F]+/[0-9a-fA-F]+$' -or
+        [string]$After.wal_lsn -cnotmatch '^[0-9a-fA-F]+/[0-9a-fA-F]+$') {
+        throw 'WINDOW_DB_STATS_UNTRUSTWORTHY'
+    }
+    if([string]$Before.wal_lsn -ine [string]$After.wal_lsn) { throw 'WINDOW_DB_WAL_WRITES_OBSERVED' }
     foreach($name in @('tup_inserted','tup_updated','tup_deleted')) {
         if([string]$Before.$name -cnotmatch '^[0-9]+$' -or
             [string]$After.$name -cnotmatch '^[0-9]+$') {
@@ -69,4 +87,205 @@ function Assert-HiveDatabaseQuiet {
             throw 'WINDOW_DB_WRITES_OBSERVED'
         }
     }
+}
+
+
+# Explicit maintenance permission is an exact typed off-Git witness, not inferred from existence.
+function Assert-HiveHeadAdvanceReceipt {
+    [CmdletBinding()]
+    param([AllowNull()][object]$Receipt,
+        [Parameter(Mandatory=$true)][string]$ExpectedHead)
+    if($null -eq $Receipt -or $ExpectedHead -cnotmatch '^[0-9a-f]{40}$') {
+        throw 'WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED'
+    }
+    foreach($key in @('operator_authorized_one_head_advance_index','prior_index_head','target_fairview_head')) {
+        if($null -eq $Receipt.PSObject.Properties[$key]) {
+            throw 'WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED'
+        }
+    }
+    if(-not ($Receipt.operator_authorized_one_head_advance_index -is [bool]) -or
+        $Receipt.operator_authorized_one_head_advance_index -ne $true -or
+        [string]$Receipt.prior_index_head -cnotmatch '^[0-9a-f]{40}$' -or
+        [string]$Receipt.target_fairview_head -cne $ExpectedHead -or
+        [string]$Receipt.prior_index_head -ceq $ExpectedHead) {
+        throw 'WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED'
+    }
+    return [string]$Receipt.prior_index_head
+}
+
+# Private one-shot authorization is tied to the original failed run; not to an error label alone.
+function Assert-HiveCorpusCorrectionReceipt {
+    [CmdletBinding()]
+    param([AllowNull()][object]$Receipt,
+        [Parameter(Mandatory=$true)][string]$ProjectId,
+        [Parameter(Mandatory=$true)][string]$ExpectedHead,
+        [AllowNull()][object]$LatestRun)
+    if($null -eq $Receipt -or
+        -not ($Receipt.operator_authorized_one_corpus_sync -is [bool]) -or
+        $Receipt.operator_authorized_one_corpus_sync -ne $true -or
+        [string]$Receipt.authorized_fairview_project_id -cne $ProjectId -or
+        $ExpectedHead -cnotmatch '^[0-9a-f]{40}$' -or
+        [string]$Receipt.target_fairview_head -cne $ExpectedHead) {
+        throw 'CORPUS_CORRECTION_NOT_OPERATOR_AUTHORIZED'
+    }
+    $prior=''
+    if($null -ne $Receipt.PSObject.Properties['prior_corpus_run_id']) {
+        $prior=[string]$Receipt.prior_corpus_run_id
+    }
+    if($null -eq $LatestRun) {
+        if(-not [string]::IsNullOrWhiteSpace($prior)) { throw 'CORPUS_PRIOR_RUN_ID_MISMATCH' }
+    } elseif($prior -cnotmatch '^[0-9a-fA-F-]{36}$' -or
+        [string]$LatestRun.run_id -cne $prior) {
+        throw 'CORPUS_PRIOR_RUN_ID_MISMATCH'
+    }
+    return $prior
+}
+
+# One common machine-wide reservation namespace selector; never use receipt folders,
+# local profiles, database snapshots, or checkout-relative locations.
+function Get-HiveMutationJournalPath {
+    [CmdletBinding()]
+    param([Parameter(Mandatory=$true)][string]$JournalRoot,
+        [Parameter(Mandatory=$true)][string]$ProjectId,
+        [Parameter(Mandatory=$true)][ValidateSet('index','corpus','semantic')][string]$Kind,
+        [Parameter(Mandatory=$true)][string]$GenerationId)
+    if([string]::IsNullOrWhiteSpace($JournalRoot) -or
+        $ProjectId -cnotmatch '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') {
+        throw 'MUTATION_JOURNAL_IDENTITY_INVALID'
+    }
+    if($Kind -eq 'semantic') {
+        if($GenerationId -cnotmatch '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') {
+            throw 'MUTATION_JOURNAL_IDENTITY_INVALID'
+        }
+    } elseif($GenerationId -cnotmatch '^[0-9a-f]{40}$') {
+        throw 'MUTATION_JOURNAL_IDENTITY_INVALID'
+    }
+    return (Join-Path $JournalRoot ("fv-r8-"+$Kind+"-"+$ProjectId.ToLowerInvariant()+"-"+$GenerationId.ToLowerInvariant()+".once.json"))
+}
+
+# Actual atomic write, separately testable against Windows TEMP only.
+# A failed/partial CreateNew marker is deliberately retained as an attempted write.
+function New-HiveMutationAttemptMarker {
+    [CmdletBinding()]
+    param([Parameter(Mandatory=$true)][string]$JournalPath,
+        [Parameter(Mandatory=$true)][string]$JsonBody)
+    $bytes=[System.Text.Encoding]::UTF8.GetBytes($JsonBody)
+    $stream=$null
+    try {
+        $stream=[System.IO.File]::Open($JournalPath,
+            [System.IO.FileMode]::CreateNew,[System.IO.FileAccess]::Write,[System.IO.FileShare]::None)
+        $stream.Write($bytes,0,$bytes.Length)
+        $stream.Flush($true)
+    } catch {
+        throw 'MUTATION_ATTEMPT_ALREADY_RESERVED_OR_JOURNAL_UNAVAILABLE'
+    } finally {
+        if($null -ne $stream) { $stream.Dispose() }
+    }
+}
+
+# Backwards-compatible pure selector for existing R8 corpus fixtures.
+function Get-HiveCorpusJournalPath {
+    [CmdletBinding()]
+    param([Parameter(Mandatory=$true)][string]$JournalRoot,
+        [Parameter(Mandatory=$true)][string]$ProjectId,
+        [Parameter(Mandatory=$true)][string]$ExpectedHead)
+    if($ExpectedHead -cnotmatch '^[0-9a-f]{40}$' -or
+        $ProjectId -cnotmatch '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' -or
+        [string]::IsNullOrWhiteSpace($JournalRoot)) {
+        throw 'CORPUS_JOURNAL_IDENTITY_INVALID'
+    }
+    return (Get-HiveMutationJournalPath -JournalRoot $JournalRoot -ProjectId $ProjectId -Kind corpus -GenerationId $ExpectedHead)
+}
+
+# Reject relative archives or file/ancestor reparse links BEFORE hashing.
+# Verify both lexical full and provider-resolved paths against protected roots.
+function Get-HiveTrustedBackupPath {
+    [CmdletBinding()]
+    param([Parameter(Mandatory=$true)][string]$BackupPath,
+        [Parameter(Mandatory=$true)][string]$RepoRoot)
+    if([string]::IsNullOrWhiteSpace($BackupPath) -or
+        -not [System.IO.Path]::IsPathRooted($BackupPath) -or
+        ($BackupPath.Length -ge 2 -and $BackupPath[1] -eq ':' -and
+           ($BackupPath.Length -lt 3 -or ($BackupPath[2] -ne '\' -and $BackupPath[2] -ne '/')))) {
+        throw 'WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE'
+    }
+    try {
+        $lexical=[System.IO.Path]::GetFullPath($BackupPath)
+        $resolved=(Resolve-Path -LiteralPath $lexical -ErrorAction Stop).ProviderPath
+        $canonical=[System.IO.Path]::GetFullPath($resolved)
+        foreach($candidate in @($lexical,$canonical)) {
+            $file=Get-Item -LiteralPath $candidate -Force -ErrorAction Stop
+            if($file.PSIsContainer) { throw 'WINDOW_BACKUP_FILE_UNAVAILABLE' }
+            if(($file.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+                throw 'WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE'
+            }
+            $parent=$file.Directory
+            while($null -ne $parent) {
+                if(($parent.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+                    throw 'WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE'
+                }
+                $parent=$parent.Parent
+            }
+        }
+    } catch {
+        if($_.Exception.Message -in @('WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE',
+                                      'WINDOW_BACKUP_FILE_UNAVAILABLE')) { throw }
+        throw 'WINDOW_BACKUP_FILE_UNAVAILABLE'
+    }
+    $repoNorm=[System.IO.Path]::GetFullPath($RepoRoot).Replace('\','/').TrimEnd('/').ToLowerInvariant()
+    $backupNorm=$canonical.Replace('\','/').TrimEnd('/').ToLowerInvariant()
+    if($backupNorm -eq $repoNorm -or $backupNorm.StartsWith($repoNorm+'/') -or
+       $backupNorm -eq 'd:/hive' -or $backupNorm.StartsWith('d:/hive/')) {
+        throw 'WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE'
+    }
+    return $canonical
+}
+
+
+# The machine-known lexical root is insufficient if a directory in its ancestry
+# is a junction or symlink to public Git, global HIVE, or a restorable snapshot.
+# This predicate is pure; call BEFORE creating the leaf and AGAIN after creation.
+function Assert-HiveTrustedMutationJournalRoot {
+    [CmdletBinding()]
+    param([Parameter(Mandatory=$true)][string]$JournalRoot,
+        [Parameter(Mandatory=$true)][string]$MachineRoot,
+        [Parameter(Mandatory=$true)][string]$RepoRoot)
+    try {
+        $machine=[System.IO.Path]::GetFullPath($MachineRoot)
+        $expected=[System.IO.Path]::GetFullPath((Join-Path $machine 'Fairview\R8-Attempts'))
+        $candidate=[System.IO.Path]::GetFullPath($JournalRoot)
+        $repo=[System.IO.Path]::GetFullPath($RepoRoot)
+        if($candidate -ine $expected -or -not (Test-Path -LiteralPath $machine -PathType Container)) {
+            throw 'MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE'
+        }
+        $repoNorm=$repo.Replace('\','/').TrimEnd('/').ToLowerInvariant()
+        $walk=$candidate
+        while(-not [string]::IsNullOrWhiteSpace($walk)) {
+            $item=Get-Item -LiteralPath $walk -Force -ErrorAction SilentlyContinue
+            if($null -ne $item) {
+                if(($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+                    throw 'MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE'
+                }
+                if(-not $item.PSIsContainer) { throw 'MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE' }
+            }
+            $parent=[System.IO.Path]::GetDirectoryName($walk)
+            if([string]::IsNullOrWhiteSpace($parent) -or $parent -ieq $walk) { break }
+            $walk=$parent
+        }
+        $canonical=$candidate
+        if(Test-Path -LiteralPath $candidate -PathType Container) {
+            $canonical=[System.IO.Path]::GetFullPath(
+                (Resolve-Path -LiteralPath $candidate -ErrorAction Stop).ProviderPath)
+        }
+        foreach($path in @($candidate,$canonical)) {
+            $norm=$path.Replace('\','/').TrimEnd('/').ToLowerInvariant()
+            if($norm -eq $repoNorm -or $norm.StartsWith($repoNorm+'/') -or
+                $norm -eq 'd:/hive' -or $norm.StartsWith('d:/hive/')) {
+                throw 'MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE'
+            }
+        }
+    } catch {
+        throw 'MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE'
+    }
+    return $candidate
 }

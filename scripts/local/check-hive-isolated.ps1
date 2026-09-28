@@ -7,6 +7,8 @@ param(
     [ValidateSet('Inspect','Verify')][string]$Mode='Inspect',
     [string]$ComposeProject='hive-fairview-dev',
     [switch]$RequireSemantic,
+    [switch]$AllowHeadAdvanceIndex,
+    [switch]$WindowOnly,
     [string]$ExclusiveWindowReceipt,
     [ValidateRange(120,360)][int]$ObserveSeconds=120
 )
@@ -49,7 +51,7 @@ function Container([string]$Service) {
 }
 function Get-HiveDatabaseWriteStats([string]$PostgresContainerId) {
     # Read-only SQL via container-local Unix socket. No credentials or env values printed.
-    $sql="SELECT row_to_json(s) FROM (SELECT d.datname, d.tup_inserted::text AS tup_inserted, d.tup_updated::text AS tup_updated, d.tup_deleted::text AS tup_deleted, COALESCE(d.stats_reset::text,'never') AS stats_reset, (SELECT count(*) FROM pg_stat_activity a WHERE a.datname=current_database() AND a.pid<>pg_backend_pid() AND a.state='active') AS other_active FROM pg_stat_database d WHERE d.datname=current_database()) s;"
+    $sql="SELECT row_to_json(s) FROM (SELECT d.datname, pg_current_wal_lsn()::text AS wal_lsn, d.tup_inserted::text AS tup_inserted, d.tup_updated::text AS tup_updated, d.tup_deleted::text AS tup_deleted, COALESCE(d.stats_reset::text,'never') AS stats_reset, (SELECT count(*) FROM pg_stat_activity a WHERE a.datname=current_database() AND a.pid<>pg_backend_pid() AND a.state='active') AS other_active FROM pg_stat_database d WHERE d.datname=current_database()) s;"
     $command='exec psql -X -qAt -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "'+$sql+'"'
     $raw=Native 'docker' @('exec',$PostgresContainerId,'sh','-c',$command)
     if([string]::IsNullOrWhiteSpace($raw)) { throw 'WINDOW_DB_STATS_UNAVAILABLE' }
@@ -65,6 +67,7 @@ function ContainerMounts([string]$Id) {
 }
 try {
     if($ComposeProject -ne 'hive-fairview-dev') {throw 'UNAUTHORIZED_COMPOSE_PROJECT'}
+    if($WindowOnly.IsPresent -and $Mode -ne 'Verify') {throw 'WINDOW_ONLY_REQUIRES_VERIFY'}
     if($ApiBaseUrl.Scheme -ne 'http' -or $ApiBaseUrl.Host -notin @('localhost','127.0.0.1','::1')) {throw 'API_MUST_BE_LOOPBACK'}
     $source=(Resolve-Path -LiteralPath $HiveCheckout -ErrorAction Stop).Path
     $data=(Resolve-Path -LiteralPath $IsolatedDataRoot -ErrorAction Stop).Path
@@ -110,15 +113,16 @@ try {
         try { $receipt=Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json -ErrorAction Stop }
         catch { throw 'WINDOW_RECEIPT_INVALID' }
         Assert-HiveWindowReceipt -Receipt $receipt -ApiContainerId $api -PostgresContainerId $pg -CanonicalDataRoot $canonicalData -Now ([datetimeoffset]::UtcNow)
-        if((HostPath ([string]$receipt.backup_file)).StartsWith((HostPath $RepoRoot)+'/') -or
-            (HostPath ([string]$receipt.backup_file)) -eq 'd:/hive' -or
-            (HostPath ([string]$receipt.backup_file)).StartsWith('d:/hive/')) {
-            throw 'WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE'
+        if($AllowHeadAdvanceIndex.IsPresent) {
+            $target=Native 'git' @('-C',$RepoRoot,'rev-parse','HEAD')
+            $authorizedPriorHead=Assert-HiveHeadAdvanceReceipt -Receipt $receipt -ExpectedHead $target
         }
-        if(-not (Test-Path -LiteralPath ([string]$receipt.backup_file) -PathType Leaf)) {
+        # Validate actual absolute archive path and reject reparse links before hashing.
+        $trustedBackup=Get-HiveTrustedBackupPath -BackupPath ([string]$receipt.backup_file) -RepoRoot $RepoRoot
+        if(-not (Test-Path -LiteralPath $trustedBackup -PathType Leaf)) {
             throw 'WINDOW_BACKUP_FILE_UNAVAILABLE'
         }
-        $actualBackupHash=(Get-FileHash -LiteralPath ([string]$receipt.backup_file) -Algorithm SHA256).Hash
+        $actualBackupHash=(Get-FileHash -LiteralPath $trustedBackup -Algorithm SHA256).Hash
         if($actualBackupHash -ine [string]$receipt.backup_sha256) {
             throw 'WINDOW_BACKUP_DIGEST_MISMATCH'
         }
@@ -143,12 +147,20 @@ try {
         $after=Get-HiveDatabaseWriteStats $pg
         Assert-HiveDatabaseQuiet -Before $before -After $after
         Write-Host '[PASS] Observed 120s+ no database tuple writes; operator exclusivity must remain valid through smoke.'
+        if($WindowOnly.IsPresent) {
+            Write-Host '[PASS] live window guarded without index/corpus mutation or nested smoke.'
+            exit 0
+        }
         $smokeArguments=@('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',
             (Join-Path $RepoRoot 'scripts\local\invoke-hive-smoke.ps1'),
             '-SmokeScriptPath',(Join-Path $RepoRoot 'scripts\local\check-hive.ps1'),
             '-BaseUrl',$ApiBaseUrl.AbsoluteUri.TrimEnd('/'),
-            '-ProjectRelativePath','Fairview')
+            '-ProjectRelativePath','Fairview',
+            '-HiveCheckout',$source,
+            '-IsolatedDataRoot',$data,
+            '-ExclusiveWindowReceipt',$receiptPath)
         if($RequireSemantic.IsPresent) { $smokeArguments+= '-RequireSemantic' }
+        if($AllowHeadAdvanceIndex.IsPresent) { $smokeArguments+= @('-AllowHeadAdvanceIndex','-AuthorizedPriorIndexHead',$authorizedPriorHead,'-AuthorizedTargetHead',$target) }
         $oldPreference=$ErrorActionPreference
         try {
             $ErrorActionPreference='Continue'

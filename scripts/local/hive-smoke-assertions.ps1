@@ -77,3 +77,111 @@ function Assert-HiveCorpusFresh {
         $Corpus.status -ne 'COMPLETED' -or
         [string]$Corpus.repository_index_run_id -cne $IndexRunId) { throw 'CORPUS_INDEX_GENERATION_STALE' }
 }
+
+
+# R8 follow-up: choose a pure, fail-closed read-only corpus action. No hidden index retries.
+function Get-HiveIndexAction {
+    [CmdletBinding()]
+    param([AllowNull()][object]$Index,
+        [Parameter(Mandatory=$true)][string]$ProjectId,
+        [Parameter(Mandatory=$true)][string]$ExpectedHead,
+        [bool]$AllowAdvance=$false,
+        [string]$AuthorizedPriorHead)
+    if($ExpectedHead -cnotmatch '^[0-9a-f]{40}$' -or
+        $null -eq $Index -or [string]$Index.project_id -ne $ProjectId -or
+        [string]::IsNullOrWhiteSpace([string]$Index.run_id) -or
+        $Index.status -ne 'COMPLETED') {
+        throw 'INDEX_NOT_VERIFIED_NO_REINDEX_AUTHORIZED'
+    }
+    if([string]$Index.repository_head_sha -ceq $ExpectedHead) { return 'REUSE' }
+    if(-not $AllowAdvance -or [string]$AuthorizedPriorHead -cnotmatch '^[0-9a-f]{40}$' -or
+        [string]$Index.repository_head_sha -cne $AuthorizedPriorHead -or
+        $AuthorizedPriorHead -ceq $ExpectedHead) {
+        throw 'INDEX_HEAD_STALE_NO_INCREMENT_AUTHORIZED'
+    }
+    # Caller MUST separately prove read-only Git ancestry before ONE POST.
+    return 'ADVANCE_ONCE'
+}
+
+function Get-HiveCorpusAction {
+    [CmdletBinding()]
+    param([AllowNull()][object]$Status,
+        [Parameter(Mandatory=$true)][string]$ProjectId,
+        [Parameter(Mandatory=$true)][string]$IndexRunId,
+        [string]$PriorIndexRunId,
+        [string]$AuthorizedPriorRunId)
+    if($null -eq $Status -or [string]$Status.project_id -ne $ProjectId -or
+        [string]::IsNullOrWhiteSpace($IndexRunId)) {
+        throw 'CORPUS_STATUS_PROJECT_OR_INDEX_MISMATCH'
+    }
+    $latest=$Status.latest_run
+    if($Status.state -eq 'CURRENT' -and $null -ne $latest -and
+        $latest.status -eq 'COMPLETED' -and
+        [string]$latest.project_id -eq $ProjectId -and
+        [string]$latest.repository_index_run_id -eq $IndexRunId -and
+        [int]$Status.chunk_count -gt 0 -and
+        [int]$Status.repository_reference_count -gt 0 -and
+        [int]$latest.chunk_count -gt 0 -and
+        [int]$latest.repository_reference_count -gt 0) {
+        return 'REUSE'
+    }
+    if($Status.state -eq 'BLOCKED' -and
+        $null -eq $Status.last_successful_sync -and
+        $null -ne $Status.chunk_count -and $null -ne $Status.repository_reference_count -and
+        [int]$Status.chunk_count -eq 0 -and [int]$Status.repository_reference_count -eq 0) {
+        if($null -eq $latest) { return 'SYNC_ONCE' }
+        if($latest.status -eq 'BLOCKED' -and
+            [string]$latest.project_id -eq $ProjectId -and
+            $null -ne $latest.PSObject.Properties['run_id'] -and
+            [string]$latest.run_id -cmatch '^[0-9a-fA-F-]{36}$' -and
+            [string]$latest.run_id -ceq $AuthorizedPriorRunId -and
+            ([string]$latest.repository_index_run_id -eq $IndexRunId -or
+             (-not [string]::IsNullOrWhiteSpace($PriorIndexRunId) -and
+              [string]$latest.repository_index_run_id -eq $PriorIndexRunId)) -and
+            $latest.error -eq 'repository_index_stale' -and
+            $null -ne $latest.chunk_count -and $null -ne $latest.repository_reference_count -and
+            [int]$latest.chunk_count -eq 0 -and
+            [int]$latest.repository_reference_count -eq 0) { return 'SYNC_ONCE' }
+    }
+    throw 'CORPUS_UNSAFE_TO_RETRY_OR_REUSE'
+}
+
+
+function Get-HiveSemanticAction {
+    [CmdletBinding()]
+    param([AllowNull()][object]$Status,
+        [Parameter(Mandatory=$true)][string]$ProjectId,
+        [Parameter(Mandatory=$true)][string]$CorpusRunId)
+    if($null -eq $Status -or [string]$Status.project_id -ne $ProjectId -or
+       [string]::IsNullOrWhiteSpace($CorpusRunId) -or
+       $Status.enabled -ne $true -or $Status.configured -ne $true) {
+        throw 'SEMANTIC_STATUS_OR_PROVIDER_NOT_VERIFIED'
+    }
+    if([string]$Status.current_corpus_run_id -ne $CorpusRunId) {
+        throw 'SEMANTIC_CORPUS_GENERATION_NOT_VERIFIED'
+    }
+    $latest=$Status.latest_run
+    if($Status.state -eq 'CURRENT' -and $null -ne $latest -and
+        $latest.status -eq 'COMPLETED' -and
+        [string]$latest.project_id -eq $ProjectId -and
+        [string]$latest.corpus_run_id -eq $CorpusRunId -and
+        $null -ne $Status.embedded_chunk_count -and $null -ne $Status.missing_chunk_count -and
+        [int]$Status.embedded_chunk_count -gt 0 -and [int]$Status.missing_chunk_count -eq 0) {
+        return 'REUSE'
+    }
+    if($Status.state -eq 'SYNCING' -or ($null -ne $latest -and $latest.status -eq 'RUNNING')) {
+        throw 'SEMANTIC_CONCURRENT_SYNC_FORBIDDEN'
+    }
+    if($null -ne $latest) {
+        if([string]$latest.project_id -ne $ProjectId) { throw 'SEMANTIC_PRIOR_PROJECT_MISMATCH' }
+        if($latest.status -ne 'COMPLETED' -or
+            [string]$latest.corpus_run_id -eq $CorpusRunId) {
+            throw 'SEMANTIC_PRIOR_ATTEMPT_NOT_RETRYABLE'
+        }
+    } elseif(-not [string]::IsNullOrWhiteSpace([string]$Status.last_error)) {
+        throw 'SEMANTIC_PRIOR_ATTEMPT_NOT_VERIFIABLE'
+    }
+    if($Status.state -ne 'STALE' -or $null -eq $Status.total_current_chunks -or
+        [int]$Status.total_current_chunks -lt 1) { throw 'SEMANTIC_UNSAFE_TO_SYNC' }
+    return 'SYNC_ONCE'
+}

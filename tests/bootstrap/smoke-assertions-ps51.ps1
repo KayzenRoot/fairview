@@ -68,3 +68,78 @@ Expect-HiveFailure { Assert-HiveIndexFresh -Index $freshIndex -ProjectId $other 
 Expect-HiveFailure { Assert-HiveCorpusFresh -Corpus $freshCorpus -ProjectId $other -IndexRunId $run } 'CORPUS_PROJECT_MISMATCH'
 Expect-HiveFailure { Assert-HiveCorpusFresh -Corpus $freshCorpus -ProjectId $project -IndexRunId $other } 'CORPUS_INDEX_GENERATION_STALE'
 Write-Output '[PASS] PS51_HIVE_PROJECT_INDEX_CORPUS_HEAD_LINEAGE'
+
+
+# Real Windows PS5.1 anti-retry fixture for exact-HEAD index and corpus decisions.
+$goodCorpus=[pscustomobject]@{
+    run_id='00000000-0000-0000-0000-000000000008'
+    project_id=$project;repository_index_run_id=$run;status='COMPLETED'
+    chunk_count=11;repository_reference_count=12
+}
+$current=[pscustomobject]@{
+    project_id=$project;state='CURRENT';latest_run=$goodCorpus
+    chunk_count=11;repository_reference_count=12;last_successful_sync='2026-09-28'
+}
+if((Get-HiveCorpusAction -Status $current -ProjectId $project -IndexRunId $run) -ne 'REUSE') {
+    throw 'EXPECTED_CURRENT_CORPUS_REUSE'
+}
+$oldBlocked=[pscustomobject]@{
+    run_id='00000000-0000-0000-0000-000000000009'
+    project_id=$project;repository_index_run_id=$run;status='BLOCKED'
+    chunk_count=0;repository_reference_count=0;error='repository_index_stale'
+}
+$blocked=[pscustomobject]@{
+    project_id=$project;state='BLOCKED';latest_run=$oldBlocked
+    chunk_count=0;repository_reference_count=0;last_successful_sync=$null
+}
+if((Get-HiveCorpusAction -Status $blocked -ProjectId $project -IndexRunId $run -AuthorizedPriorRunId $oldBlocked.run_id) -ne 'SYNC_ONCE') {
+    throw 'EXPECTED_ONLY_ONE_GITLINK_CORRECTION'
+}
+$empty=[pscustomobject]@{project_id=$project;state='BLOCKED';latest_run=$null;chunk_count=0;repository_reference_count=0;last_successful_sync=$null}
+if((Get-HiveCorpusAction -Status $empty -ProjectId $project -IndexRunId $run) -ne 'SYNC_ONCE') {
+    throw 'EXPECTED_INITIAL_CORPUS_SYNC'
+}
+Expect-HiveFailure { Get-HiveCorpusAction -Status $current -ProjectId $project -IndexRunId $other } 'CORPUS_UNSAFE_TO_RETRY_OR_REUSE'
+Expect-HiveFailure { Get-HiveCorpusAction -Status $blocked -ProjectId $project -IndexRunId $other } 'CORPUS_UNSAFE_TO_RETRY_OR_REUSE'
+$otherError=[pscustomobject]@{project_id=$project;repository_index_run_id=$run;status='BLOCKED';chunk_count=0;repository_reference_count=0;error='database_error'}
+$unsafe=[pscustomobject]@{project_id=$project;state='BLOCKED';latest_run=$otherError;chunk_count=0;repository_reference_count=0;last_successful_sync=$null}
+Expect-HiveFailure { Get-HiveCorpusAction -Status $unsafe -ProjectId $project -IndexRunId $run } 'CORPUS_UNSAFE_TO_RETRY_OR_REUSE'
+$active=[pscustomobject]@{project_id=$project;state='SYNCING';latest_run=$oldBlocked;chunk_count=0;repository_reference_count=0;last_successful_sync=$null}
+Expect-HiveFailure { Get-HiveCorpusAction -Status $active -ProjectId $project -IndexRunId $run } 'CORPUS_UNSAFE_TO_RETRY_OR_REUSE'
+$wrong=[pscustomobject]@{project_id=$other;state='CURRENT';latest_run=$goodCorpus;chunk_count=11;repository_reference_count=12}
+Expect-HiveFailure { Get-HiveCorpusAction -Status $wrong -ProjectId $project -IndexRunId $run } 'CORPUS_STATUS_PROJECT_OR_INDEX_MISMATCH'
+Write-Output '[PASS] PS51_EXISTING_INDEX_AND_CORPUS_REUSE_NO_BLIND_RETRY'
+
+
+# Main advanced after the local index: explicit owner-authorized one-shot path.
+$oldHead='e'*40
+$priorIndex=[pscustomobject]@{project_id=$project;run_id=$run;repository_head_sha=$oldHead;status='COMPLETED'}
+if((Get-HiveIndexAction -Index $freshIndex -ProjectId $project -ExpectedHead $head) -ne 'REUSE') {
+    throw 'EXPECTED_REUSE_OF_CURRENT_INDEX'
+}
+Expect-HiveFailure { Get-HiveIndexAction -Index $priorIndex -ProjectId $project -ExpectedHead $head } 'INDEX_HEAD_STALE_NO_INCREMENT_AUTHORIZED'
+Expect-HiveFailure { Get-HiveIndexAction -Index $priorIndex -ProjectId $project -ExpectedHead $head -AllowAdvance $true -AuthorizedPriorHead $stale } 'INDEX_HEAD_STALE_NO_INCREMENT_AUTHORIZED'
+if((Get-HiveIndexAction -Index $priorIndex -ProjectId $project -ExpectedHead $head -AllowAdvance $true -AuthorizedPriorHead $oldHead) -ne 'ADVANCE_ONCE') {
+    throw 'EXPECTED_ONE_OWNER_AUTHORIZED_INDEX_ADVANCE'
+}
+$failedIndex=[pscustomobject]@{project_id=$project;run_id=$run;repository_head_sha=$oldHead;status='FAILED'}
+Expect-HiveFailure { Get-HiveIndexAction -Index $failedIndex -ProjectId $project -ExpectedHead $head -AllowAdvance $true -AuthorizedPriorHead $oldHead } 'INDEX_NOT_VERIFIED_NO_REINDEX_AUTHORIZED'
+if((Get-HiveCorpusAction -Status $blocked -ProjectId $project -IndexRunId $other -PriorIndexRunId $run -AuthorizedPriorRunId $oldBlocked.run_id) -ne 'SYNC_ONCE') {
+    throw 'EXPECTED_ONE_CORPUS_CORRECTION_AFTER_PROVEN_INDEX_ADVANCE'
+}
+Write-Output '[PASS] PS51_EXPLICIT_ONE_SHOT_VERIFIED_MAIN_INDEX_ADVANCE'
+
+# A repeated zero-content BLOCKED run cannot match the original authorized run ID.
+Expect-HiveFailure { Get-HiveCorpusAction -Status $blocked -ProjectId $project -IndexRunId $run } 'CORPUS_UNSAFE_TO_RETRY_OR_REUSE'
+$secondBlocked=[pscustomobject]@{run_id='00000000-0000-0000-0000-000000000010';project_id=$project;repository_index_run_id=$run;status='BLOCKED';chunk_count=0;repository_reference_count=0;error='repository_index_stale'}
+$secondStatus=[pscustomobject]@{project_id=$project;state='BLOCKED';latest_run=$secondBlocked;chunk_count=0;repository_reference_count=0;last_successful_sync=$null}
+Expect-HiveFailure { Get-HiveCorpusAction -Status $secondStatus -ProjectId $project -IndexRunId $run -AuthorizedPriorRunId $oldBlocked.run_id } 'CORPUS_UNSAFE_TO_RETRY_OR_REUSE'
+# Confirm actual upstream semantic_status semantics: CURRENT lexical corpus ID remains visible even before first embedding sync.
+$first=[pscustomobject]@{project_id=$project;enabled=$true;configured=$true;current_corpus_run_id=$run;latest_run=$null;state='STALE';total_current_chunks=6;embedded_chunk_count=0;missing_chunk_count=6;last_error=$null}
+if((Get-HiveSemanticAction -Status $first -ProjectId $project -CorpusRunId $run) -ne 'SYNC_ONCE'){throw 'FIRST_SEMANTIC_SYNC_MUST_BE_ELIGIBLE'}
+$previousSemantic=[pscustomobject]@{project_id=$project;status='COMPLETED';corpus_run_id=$run}
+$newCorpusSemantic=[pscustomobject]@{project_id=$project;enabled=$true;configured=$true;current_corpus_run_id=$other;latest_run=$previousSemantic;state='STALE';total_current_chunks=6;embedded_chunk_count=0;missing_chunk_count=6;last_error=$null}
+if((Get-HiveSemanticAction -Status $newCorpusSemantic -ProjectId $project -CorpusRunId $other) -ne 'SYNC_ONCE'){throw 'NEW_CORPUS_SEMANTIC_SYNC_MUST_BE_ELIGIBLE'}
+$unknownGeneration=[pscustomobject]@{project_id=$project;enabled=$true;configured=$true;current_corpus_run_id=$null;latest_run=$null;state='STALE';total_current_chunks=6}
+Expect-HiveFailure { Get-HiveSemanticAction -Status $unknownGeneration -ProjectId $project -CorpusRunId $run } 'SEMANTIC_CORPUS_GENERATION_NOT_VERIFIED'
+Write-Output '[PASS] PS51_ONE_SHOT_CORPUS_AND_FIRST_NEW_SEMANTIC_SYNC'

@@ -46,4 +46,41 @@ test("Verify rejects writes before smoke unless discovery is off and exclusive w
  assert(fixture.includes("PS51_ISOLATED_WRITER_WINDOW_FAIL_CLOSED"));
 });
 
-test("even an in-place Docker restart and backup archive under public Git are rejected",()=>{assert(code.includes("WINDOW_CONTAINER_RESTARTED"));assert(code.includes("WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE"));assert(code.includes("{{.State.StartedAt}}"));});
+test("even an in-place Docker restart and backup archive under public Git are rejected",()=>{
+ const pure=fs.readFileSync(new URL("../../scripts/local/hive-window-assertions.ps1",import.meta.url),"utf8");
+ assert(code.includes("WINDOW_CONTAINER_RESTARTED"));
+ assert(code.includes("Get-HiveTrustedBackupPath -BackupPath"));
+ assert(pure.includes("WINDOW_BACKUP_MUST_STAY_OFF_GIT_AND_GLOBAL_HIVE"));
+ assert(code.includes("{{.State.StartedAt}}"));
+});
+
+test("index main advancement needs exact prior SHA and off-Git explicit operator approval",()=>{
+ const runner=fs.readFileSync(new URL("../../scripts/local/invoke-hive-smoke.ps1",import.meta.url),"utf8");
+ for(const source of [code,runner]) {
+  assert(source.includes("AllowHeadAdvanceIndex"));
+  assert(source.includes("prior_index_head")||source.includes("AuthorizedPriorIndexHead"));
+  assert(source.includes("if($AllowHeadAdvanceIndex.IsPresent)"));
+ }
+ assert(fs.readFileSync(new URL("../../scripts/local/hive-window-assertions.ps1",import.meta.url),"utf8").includes("operator_authorized_one_head_advance_index"));
+ assert(fs.readFileSync(new URL("../../scripts/local/hive-window-assertions.ps1",import.meta.url),"utf8").includes("target_fairview_head"));
+ assert(code.includes("Assert-HiveHeadAdvanceReceipt"));
+ assert(fs.readFileSync(new URL("../../scripts/local/hive-window-assertions.ps1",import.meta.url),"utf8").includes("WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED"));
+});
+
+test("window-only direct smoke preflight never invokes a second smoke",()=>{
+ assert(code.includes("WINDOW_ONLY_REQUIRES_VERIFY"));
+ assert(code.includes("if($WindowOnly.IsPresent)"));
+ assert(code.indexOf("if($WindowOnly.IsPresent)")<code.indexOf("$smokeArguments=@("));
+ const runner=fs.readFileSync(new URL("../../scripts/local/invoke-hive-smoke.ps1",import.meta.url),"utf8");
+ for(const marker of ["'-HiveCheckout'","'-IsolatedDataRoot'","'-ExclusiveWindowReceipt'"]){
+   assert(runner.includes(marker)||code.includes(marker),marker);
+ }
+});
+
+test("R8 rejects stale receipt time and WAL drift, and hashes a trusted archive path",()=>{
+ const pure=fs.readFileSync(new URL("../../scripts/local/hive-window-assertions.ps1",import.meta.url),"utf8");
+ const fixture=fs.readFileSync(new URL("../../tests/bootstrap/hive-window-assertions-ps51.ps1",import.meta.url),"utf8");
+ for(const marker of ["pg_current_wal_lsn()","Get-HiveTrustedBackupPath -BackupPath","$trustedBackup","Get-FileHash -LiteralPath $trustedBackup"])assert(code.includes(marker),marker);
+ for(const marker of ["WINDOW_DB_WAL_WRITES_OBSERVED","WINDOW_RECEIPT_TIMESTAMP_INVALID","ReparsePoint","IsPathRooted","GetFullPath"])assert(pure.includes(marker),marker);
+ assert(fixture.includes("PS51_R8_WAL_BACKUP_UTC_GATES"));
+});
