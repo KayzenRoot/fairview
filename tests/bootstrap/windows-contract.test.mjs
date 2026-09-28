@@ -23,7 +23,8 @@ test("R8 reuses existing exact-HEAD index and only corrects known empty gitlink-
     const corpusStatus=smoke.indexOf('Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects/$id/retrieval/corpus"');
     const corpusPost=smoke.indexOf('Post "/api/v1/projects/$id/retrieval/corpus/sync"');
     assert(preflight>=0&&indexGet>preflight&&corpusStatus>indexGet&&corpusPost>corpusStatus);
-    assert(!smoke.includes('Post "/api/v1/projects/$id/index"'));
+    assert.equal((smoke.match(/Post "\/api\/v1\/projects\/\$id\/index"/g)||[]).length,1);
+    assert(smoke.includes("if($indexAction -eq 'ADVANCE_ONCE')"));
     assert(smoke.includes("Get-HiveCorpusAction -Status $status"));
     for(const s of ["CORPUS_UNSAFE_TO_RETRY_OR_REUSE","repository_index_stale","SYNC_ONCE","REUSE"])assert(assertions.includes(s));
     const fixture=fs.readFileSync(new URL("../../tests/bootstrap/smoke-assertions-ps51.ps1",import.meta.url),"utf8");
