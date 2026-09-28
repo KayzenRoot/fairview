@@ -215,3 +215,45 @@ test("Round 5 Forex ADRs remain proposals and any future strategy source needs a
   assert(srcImpact.planned.includes("integration"));
   assert.deepEqual(srcImpact.unknown,[]);
 });
+
+
+test("Round 6 CEX spot adapter and strategy design protects 20 adverse scenarios",()=>{
+  const design=fs.readFileSync(new URL("../../docs/architecture/CEX-CONNECTORS-STRATEGIES-R6.md",import.meta.url),"utf8");
+  for(const field of ["CexConnectorEvidenceV0","CexSpotInstrumentV0","CexOrderBookIntegrityV0","CexPortfolioReservationV0","CexOpportunityV0","TriangularRouteV0","CrossExchangeHedgePlanV0","BINANCE_SPOT_RESEARCH","KRAKEN_SPOT_RESEARCH","CROSS_EXCHANGE_TAKER","TRIANGULAR_SPOT","XEMM_MAKER_TAKER","UNKNOWN_NEEDS_RECONCILIATION"]){
+    assert(design.includes(field),"R6_MISSING_TYPED_CONTRACT_OR_PROFILE "+field);
+  }
+  for(const scenario of ["BINANCE_SNAPSHOT_GAP","KRAKEN_CRC_MISMATCH","KRAKEN_MULTI_LEVEL_UPDATE","SPOT_FUTURES_MIXUP","SYMBOL_ALIAS_COLLISION","UNLICENSED_FEED_EXPORT","CROSS_HOST_TIME_UNCERTAIN","STALE_BOOK_SIGNAL","MISSING_FEE_TIER","DEPTH_SHORTFALL","LOT_DUST_MIN_NOTIONAL","WRONG_TRADE_DIRECTION","VENUE_BALANCE_SHORTFALL","PARTIAL_LEG_UNKNOWN_HEDGE","MAKER_CANCEL_FILL_RACE","HEDGE_REJECTED","API_RATE_LIMIT","PRIVATE_STREAM_GAP","KILL_SWITCH_NETWORK_SPLIT","MODEL_OR_DATA_LOOKAHEAD"]){
+    const row=design.split(/\r?\n/).find(line=>line.startsWith("| "+scenario+" | "));
+    assert(row&&row.split("|").length>=4,"R6_MISSING_DESIGN_NEGATIVE_FIXTURE "+scenario);
+  }
+  for(const id of ["cex","strategy-cex"]){
+    assert.equal(r.modules.find(m=>m.id===id)?.state,"planned","R6_PREMATURE_ACTIVATION "+id);
+    const charter=fs.readFileSync(new URL("../../docs/architecture/modules/"+id+".md",import.meta.url),"utf8");
+    assert(charter.includes("PLANNED, NOT IMPLEMENTED"));
+    assert(charter.includes("STOP"));
+  }
+  assert.equal(r.modules.length,20);
+  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap"]);
+});
+test("Round 6 ADRs are proposals, and future CEX source remains blocked by planned harness",()=>{
+  const names=["FV-ADR-011-PROPOSED-CEX-ORDERBOOK-CONTRACT.md","FV-ADR-012-PROPOSED-CEX-ARBITRAGE-ROUTES.md"];
+  for(const name of names){
+    const adr=fs.readFileSync(new URL("../../docs/architecture/adrs/"+name,import.meta.url),"utf8");
+    assert(adr.includes("PROPOSED_NOT_ADOPTED"),"R6_PREMATURE_ADR "+name);
+  }
+  for(const path of ["docs/architecture/CEX-CONNECTORS-STRATEGIES-R6.md",...names.map(x=>"docs/architecture/adrs/"+x)]){
+    const impact=calculateImpact(r,[path]);
+    assert.deepEqual(impact.active,["bootstrap"]);
+    assert.deepEqual(impact.planned,[]);
+    assert.deepEqual(impact.unknown,[]);
+  }
+  const adapter=calculateImpact(r,["src/cex/binance_spot.rs"]);
+  assert(adapter.planned.includes("cex"));
+  assert(adapter.planned.includes("strategy-cex"));
+  assert(adapter.planned.includes("integration"));
+  assert.deepEqual(adapter.unknown,[]);
+  const strategy=calculateImpact(r,["src/strategy-cex/triangular_spot.rs"]);
+  assert(strategy.planned.includes("strategy-cex"));
+  assert(strategy.planned.includes("integration"));
+  assert.deepEqual(strategy.unknown,[]);
+});
