@@ -346,3 +346,47 @@ test("Round 8 ADR proposals stay nonadopted and planned portfolio/telemetry sour
   assert(obsImpact.planned.includes("integration"));
   assert.deepEqual(obsImpact.unknown,[]);
 });
+
+
+test("Round 9 web and AI architecture documents bounded contracts and 24 adversarial cases",()=>{
+  const design=fs.readFileSync(new URL("../../docs/architecture/WEB-AI-CONTROL-PLANE-R9.md",import.meta.url),"utf8");
+  for(const field of ["OperatorSessionV0","OperatorReadModelV0","OperatorStreamEventV0","OperatorCommandRequestV0","OperatorCommandReceiptV0","AdvisoryRequestV0","EvidencePackV0","AdvisoryFindingV0","TuningProposalV0","AdvisoryAuditV0","UNRECONCILED","RESEARCH_ONLY","UNKNOWN_NEEDS_RECONCILIATION"]){
+    assert(design.includes(field),"R9_MISSING_CONTRACT_OR_SAFETY_STATE "+field);
+  }
+  for(const scenario of ["SESSION_EXPIRED_STREAM","CROSS_TENANT_IDOR","ROLE_SPOOFING","CSRF_MUTATION","CROSS_TENANT_CACHE","STREAM_SEQUENCE_GAP","RECONNECT_DUPLICATE_ACTION","CLIENT_FAKED_KILL_ACK","KILL_RESET_FROM_UI","STALE_PORTFOLIO_GREEN","SYNTHETIC_REAL_CONFLATION","UNLICENSED_TICK_EXPORT","METRIC_LABEL_LEAK","AI_MARKET_PROMPT_INJECTION","AI_FORGED_SYSTEM_MESSAGE","AI_TOOL_CALL_LAUNDERING","AI_CROSS_TENANT_RAG","AI_UNLICENSED_DATA_USE","AI_FABRICATED_FILL","AI_SELF_APPROVED_TUNING","MODEL_SERVICE_OUTAGE","TELEMETRY_OUTAGE","ALERT_ACK_NOT_RECONCILED","WEB_BROWSER_RESTART"]){
+    const row=design.split(/\r?\n/).find(line=>line.startsWith("| "+scenario+" | "));
+    assert(row&&row.split("|").length>=4,"R9_MISSING_ADVERSARIAL_DESIGN_FIXTURE "+scenario);
+  }
+  for(const id of ["web","ai"]){
+    assert.equal(r.modules.find(m=>m.id===id)?.state,"planned","R9_PREMATURE_ACTIVATION "+id);
+    const charter=fs.readFileSync(new URL("../../docs/architecture/modules/"+id+".md",import.meta.url),"utf8");
+    assert(charter.includes("PLANNED, NOT IMPLEMENTED"));
+    assert(charter.includes("STOP"));
+  }
+  assert.equal(r.modules.length,20);
+  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap"]);
+  assert.deepEqual(r.modules.find(m=>m.id==="web")?.depends_on,["risk","portfolio","observability","ai"]);
+  assert.deepEqual(r.modules.find(m=>m.id==="ai")?.depends_on,["risk","research"]);
+});
+test("Round 9 web and AI ADRs remain proposals and future source dependencies need harness admission",()=>{
+  const names=["FV-ADR-017-PROPOSED-OPERATOR-WEB-BOUNDARY.md","FV-ADR-018-PROPOSED-BOUNDED-AI-ADVISORY.md"];
+  for(const name of names){
+    const adr=fs.readFileSync(new URL("../../docs/architecture/adrs/"+name,import.meta.url),"utf8");
+    assert(adr.includes("PROPOSED_NOT_ADOPTED"),"R9_PREMATURE_ADR "+name);
+  }
+  for(const path of ["docs/architecture/WEB-AI-CONTROL-PLANE-R9.md",...names.map(name=>"docs/architecture/adrs/"+name)]){
+    const impact=calculateImpact(r,[path]);
+    assert.deepEqual(impact.active,["bootstrap"]);
+    assert.deepEqual(impact.planned,[]);
+    assert.deepEqual(impact.unknown,[]);
+  }
+  const webImpact=calculateImpact(r,["src/web/operator_console.ts"]);
+  assert(webImpact.planned.includes("web"));
+  assert(webImpact.planned.includes("integration"));
+  assert.deepEqual(webImpact.unknown,[]);
+  const aiImpact=calculateImpact(r,["src/ai/bounded_advisory.rs"]);
+  assert(aiImpact.planned.includes("ai"));
+  assert(aiImpact.planned.includes("web"));
+  assert(aiImpact.planned.includes("integration"));
+  assert.deepEqual(aiImpact.unknown,[]);
+});
