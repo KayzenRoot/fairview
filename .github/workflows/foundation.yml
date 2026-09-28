@@ -147,6 +147,11 @@ jobs:
           if ($LASTEXITCODE -ne 0 -or ($off -join "`n") -notmatch 'SEMANTIC_ABSENT') { throw 'PS51_ABSENT_SWITCH_REGRESSION' }
           $on = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview -RequireSemantic
           if ($LASTEXITCODE -ne 0 -or ($on -join "`n") -notmatch 'SEMANTIC_PRESENT') { throw 'PS51_PRESENT_SWITCH_REGRESSION' }
+          $prior = 'a' * 40
+          $advance = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview -AllowHeadAdvanceIndex -AuthorizedPriorIndexHead $prior
+          if ($LASTEXITCODE -ne 0 -or ($advance -join "`n") -notmatch ('ADVANCE_PRESENT:'+$prior)) { throw 'PS51_HEAD_ADVANCE_SWITCH_REGRESSION' }
+          $noAdvance = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview
+          if ($LASTEXITCODE -ne 0 -or ($noAdvance -join "`n") -notmatch 'ADVANCE_ABSENT') { throw 'PS51_HEAD_ADVANCE_ABSENT_REGRESSION' }
           $oldPreference = $ErrorActionPreference
           try {
             $ErrorActionPreference = 'Continue'

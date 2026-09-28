@@ -31,3 +31,18 @@ test("R8 reuses existing exact-HEAD index and only corrects known empty gitlink-
     assert(smoke.includes("current semantic embeddings reused"));
     assert(smoke.includes("SEMANTIC_CONCURRENT_SYNC_FORBIDDEN"));
 });
+
+test("one-shot descendant advancement is witnessed, ancestral, and forwarded safely",()=>{
+ const doctor=fs.readFileSync(new URL("../../scripts/local/check-hive-isolated.ps1",import.meta.url),"utf8");
+ const runner=fs.readFileSync(new URL("../../scripts/local/invoke-hive-smoke.ps1",import.meta.url),"utf8");
+ for(const code of [smoke,doctor,runner])assert(code.includes("AllowHeadAdvanceIndex"));
+ assert(doctor.includes("operator_authorized_one_head_advance_index"));
+ assert(doctor.includes("target_fairview_head"));
+ assert(doctor.includes("WINDOW_HEAD_ADVANCE_NOT_OPERATOR_AUTHORIZED"));
+ assert(smoke.includes("merge-base --is-ancestor"));
+ assert(smoke.includes("Get-HiveIndexAction"));
+ assert(smoke.includes("PriorIndexRunId $priorIndexRunId"));
+ assert.equal((smoke.match(/Post "\/api\/v1\/projects\/\$id\/index"/g)||[]).length,1);
+ const ps51=fs.readFileSync(new URL("../../tests/bootstrap/smoke-assertions-ps51.ps1",import.meta.url),"utf8");
+ assert(ps51.includes("PS51_EXPLICIT_ONE_SHOT_VERIFIED_MAIN_INDEX_ADVANCE"));
+});
