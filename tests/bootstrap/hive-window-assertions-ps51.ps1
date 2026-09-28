@@ -79,3 +79,15 @@ ExpectBlocked { Assert-HiveCorpusCorrectionReceipt -Receipt $corpusPermit -Proje
 $untypedCorpus=[pscustomobject]@{operator_authorized_one_corpus_sync='True';authorized_fairview_project_id=$api;target_fairview_head=$newHead;prior_corpus_run_id=$blockedCorpus.run_id}
 ExpectBlocked { Assert-HiveCorpusCorrectionReceipt -Receipt $untypedCorpus -ProjectId $api -ExpectedHead $newHead -LatestRun $blockedCorpus } 'CORPUS_CORRECTION_NOT_OPERATOR_AUTHORIZED'
 Write-Output '[PASS] PS51_TYPED_CORPUS_CORRECTION_PRIOR_RUN_WITNESS'
+
+# StrictMode: genuine first corpus has no historical run field (absent, not just explicit null).
+$firstCorpusPermit=[pscustomobject]@{operator_authorized_one_corpus_sync=$true;authorized_fairview_project_id=$api;target_fairview_head=$newHead}
+$firstPrior=Assert-HiveCorpusCorrectionReceipt -Receipt $firstCorpusPermit -ProjectId $api -ExpectedHead $newHead -LatestRun $null
+if(-not [string]::IsNullOrEmpty([string]$firstPrior)){throw 'EXPECTED_MISSING_PRIOR_ID_AS_INITIAL_CORPUS'}
+$stableJournalRoot=Join-Path ([System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::LocalApplicationData)) 'Fairview\R8-Attempts'
+$realProject='00000000-0000-0000-0000-000000000001'
+$journalFromReceiptA=Get-HiveCorpusJournalPath -JournalRoot $stableJournalRoot -ProjectId $realProject -ExpectedHead $newHead
+$journalFromReceiptB=Get-HiveCorpusJournalPath -JournalRoot $stableJournalRoot -ProjectId $realProject -ExpectedHead $newHead
+if($journalFromReceiptA -cne $journalFromReceiptB){throw 'JOURNAL_ROOT_MUST_NOT_DEPEND_ON_RECEIPT_LOCATION'}
+ExpectBlocked { Get-HiveCorpusJournalPath -JournalRoot $stableJournalRoot -ProjectId $realProject -ExpectedHead 'bad' } 'CORPUS_JOURNAL_IDENTITY_INVALID'
+Write-Output '[PASS] PS51_INITIAL_CORPUS_OMITTED_PRIOR_AND_STABLE_PRIVATE_JOURNAL'
