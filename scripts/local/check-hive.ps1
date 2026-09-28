@@ -8,6 +8,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'hive-project-list.ps1')
+. (Join-Path $PSScriptRoot 'hive-smoke-assertions.ps1')
 function Post([string]$suffix,[object]$data=$null) {
     $parameters=@{Uri="$BaseUrl$suffix";Method='Post';TimeoutSec=90}
     if ($null -ne $data) { $parameters.ContentType='application/json';$parameters.Body=($data | ConvertTo-Json -Depth 6 -Compress) }
@@ -42,11 +43,13 @@ try {
     if ($index.status -ne 'COMPLETED') { throw "REPO_INDEX_$($index.status):$($index.error)" }
     $corpus=Post "/api/v1/projects/$id/retrieval/corpus/sync"
     if ($corpus.status -ne 'COMPLETED') { throw "CORPUS_SYNC_$($corpus.status):$($corpus.error)" }
+    if ([string]$corpus.project_id -ne [string]$id) { throw 'CORPUS_PROJECT_MISMATCH' }
+    if ([int]$corpus.chunk_count -lt 1 -or [int]$corpus.repository_reference_count -lt 1) { throw 'CORPUS_EMPTY_OR_NO_REPOSITORY_REFERENCES' }
     $query=@{query='Fairview';top_k=3}
     $lexical=Post "/api/v1/projects/$id/retrieval/lexical" $query
-    if (@($lexical.results).Count -lt 1) { throw 'LEXICAL_SEARCH_EMPTY' }
+    Assert-HiveResultSet -Response $lexical -ProjectId ([string]$id) -Kind LEXICAL
     $hybrid=Post "/api/v1/projects/$id/retrieval/hybrid" $query
-    if (@($hybrid.results).Count -lt 1) { throw 'HYBRID_SEARCH_EMPTY' }
+    Assert-HiveResultSet -Response $hybrid -ProjectId ([string]$id) -Kind HYBRID
     Write-Host "[PASS] HIVE health, registry READY, index, corpus, lexical and hybrid queries; project ID $id"
     $semantic=Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects/$id/retrieval/semantic" -Method Get -TimeoutSec 10
     if ($RequireSemantic) {
@@ -55,10 +58,17 @@ try {
         if ($sync.status -ne 'COMPLETED') { throw "SEMANTIC_SYNC_$($sync.status)" }
         $semantic=Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects/$id/retrieval/semantic" -Method Get -TimeoutSec 10
         if ($semantic.state -ne 'CURRENT') { throw "SEMANTIC_STATE_$($semantic.state)" }
+        if ([string]$semantic.current_corpus_run_id -ne [string]$corpus.run_id -or
+            [int]$semantic.embedded_chunk_count -lt 1 -or [int]$semantic.missing_chunk_count -ne 0) {
+            throw 'SEMANTIC_EMBEDDINGS_INCOMPLETE_OR_STALE'
+        }
         $result=Post "/api/v1/projects/$id/retrieval/semantic" $query
-        if (@($result.results).Count -lt 1) { throw 'SEMANTIC_SEARCH_EMPTY' }
-        $hybrid=Post "/api/v1/projects/$id/retrieval/hybrid" $query
-        if ($hybrid.semantic_state -ne 'CURRENT') { throw 'HYBRID_SEMANTIC_FALLBACK_ONLY' }
+        Assert-HiveResultSet -Response $result -ProjectId ([string]$id) -Kind SEMANTIC
+        # Strict mode forbids silent fallback, while contribution fields prove real fusion.
+        $strictQuery=@{query='Fairview';top_k=20;strict_semantic=$true}
+        $hybrid=Post "/api/v1/projects/$id/retrieval/hybrid" $strictQuery
+        Assert-HiveResultSet -Response $hybrid -ProjectId ([string]$id) -Kind HYBRID
+        Assert-HiveSemanticContribution -Response $hybrid
         Write-Host '[PASS] semantic CURRENT plus hybrid semantic contribution'
     } else {
         Write-Host "[INFO] semantic state=$($semantic.state); not asserted without -RequireSemantic"
