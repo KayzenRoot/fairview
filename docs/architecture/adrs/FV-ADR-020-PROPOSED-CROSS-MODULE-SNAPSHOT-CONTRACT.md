@@ -1,0 +1,25 @@
+# FV-ADR-020 | Immutable financial snapshot seams and early module-owned integration proof
+
+**Status: PROPOSED_NOT_ADOPTED.** This is a cross-module **planning interface** only; no source schema, network protocol, DB, ledger or trading runtime was created.
+
+## Proposed decision and the risk/portfolio graph tension
+The registered `risk` dependency list is `market-data`, `clock`, `policy`; the registered `portfolio` dependency list is `risk`, `ledger`. Prior R8 design also proposes `PortfolioRiskViewV0` as a source of reconciled account balance/exposure evidence consumed at the independent pretrade Risk boundary. A literal new `risk -> portfolio` registry dependency would create a cycle, so **do not add it** in R10.
+
+First future Risk WO can validate a **synthetic immutable input** implementing a versioned `RiskAccountEvidenceV0` read-only contract with `source_scope`, `source_mode`, `per_account_asset_balance`, `ledger_high_watermark`, external order/fill/position completeness watermark and expiry, maximum possible UNKNOWN remote fill and reserved exposure, exact asset/fee units and independent risk/kill epoch. An absent/expired/contradictory contract is `DENY`, never assumed zero. Later, once separately admitted Portfolio source exists, its evidence-linked `PortfolioRiskViewV0` can be **adapted** to that contract at a separately reviewed module-owned seam. Its standalone tests prove correctly authenticated, monotonic/clock-valid freshness and preserved worst-case possible fills. **Risk remains solely authoritative for admitting/denying order intents; Portfolio remains solely authoritative for its evidence-linked projection and cannot override Risk.**
+
+For execution: Strategy candidate -> independent policy and risk -> local durable Ledger `MAY_HAVE_SENT` -> venue-specific Execution send/receipt -> authenticated external order/fill/position reconciliation -> Portfolio immutable versioned projection. A DB commit cannot be atomic with an external broker. On ambiguous ACK/fill, freeze new risk-increasing intents and demand authoritative remote evidence; no blind retry. CEX/Forex inventory is venue/account/contract scoped, DEX receipts have exact chain/blockHash/finality, and no raw customer or licensed data enters public CI or HIVE.
+
+For Web/AI: Authenticated, tenant-scoped server-side redacted `OperatorReadModelV0` and finite no-tools `EvidencePackV0` are **downstream** of reconciled financial records. The browser and model may display/explain data and propose offline R4 tuning only; neither can submit broker/signing actions or change kill/risk/permissions. The Observability plane publishes pseudonymous low-cardinality metrics and incident pointer hashes only, not authoritative financial events. Its outage or alert ACK never reconciles a fill.
+
+## Integration-harness placement and activation
+With CURRENT registry, `integration` depends on all 18 other product modules and activates last. Every earlier module WO must place its own contract fixtures in its real active owning harness (`tests/risk/`, `tests/ledger/`, etc.), including stub/mock peer contracts, dependency-impact propagation and invalid-input boundaries. The later `tests/integration/` adds whole-pipeline replay, crash/disconnect, one-leg exposure, privileged auth, read-only X-venue accounting, permitted adapter and chain-specific reorg drills only after all literal dependencies are actually ACTIVE. Do not claim an ACTIVE integration harness when it remains PLANNED. Any redesign to activate early integration or a UI-only slice needs a new admitted ADR and exact test-registry migration.
+
+## Required future proof and STOP
+- Mock policy-deny/expired approval, unknown reference clock or book gap -> Risk DENY regardless of AI and UI.
+- Missing source cursor or another venue's balance -> Portfolio `UNRECONCILED`, Risk DENY and never credit cross-venue inventory automatically.
+- Lost ACK after actual mocked broker fill -> durable `UNKNOWN_NEEDS_RECONCILIATION`, authenticated complete history first, no duplicate dispatch.
+- Cancel/fill race and any independently approved hedge -> bounded residual exposure and separate policy/risk admission.
+- Synthetic replay future data/biased modeled costs -> invalid run, not executed or profitable fill.
+- Web reconnect or LLM prompt injection -> no live order, policy mutation, kill reset or cross-tenant read; mandated safety status persists.
+
+This proposed contract may be changed only through later narrowly admitted source/ADR work with nonempty negative tests and named independent approval following the FV-BOOT-001 FULL gate. It is NOT code, HIVE approval, actual financial reconciliation or a production checkpoint.

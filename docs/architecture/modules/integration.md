@@ -1,19 +1,14 @@
 # Cross-module contracts and release proofs | module `integration`
 
-State: **PLANNED, NOT IMPLEMENTED**. Authority: proposed FV-DISC-001 modular map; separate admitted Work Order required to add source/tests.
+**PLANNED, NOT IMPLEMENTED.** FV-DISC-001 Round 10 consolidates original registry identity `integration`, with reserved `src/contracts/` and `tests/integration/` and the existing **18 literal product dependencies** unchanged: `risk`, `forex`, `cex`, `defi`, `ai`, `web`, `policy`, `clock`, `market-data`, `ledger`, `execution`, `portfolio`, `replay`, `research`, `strategy-forex`, `strategy-cex`, `strategy-defi`, `observability`. The module is **NOT activation-eligible until all 18** of those registered dependencies are independently ACTIVE and reviewed.
 
-Reserved source ownership: `src/contracts/`.
-Harness ownership: `tests/integration/`.
-Dependency graph: `risk`, `forex`, `cex`, `defi`, `ai`, `web`, `policy`, `clock`, `market-data`, `ledger`, `execution`, `portfolio`, `replay`, `research`, `strategy-forex`, `strategy-cex`, `strategy-defi`, `observability`.
+## Trust boundaries and source of truth
+The proposed `docs/architecture/MODULE-READINESS-AND-IMPLEMENTATION-R10.md` maps the literal registered graph and the prior R1–R9 design contracts. R10 proposed ADR-020 specifies an immutable `RiskAccountEvidenceV0` seam to avoid the current risk/portfolio graph cycle, enforces exact source-licence/clock data, locally durable Ledger intent vs externally unknown broker effect, independent bounded Risk admission and conservative Portfolio reconciliation. Web and AI are downstream non-authoritative clients; Observability is a non-authoritative, privacy-bounded diagnostic channel. HIVE remains engineering context only.
 
-## Responsibility and scope
-Typed event schema, simulated cross-venue failure injections, whole-pipeline replay, audit, gated paper rollout and independent review.
+## Harness plan and early seam tests
+**Before final integration activation**, each separately admitted owner module MUST include negative **module-owned** contract/peer-mock fixtures under its own nonempty tests. For example Risk tests synthetic immutable account snapshots, Ledger tests at-most-once LOCAL creation and uncertain external ACK, Execution tests mock venue cancel/fill and two-leg recovery, Portfolio tests complete source cursors and shared account exposure, Web tests server-side per-resource auth and stale streams and AI tests no-tools injection defense. Do not park required early proof exclusively under inactive `tests/integration/`.
 
-## Candidate existing technology to evaluate
-Contract-test harness and exact source fingerprint; no production keys in CI.
+**After all direct dependencies become ACTIVE**, the separate admitted Integration WO may add real `tests/integration/` and canonical `src/contracts/` as needed, run exact cross-module replay and mock-broker/chain fault injection, verify independent kill/rollback/observer incidents and matched R4 benchmark on properly licensed feeds. A whole-platform green check still does not prove external venue permission, actual order acceptance, production readiness or superiority over a competitor.
 
-## First activation proof / STOP
-Full suites, independent assurance and FV-BOOT-001 completion before activation.
-
-### Design-time interface contract
-Produce a typed input/output specification, ownership and failure-state table, fixture/provenance specification, numerical acceptance metrics if appropriate, upstream license/terms record, rollback/reconciliation requirements and one narrowly scoped WO before implementing. Default mode: documentation or deterministic offline research. No live credentials or orders, no trading implementation under this proposal.
+## STOP and independent gate
+No integration source, broad PR, actual credentials, live/paper execution or renamed registry dependency under this docs-only round. FV-BOOT-001 isolated host FULL and an actual **named independent** review remain unresolved on the latest supplied evidence. Per-module source activation requires separate admitted WOs, real deterministic negative tests and exact-head security/CI; a production release also requires D-008 verified PRIVATE repository, runtime external managed secrets, selected legal venue/chain/data rights, independent HIGH_ASSURANCE acceptance and a tested bounded rollback.
