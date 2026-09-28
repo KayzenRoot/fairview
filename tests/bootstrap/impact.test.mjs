@@ -299,3 +299,50 @@ test("Round 7 proposed DEX ADRs and future source impact remain governed by boot
   assert(strategy.planned.includes("integration"));
   assert.deepEqual(strategy.unknown,[]);
 });
+
+
+test("Round 8 Portfolio and Observability design gates preserve financial truth and 24 adverse fixtures",()=>{
+  const design=fs.readFileSync(new URL("../../docs/architecture/PORTFOLIO-OBSERVABILITY-R8.md",import.meta.url),"utf8");
+  for(const field of ["BalancePositionObservationV0","ReconciliationCursorV0","InventoryReservationV0","ReconciliationDiscrepancyV0","PortfolioSnapshotV0","PortfolioRiskViewV0","TradingTraceEnvelopeV0","LatencyMeasurementV0","TelemetryQualityV0","IncidentEnvelopeV0","OperatorAlertRouteV0","UNRECONCILED","DISCREPANCY_LOCKED","UNKNOWN_NEEDS_RECONCILIATION"]){
+    assert(design.includes(field),"R8_MISSING_DESIGN_CONTRACT_OR_STATE "+field);
+  }
+  for(const scenario of ["DUPLICATE_EXTERNAL_FILL","CONFLICTING_FILL_IDS","LOST_ACK_OPEN_POSITION","INCOMPLETE_HISTORY_CURSOR","BALANCE_POSITION_DRIFT","CROSS_ACCOUNT_FUNDS","PENDING_WITHDRAWAL","WRONG_ASSET_ISSUER","FX_CONVERSION_STALE","MISSING_FEE_OR_CARRY","RESERVATION_CONFLICT","SERIALIZATION_RETRY_SIDE_EFFECT","STALE_RISK_VIEW","REORGED_CHAIN_RECEIPT","KILL_PERSIST_AFTER_RESTART","PRIVATE_STREAM_GAP","CROSS_CLOCK_LATENCY","THIN_P99_SAMPLE","METRIC_CARDINALITY_SPIKE","EXPORTER_BACKPRESSURE","COLLECTOR_UNAVAILABLE","ALERT_DELIVERY_FAILURE","ALERT_ACK_NOT_RECEIPT","SECRET_OR_TICK_LEAK"]){
+    const row=design.split(/\r?\n/).find(line=>line.startsWith("| "+scenario+" | "));
+    assert(row&&row.split("|").length>=4,"R8_MISSING_ADVERSE_DESIGN_FIXTURE "+scenario);
+  }
+  for(const id of ["portfolio","observability"]){
+    assert.equal(r.modules.find(m=>m.id===id)?.state,"planned","R8_PREMATURE_ACTIVATION "+id);
+    const charter=fs.readFileSync(new URL("../../docs/architecture/modules/"+id+".md",import.meta.url),"utf8");
+    assert(charter.includes("PLANNED, NOT IMPLEMENTED"));
+    assert(charter.includes("STOP"));
+  }
+  assert.equal(r.modules.length,20);
+  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap"]);
+  assert.deepEqual(r.modules.find(m=>m.id==="portfolio")?.depends_on,["risk","ledger"]);
+  assert.deepEqual(r.modules.find(m=>m.id==="observability")?.depends_on,["market-data","clock","execution","ledger","risk"]);
+});
+test("Round 8 ADR proposals stay nonadopted and planned portfolio/telemetry source impact stays gated",()=>{
+  const names=["FV-ADR-015-PROPOSED-PORTFOLIO-RECONCILIATION.md","FV-ADR-016-PROPOSED-TRADING-OBSERVABILITY.md"];
+  for(const name of names){
+    const adr=fs.readFileSync(new URL("../../docs/architecture/adrs/"+name,import.meta.url),"utf8");
+    assert(adr.includes("PROPOSED_NOT_ADOPTED"),"R8_ADR_PREMATURELY_ADOPTED "+name);
+  }
+  for(const path of ["docs/architecture/PORTFOLIO-OBSERVABILITY-R8.md",...names.map(name=>"docs/architecture/adrs/"+name)]){
+    const impact=calculateImpact(r,[path]);
+    assert.deepEqual(impact.active,["bootstrap"]);
+    assert.deepEqual(impact.planned,[]);
+    assert.deepEqual(impact.unknown,[]);
+  }
+  const portfolioImpact=calculateImpact(r,["src/portfolio/reconciliation.rs"]);
+  assert(portfolioImpact.planned.includes("portfolio"));
+  assert(portfolioImpact.planned.includes("strategy-forex"));
+  assert(portfolioImpact.planned.includes("strategy-cex"));
+  assert(portfolioImpact.planned.includes("strategy-defi"));
+  assert(portfolioImpact.planned.includes("integration"));
+  assert.deepEqual(portfolioImpact.unknown,[]);
+  const obsImpact=calculateImpact(r,["src/observability/latency.rs"]);
+  assert(obsImpact.planned.includes("observability"));
+  assert(obsImpact.planned.includes("web"));
+  assert(obsImpact.planned.includes("integration"));
+  assert.deepEqual(obsImpact.unknown,[]);
+});
