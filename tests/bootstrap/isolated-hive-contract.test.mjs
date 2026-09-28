@@ -1,5 +1,7 @@
 import test from "node:test";import assert from "node:assert/strict";import fs from "node:fs";
 const code=fs.readFileSync(new URL("../../scripts/local/check-hive-isolated.ps1",import.meta.url),"utf8");
+const smoke=fs.readFileSync(new URL("../../scripts/local/check-hive.ps1",import.meta.url),"utf8");
+const projectList=fs.readFileSync(new URL("../../scripts/local/hive-project-list.ps1",import.meta.url),"utf8");
 const cand=JSON.parse(fs.readFileSync(new URL("../../.integrations/hive-fv-maintenance.lock.json",import.meta.url),"utf8"));
 test("candidate lock is separate from immutable official HIVE v1.0.3 pin",()=>{
  const official=JSON.parse(fs.readFileSync(new URL("../../.integrations/hive.lock.json",import.meta.url),"utf8"));
@@ -33,4 +35,10 @@ test("PowerShell 5.1 switch forwarding omits false switch across both native sub
  }
  assert(child.includes("$LASTEXITCODE"));
  assert(code.includes("$smokeExit=$LASTEXITCODE"));
+});
+
+test("PowerShell HIVE project list is normalized before filtering",()=>{
+ assert.equal((smoke.match(/Convert-HiveProjectList -Response \$projectResponse/g)||[]).length,2);
+ assert(projectList.includes("foreach($item in $Response)"));
+ assert(!smoke.includes('Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects" -Method Get -TimeoutSec 10 | Where-Object'));
 });

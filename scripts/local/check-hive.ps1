@@ -7,6 +7,7 @@ param(
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'hive-project-list.ps1')
 function Post([string]$suffix,[object]$data=$null) {
     $parameters=@{Uri="$BaseUrl$suffix";Method='Post';TimeoutSec=90}
     if ($null -ne $data) { $parameters.ContentType='application/json';$parameters.Body=($data | ConvertTo-Json -Depth 6 -Compress) }
@@ -17,13 +18,17 @@ try {
     if ($health.status -ne 'ok') { throw 'HIVE_NOT_HEALTHY' }
     # Windows PowerShell 5.1 converts an empty JSON array (`[]`) to $null.
     # Filter null pipeline output before reading ProjectResponse properties.
-    $projects=@(Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects" -Method Get -TimeoutSec 10 | Where-Object { $null -ne $_ })
+    # Windows PowerShell 5.1 can preserve the JSON array as one pipeline item when
+    # the REST call is piped directly into Where-Object. Normalize the response first.
+    $projectResponse=Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects" -Method Get -TimeoutSec 10
+    $projects=Convert-HiveProjectList -Response $projectResponse
     $found=@($projects | Where-Object { $_.relative_path -eq $ProjectRelativePath })
     if ($found.Count -eq 0) {
         # Automatic discovery may not have fired yet. Safe, idempotent bounded registration.
         try { $null=Post '/api/v1/projects' @{name='Fairview';relative_path=$ProjectRelativePath} }
         catch { if ($_.Exception.Response.StatusCode.value__ -ne 409) { throw } }
-        $projects=@(Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects" -Method Get -TimeoutSec 10 | Where-Object { $null -ne $_ })
+        $projectResponse=Invoke-RestMethod -Uri "$BaseUrl/api/v1/projects" -Method Get -TimeoutSec 10
+        $projects=Convert-HiveProjectList -Response $projectResponse
         $found=@($projects | Where-Object { $_.relative_path -eq $ProjectRelativePath })
     }
     if ($found.Count -ne 1) { throw "FAIRVIEW_REGISTRY_IDENTITY_MISSING_OR_AMBIGUOUS" }
