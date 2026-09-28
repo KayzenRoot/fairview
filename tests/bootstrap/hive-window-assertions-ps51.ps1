@@ -84,7 +84,7 @@ Write-Output '[PASS] PS51_TYPED_CORPUS_CORRECTION_PRIOR_RUN_WITNESS'
 $firstCorpusPermit=[pscustomobject]@{operator_authorized_one_corpus_sync=$true;authorized_fairview_project_id=$api;target_fairview_head=$newHead}
 $firstPrior=Assert-HiveCorpusCorrectionReceipt -Receipt $firstCorpusPermit -ProjectId $api -ExpectedHead $newHead -LatestRun $null
 if(-not [string]::IsNullOrEmpty([string]$firstPrior)){throw 'EXPECTED_MISSING_PRIOR_ID_AS_INITIAL_CORPUS'}
-$stableJournalRoot=Join-Path ([System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::LocalApplicationData)) 'Fairview\R8-Attempts'
+$stableJournalRoot=Join-Path ([System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::CommonApplicationData)) 'Fairview\R8-Attempts'
 $realProject='00000000-0000-0000-0000-000000000001'
 $journalFromReceiptA=Get-HiveCorpusJournalPath -JournalRoot $stableJournalRoot -ProjectId $realProject -ExpectedHead $newHead
 $journalFromReceiptB=Get-HiveCorpusJournalPath -JournalRoot $stableJournalRoot -ProjectId $realProject -ExpectedHead $newHead
