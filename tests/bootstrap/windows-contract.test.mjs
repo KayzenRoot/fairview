@@ -94,3 +94,16 @@ test("atomic journal reserves all three R8 mutation kinds before every permitted
  assert(helper.includes("New-HiveMutationAttemptMarker"));
  assert(fixture.includes("PS51_SHARED_MUTATION_JOURNAL_CREATE_NEW_REJECTS_DUPLICATE"));
 });
+
+test("machine-wide journal cannot be redirected into a restorable root by junctions",()=>{
+ const helper=fs.readFileSync(new URL("../../scripts/local/hive-window-assertions.ps1",import.meta.url),"utf8");
+ const fixture=fs.readFileSync(new URL("../../tests/bootstrap/hive-window-assertions-ps51.ps1",import.meta.url),"utf8");
+ assert(smoke.includes("CommonApplicationData"));
+ const pre=smoke.indexOf("$dir=Assert-HiveTrustedMutationJournalRoot");
+ const mkdir=smoke.indexOf("New-Item -Path $dir -ItemType Directory");
+ const post=smoke.indexOf("$dir=Assert-HiveTrustedMutationJournalRoot",pre+5);
+ const marker=smoke.indexOf("New-HiveMutationAttemptMarker -JournalPath");
+ assert(pre>0&&mkdir>pre&&post>mkdir&&marker>post);
+ for(const word of ["function Assert-HiveTrustedMutationJournalRoot","ReparsePoint","GetDirectoryName","Resolve-Path","MUTATION_JOURNAL_PRIVATE_ROOT_UNAVAILABLE"])assert(helper.includes(word));
+ assert(fixture.includes("PS51_MACHINE_ROOT_LINK_REJECTION"));
+});
