@@ -1,0 +1,26 @@
+# Fairview | Existing technology landscape (initial research, NOT an adoption ADR)
+Checked against publicly accessible official/vendor documentation on 2026-09-28. These are candidates for formal per-module ADRs, commercial-use license and maintenance review. Do not vendor/import code or create secrets under this planning proposal.
+
+| Project / reference | Useful existing capability | Fairview exploration | Constraint and proposed decision |
+|---|---|---|---|
+| Westernpips Private 7 (vendor) | Public descriptions of One Leg, Two Leg Lock, Multi Feed, charts, copier, tick analyzer, backtest, FIX/API/ITCH, controls | Behavioral competitor reference only | Claims of 10-70 ms gains are vendor-marketed, NOT independently measured; hidden/disguised execution excluded. https://westernpips.com/ |
+| NautilusTrader | Rust-native event-driven multi-venue engine with shared backtest/live model; Python control and Rust-native mode | Research and event-contract architecture comparator, perhaps test research framework | Not automatically embedded; check exact version/license/API and performance on target hardware. https://nautilustrader.io/docs/latest/ |
+| Hummingbot | Open-source standardized CEX/DEX connectors, strategy controllers/executors, arbitrage and cross-exchange market making | CEX/DEX adapter/strategy reference and offline comparison harness | Apache 2.0 source with dependency review; no automatic production adoption. https://hummingbot.org/docs/ and https://github.com/hummingbot/hummingbot |
+| CCXT + CCXT Pro | Unified REST and WebSocket exchange APIs, order-book and trade streams | Fast research bootstrap for two CEX spot connectors | Validate exact adapter semantics, event timing, limits and supported exchanges; benchmark native venue APIs for critical paths. https://docs.ccxt.com/docs/manual and https://docs.ccxt.com/docs/pro-manual |
+| QuickFIX/C++ | Open-source FIX session engine with message stores and transport | Forex documented FIX adapter candidate IF the chosen venue grants FIX access | Formal QuickFIX/license security and exact broker FIX dictionary review; do not assume authorization. https://quickfixengine.org/ |
+| QuantConnect LEAN | Open-source event-driven multi-asset research/backtesting/live comparison | Separate benchmarking/reference, research and data compatibility experiments | Apache 2.0 repo, but validate feed licenses and whether integration complexity is justified. https://github.com/QuantConnect/Lean |
+| Aeron Transport / Archive | Low-latency IPC, reliable UDP and replay archive | Future measured hot-path research | NOT default; add only if traces show existing Rust channels inadequate. https://aeron.io/docs/ |
+| Uniswap official SDKs | v3 concentrated liquidity or v4 hooks/flash accounting matched to pool | Proposed single-chain DEX read-only quote and liquidity research | Exact pool/version/chain, SDK licensing and security audit required; no keys or contract signing during planning. https://developers.uniswap.org/docs/sdks/overview |
+| Rust/Tokio | Async runtime and explicit ownership for adapter and execution state machines | Candidate execution/data/control boundary | ADR compares actual measured CPU and latency; keep all hot-path messages typed and deterministic. https://tokio.rs/ |
+| PostgreSQL | Durable idempotency/order ledger and reconciled snapshots | Initial ledger of record | Optimize write pattern after measured load, avoid coupling live risk availability to HIVE. https://www.postgresql.org/docs/ |
+| OpenTelemetry | Distributed traces, metrics and contextual spans | Correlate tick -> signal -> risk -> intent -> ack/fill | Collectors/exporters off critical execution loop; anonymize public artifacts. https://opentelemetry.io/docs/ |
+| Next.js/React | Browser console and operator workflow | UI candidate matching existing Fairview architecture | Web availability must NOT control or stop independent risk/execution. https://nextjs.org/docs |
+
+### Reuse boundaries
+- Reuse **documented protocols, compliant SDKs, optional OSS packages and test ideas**, never competitor proprietary code, reverse-engineered private packet layouts, forbidden brokers' APIs, hidden origins or paid product license assumptions.
+- Per external dependency capture version/tag/commit, license text, transitive dependencies, upstream release status, security advisories, vendor Terms and commercial-data rights, adapter-specific certification, ownership and tested rollback.
+- Python research tooling is isolated from proposed Rust real-time execution; reject an avoidable FFI or queue hop on the hot path unless benchmarked.
+- Potentially impressive technology is NOT a reason to add it: every adoption ADR needs an observed bottleneck, measurable gain and an exit strategy.
+
+### Evaluation experiment standard
+Same timestamped input traces, identical symbol/market depth, venue accounts and permissions, matched hardware/network and risk thresholds. Measure p50/p95/p99 latency, attempted/accepted/filled order counts, effective slippage/fees, hedge completion and fail-closed recovery, separately for offline replay, sandbox/paper and permissioned limited-live trials. No trade performance target until real instrument/venue configuration and audit.
