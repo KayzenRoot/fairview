@@ -177,3 +177,41 @@ test("Round 4 research ADRs stay proposed and future source changes require acti
     assert.deepEqual(impact.unknown,[]);
   }
 });
+
+
+test("Round 5 Forex one/two/multi-feed proposal has distinct typed contracts and 18 negative design fixtures",()=>{
+  const design=fs.readFileSync(new URL("../../docs/architecture/FOREX-STRATEGIES-R5.md",import.meta.url),"utf8");
+  for(const name of ["ForexStrategyConfigV0","ForexOpportunityV0","FeedConsensusEvidenceV0","TwoLegIntentPlanV0","StrategyDecisionV0","ONE_LEG","TWO_LEG","MULTI_FEED","CANDIDATE_FOR_RISK","NON_ACTIONABLE","UNKNOWN_NEEDS_RECONCILIATION"]){
+    assert(design.includes(name),"R5_MISSING_DESIGN_CONTRACT "+name);
+  }
+  for(const id of ["REF_FEED_ONLY","BROKER_POLICY_DENY","UNLICENSED_MULTI_FEED","SPOT_CFD_MISMATCH","THROTTLED_REFERENCE","CLOCK_UNCERTAINTY","SOURCE_SEQUENCE_GAP","ZERO_DEPTH_OR_SIZE","HIDDEN_FEES","VENUE_REJECT_OR_LAST_LOOK","LEG_A_PARTIAL_B_UNKNOWN","CANCEL_FILL_RACE","REJECTED_HEDGE","MIRRORED_FEED_QUORUM","STALE_OUTLIER_POISON","DATASET_LOOKAHEAD","DISCONNECT_KILL","MODEL_PARAMETER_DRIFT"]){
+    const row=design.split(/\r?\n/).find(line=>line.startsWith("| "+id+" | "));
+    assert(row&&row.split("|").length>=4,"R5_MISSING_NEGATIVE_DESIGN_FIXTURE "+id);
+  }
+  const charter=fs.readFileSync(new URL("../../docs/architecture/modules/strategy-forex.md",import.meta.url),"utf8");
+  assert(charter.includes("PLANNED, NOT IMPLEMENTED"));
+  assert(charter.includes("STOP"));
+  assert.equal(r.modules.length,20);
+  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap"]);
+  assert.equal(r.modules.find(m=>m.id==="strategy-forex")?.state,"planned");
+  assert.deepEqual(r.modules.find(m=>m.id==="strategy-forex")?.depends_on,["forex","replay","portfolio"]);
+});
+test("Round 5 Forex ADRs remain proposals and any future strategy source needs an activated harness",()=>{
+  for(const name of ["FV-ADR-009-PROPOSED-FOREX-STRATEGY-CONTRACT.md","FV-ADR-010-PROPOSED-MULTI-FEED-SIGNAL-QUALITY.md"]){
+    const path="docs/architecture/adrs/"+name;
+    const adr=fs.readFileSync(new URL("../../"+path,import.meta.url),"utf8");
+    assert(adr.includes("PROPOSED_NOT_ADOPTED"),"R5_ADR_PREMATURE_ADOPTION "+name);
+    const docImpact=calculateImpact(r,[path]);
+    assert.deepEqual(docImpact.active,["bootstrap"]);
+    assert.deepEqual(docImpact.planned,[]);
+    assert.deepEqual(docImpact.unknown,[]);
+  }
+  const designImpact=calculateImpact(r,["docs/architecture/FOREX-STRATEGIES-R5.md"]);
+  assert.deepEqual(designImpact.active,["bootstrap"]);
+  assert.deepEqual(designImpact.planned,[]);
+  assert.deepEqual(designImpact.unknown,[]);
+  const srcImpact=calculateImpact(r,["src/strategy-forex/one_leg.rs"]);
+  assert(srcImpact.planned.includes("strategy-forex"));
+  assert(srcImpact.planned.includes("integration"));
+  assert.deepEqual(srcImpact.unknown,[]);
+});
