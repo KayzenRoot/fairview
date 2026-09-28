@@ -1,19 +1,12 @@
-# Bounded AI advisory | module `ai`
+# Bounded AI explanatory and research advisory | module `ai`
 
-State: **PLANNED, NOT IMPLEMENTED**. Authority: proposed FV-DISC-001 modular map; separate admitted Work Order required to add source/tests.
+**PLANNED, NOT IMPLEMENTED.** FV-DISC-001 Round 9 preserves original `ai` with reserved `src/ai/`, `tests/ai/` and existing dependencies `risk`, `research`. It has no direct or indirect production order, wallet signing, kill-reset, API secret or broker credential capability. HIVE remains OFFLINE engineering context ONLY, never live risk/AI/market/ledger runtime dependency.
 
-Reserved source ownership: `src/ai/`.
-Harness ownership: `tests/ai/`.
-Dependency graph: `risk`, `research`.
+## Responsibilities and typed contract
+`AdvisoryRequestV0` with EXPLAIN, ANOMALY_TRIAGE, BENCHMARK_COMPARE and RESEARCH_TUNING_PROPOSAL only. `EvidencePackV0` is bounded, licence-checked, per-tenant scoped, redacted and distinguishes trusted structured evidence from **untrusted** market news/vendor docs/logs. `AdvisoryFindingV0` separates OBSERVATION/HYPOTHESIS/LIMITATION/UNVERIFIED, cites authorized evidence and refuses invented fills or private data. `TuningProposalV0` is research-only, versioned with immutable replay/config references, and never self-approved for production. `AdvisoryAuditV0` holds restricted private model/prompt/evidence and redaction hashes plus human review receipt.
 
-## Responsibility and scope
-Sourced explanation of candidate opportunities, anomaly triage, tuning proposals and operator summaries; never direct wallet signing or risk bypass.
+## Existing technology and security research
+Select an eligible local/cloud model **later** only after explicit vendor data-use, tenant privacy, licensing, cost and runtime resilience review. Use OWASP LLM prompt-injection/excessive-agency threat model https://owasp.org/www-project-top-10-for-large-language-model-applications/ ; finite server-validated structured DTO input/output and **no live mutating tools**, not just a stronger instruction prompt. R4 replay remains independent benchmark authority, R3 Risk Kernel/Policy remains order authority and web has no secret model endpoints exposed to clients.
 
-## Candidate existing technology to evaluate
-HIVE for offline engineering context only; advisory inference isolated from live risk/execution.
-
-## First activation proof / STOP
-Adversarial prompt cannot issue orders, alter risk state or read another project.
-
-### Design-time interface contract
-Produce a typed input/output specification, ownership and failure-state table, fixture/provenance specification, numerical acceptance metrics if appropriate, upstream license/terms record, rollback/reconciliation requirements and one narrowly scoped WO before implementing. Default mode: documentation or deterministic offline research. No live credentials or orders, no trading implementation under this proposal.
+## Future isolated harness and STOP
+AI_MARKET_PROMPT_INJECTION, AI_FORGED_SYSTEM_MESSAGE, AI_TOOL_CALL_LAUNDERING, AI_CROSS_TENANT_RAG, AI_UNLICENSED_DATA_USE, AI_FABRICATED_FILL, AI_SELF_APPROVED_TUNING and MODEL_SERVICE_OUTAGE plus full R9 matrix. A model outage only marks the advisory view UNAVAILABLE. **STOP:** no inference or external model calls, financial tool privileges, code commit or live action under this proposal; separate admitted source WO, privacy rights and independently evidenced FV-BOOT-001 FULL mandatory.
