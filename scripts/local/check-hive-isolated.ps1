@@ -8,6 +8,7 @@ param(
     [string]$ComposeProject='hive-fairview-dev',
     [switch]$RequireSemantic,
     [switch]$AllowHeadAdvanceIndex,
+    [switch]$WindowOnly,
     [string]$ExclusiveWindowReceipt,
     [ValidateRange(120,360)][int]$ObserveSeconds=120
 )
@@ -66,6 +67,7 @@ function ContainerMounts([string]$Id) {
 }
 try {
     if($ComposeProject -ne 'hive-fairview-dev') {throw 'UNAUTHORIZED_COMPOSE_PROJECT'}
+    if($WindowOnly.IsPresent -and $Mode -ne 'Verify') {throw 'WINDOW_ONLY_REQUIRES_VERIFY'}
     if($ApiBaseUrl.Scheme -ne 'http' -or $ApiBaseUrl.Host -notin @('localhost','127.0.0.1','::1')) {throw 'API_MUST_BE_LOOPBACK'}
     $source=(Resolve-Path -LiteralPath $HiveCheckout -ErrorAction Stop).Path
     $data=(Resolve-Path -LiteralPath $IsolatedDataRoot -ErrorAction Stop).Path
@@ -148,11 +150,18 @@ try {
         $after=Get-HiveDatabaseWriteStats $pg
         Assert-HiveDatabaseQuiet -Before $before -After $after
         Write-Host '[PASS] Observed 120s+ no database tuple writes; operator exclusivity must remain valid through smoke.'
+        if($WindowOnly.IsPresent) {
+            Write-Host '[PASS] live window guarded without index/corpus mutation or nested smoke.'
+            exit 0
+        }
         $smokeArguments=@('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',
             (Join-Path $RepoRoot 'scripts\local\invoke-hive-smoke.ps1'),
             '-SmokeScriptPath',(Join-Path $RepoRoot 'scripts\local\check-hive.ps1'),
             '-BaseUrl',$ApiBaseUrl.AbsoluteUri.TrimEnd('/'),
-            '-ProjectRelativePath','Fairview')
+            '-ProjectRelativePath','Fairview',
+            '-HiveCheckout',$source,
+            '-IsolatedDataRoot',$data,
+            '-ExclusiveWindowReceipt',$receiptPath)
         if($RequireSemantic.IsPresent) { $smokeArguments+= '-RequireSemantic' }
         if($AllowHeadAdvanceIndex.IsPresent) { $smokeArguments+= @('-AllowHeadAdvanceIndex','-AuthorizedPriorIndexHead',$authorizedPriorHead,'-AuthorizedTargetHead',$target) }
         $oldPreference=$ErrorActionPreference
