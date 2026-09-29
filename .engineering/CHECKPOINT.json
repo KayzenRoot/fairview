@@ -1,29 +1,43 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "checkpoint": "FV-CP-0002-PROPOSED",
   "status": "MIGRATION_DRAFT_NOT_APPROVED",
   "project": "Fairview",
   "brand": "Next Labs",
   "github_repo": "KayzenRoot/fairview",
-  "work_order": "FV-FOUNDATION-002",
+  "work_order": "FV-GOV-001",
   "authority": "GIT_SOURCEPACK_GEF_NODE22",
   "source_main_before_migration": "9eb01876adf2e1f2408b451e8cc08abb123173a5",
-  "migration_pr": "UNKNOWN_UNTIL_CREATED",
-  "migration_merged": false,
+  "migration_pr": 18,
+  "migration_merge_commit": "694fe60c759ab5a5f91ffaa32b599899bc614f83",
+  "migration_merged": true,
   "independent_approval": false,
-  "approval_receipt": "PENDING_EXACT_HEAD_CI_AND_REVIEW",
+  "approval_receipt": "NOT_INDEPENDENTLY_PROMOTED",
+  "latest_observed_main": {
+    "sha": "8da9fc71e35d25cef8849db5d7c218f69875faad",
+    "observed_on": "2026-09-29",
+    "latest_merged_product_pr": 23,
+    "exact_main_push_workflow_run": 36518003115,
+    "hosted_required_jobs_passed": 4,
+    "hosted_required_jobs_total": 4,
+    "owner_audit": "NOT_INDEPENDENT"
+  },
   "registry": {
-    "total": 8,
+    "total": 20,
     "active": [
-      "bootstrap"
+      "bootstrap",
+      "policy",
+      "clock",
+      "market-data"
     ],
-    "planned": 7
+    "planned": 16,
+    "active_product_scope": "SYNTHETIC_FIXTURE_ONLY"
   },
   "gef": {
     "tag": "v1.0.0",
     "commit": "866fe3af8cccc65c929aaf6a47a924401fa448b3",
     "gitlink_unchanged": true,
-    "local_windows_verification": "NOT_OBSERVED_BY_THIS_PR"
+    "local_windows_verification": "NOT_OBSERVED_BY_THIS_RECONCILIATION"
   },
   "sourcepack": {
     "native_development": "Git Node22 pinned GEF only",
@@ -34,7 +48,8 @@
     "repo_current_visibility": "PUBLIC_DEV",
     "private_before_funded_live": true,
     "requires_independent_financial_security_review": true,
-    "actual_provider_rights": "OPEN"
+    "actual_provider_rights": "OPEN",
+    "real_financial_runtime": "NOT_IMPLEMENTED"
   },
-  "historical_evidence": "Immutable Git history and original issue thread; old local-service requirement SUPERSEDED"
+  "historical_evidence": "Immutable Git history and original issues; superseded installation requirements are not active source prerequisites"
 }
