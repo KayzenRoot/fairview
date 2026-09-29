@@ -78,3 +78,19 @@ The draft PR and its exact candidate HEAD must include the base SHA, final HEAD,
 Completion for this Work Order means an auditable draft PR at a pushed exact HEAD, with the seven-path allowlist respected, complete local and hosted evidence, four exact-head checks successful, and the local synthetic Risk and Portfolio pages available for owner inspection. It does not mean independent approval, merge, production readiness, funded use, trading authority, or promotion of FV-CP-0002-PROPOSED.
 
 Checkpoint delta: none.
+
+## Correction Delta CORR-001 — bind the response to the requested scenario
+
+Date: 2026-09-29
+Admission: direct user instruction to continue PR #51 and execute the latest owner-authored ChatGPT review finding in this same Work Order. This correction does not expand the frozen scope or seven-path allowlist.
+Review: https://github.com/KayzenRoot/fairview/pull/51#discussion_r4137760242 (review submitted at candidate `b6cbae86e32638fb16e65e50ced3304007dc4563`, verdict `NOT_INDEPENDENT`).
+
+Finding: validating only the response's internal scenario/status contract permits the current request for one allowlisted scenario to receive a different internally valid scenario and render it under the selected scenario control. The monotonic request token rejects older requests but does not bind the current body to the requested scenario.
+
+Authorized correction: pass the current request's allowlisted scenario into the existing response validation and require `snapshot.scenario` to equal `scenarioLabels[scenario]` before applying any response values. A current mismatch must use the existing fail-closed unavailable/error path, clearing values on Overview, Risk, and Portfolio; the selector remains on the requested scenario and no response-provided value is rendered. Keep the single existing request token and same-origin GET contract.
+
+Required adversarial proof: add two deterministic tests that execute the real `src/web/local-demo/public/app.js` through the existing node:vm harness. Test a current `denied` request receiving a fully valid `HEALTHY_FIXTURE` envelope. Test a current `healthy` request receiving a fully valid `DENIED_FIXTURE` envelope while navigating across Overview, Risk, and Portfolio. In both cases assert that the request remains current, the requested selector is retained, the UI fails closed, all implemented-view values remain unavailable, and no wrong-scenario fixture content is rendered. Preserve every existing test and all prior adversarial cases.
+
+Proof sequence: inspect the seven-path diff; run `node --test tests/web/local-demo.test.mjs`; recompute exact-base impact from `429dc73bfa5d39b3150707d29c300331bde6acec` to the candidate and run applicable bootstrap/Web harness verification; run `node scripts/security-scan.mjs`, full `npm run validate` (all 14 active modules), and `git diff --check`; publish the new candidate SHA and require all four hosted checks to complete successfully on that exact SHA. Keep PR #51 in draft for re-audit. Do not merge, promote a checkpoint, expand paths, or solicit/re-enable automated review.
+
+Correction boundary: only the original seven allowlisted paths remain authorized. Checkpoint delta remains none.
