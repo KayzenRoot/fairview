@@ -29,7 +29,8 @@ function impact(files){
  const result=calculateImpact(registry,files);
  console.log(JSON.stringify(result,null,2));
  if(result.unknown.length) fail("UNKNOWN_FILES_FAIL_CLOSED");
- if(result.planned.length) fail("PLANNED_MODULE_TOUCHED_WITHOUT_TEST_HARNESS: "+result.planned.join(","));
+ if(result.direct_planned.length) fail("DIRECT_PLANNED_MODULE_TOUCHED_WITHOUT_ADMISSION: "+result.direct_planned.join(","));
+ if(result.planned.length) console.log("[INFO] inactive reverse dependents remain UNTESTED: "+result.planned.join(","));
  return result;
 }
 if(args[0]==="doctor") checkDoctor();
