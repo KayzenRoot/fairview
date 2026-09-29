@@ -12,9 +12,9 @@ test("exact Git HEAD and explicit base bind only a CI-verified evidence receipt"
 test("a directly edited still-planned module or unknown path fails Evidence Bundle",()=>{
  assert(code.includes("impact.unknown.length||impact.direct_planned.length"));
  assert(!code.includes("impact.unknown.length||impact.planned.length"));
- const changed=calculateImpact(registry,["src/risk/deny.mjs"]);
- assert.deepEqual(changed.direct_planned,["risk"]);
- assert(changed.planned.includes("portfolio"));
+ const changed=calculateImpact(registry,["src/forex/deny.mjs"]);
+ assert.deepEqual(changed.direct_planned,["forex"]);
+ assert(changed.planned.includes("strategy-forex"));
  assert.equal(changed.unknown.length,0);
 });
 test("an active policy owner can provide proof with explicit untested planned downstream",()=>{
@@ -22,7 +22,7 @@ test("an active policy owner can provide proof with explicit untested planned do
  assert.deepEqual(changed.direct_active,["policy"]);
  assert.deepEqual(changed.direct_planned,[]);
  assert(changed.active.includes("policy"));
- assert(changed.planned.includes("risk"));
+ assert(changed.active.includes("risk"));
  assert(changed.active.includes("ledger"));
  assert(changed.planned.includes("integration"));
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
@@ -45,7 +45,7 @@ test("an admitted synthetic clock owner is tested while its future consumers rem
  assert.deepEqual(impact.direct_planned,[]);
  assert(impact.active.includes("clock"));
  assert(impact.active.includes("market-data"));
- assert(impact.planned.includes("risk"));
+ assert(impact.active.includes("risk"));
  assert(impact.planned.includes("integration"));
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
@@ -54,7 +54,8 @@ test("fictional market-data direct owner is tested while still-planned strategy 
  const impact=calculateImpact(registry,["src/market-data/quote.mjs"]);
  assert.deepEqual(impact.direct_active,["market-data"]);
  assert.deepEqual(impact.direct_planned,[]);
- for(const id of ["risk","forex","cex","defi","replay","integration"])assert(impact.planned.includes(id));
+ assert(impact.active.includes("risk"));
+ for(const id of ["forex","cex","defi","replay","integration"])assert(impact.planned.includes(id));
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
 
@@ -66,5 +67,16 @@ test("fictional ledger direct ownership has executable tests without pretending 
  assert(impact.active.includes("ledger"));
  for(const id of ["execution","portfolio","replay","integration"])
   assert(impact.planned.includes(id),"UNTESTED_REVERSE_DEPENDENCY "+id);
+ assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
+});
+
+
+test("FV-RISK-001 fake risk direct source is owned by executable harness, while reverse financial adapters remain blocked",()=>{
+ const x=calculateImpact(registry,["src/risk/evaluate.mjs"]);
+ assert.deepEqual(x.direct_active,["risk"]);
+ assert.deepEqual(x.direct_planned,[]);
+ assert(x.active.includes("risk"));
+ for(const id of ["execution","portfolio","forex","cex","defi","replay","integration"])
+  assert(x.planned.includes(id),"UNTESTED_FINANCIAL_DEPENDENT "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
