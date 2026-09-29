@@ -1,0 +1,21 @@
+# FV-CLOCK-001 | Deterministic synthetic clock integrity core
+
+**Owner-requested source implementation; docs-first scope.** Protected `main` exact source base `a4fba7b5c2c91c730a50c45f934e3cdf16252680`, merged FV-POLICY-001 and accepted Git/Node22/pinned GEF native foundation. Separate branch `feat/fv-clock-001-synthetic-integrity`. No independently verified real provider clock, runtime market feed, real account, benchmark or OS clock adjustment. The proposed R2/FV-ADR-002 clock design is research context, **NOT** independently adopted PTP/chrony or Rust runtime technology.
+
+## Single-module purpose and contract
+
+Implement an in-process dependency-free, pure Node22 `src/clock/integrity.mjs` for **SYNTHETIC_FIXTURE** data. It must preserve lossless canonical signed 64-bit decimal nanosecond strings and reject JavaScript unsafe integers/float nanoseconds, missing source provenance, clock-domain or process/boot epoch ambiguity. Expose: single local capture clock-quality classification; same-domain monotonic elapsed duration with backwards-monotonic/wall-step, unsynchronized clock and error-budget evidence; bounded source UTC interval ordering of equal instrument and documented EVENT timestamp semantics only, using explicit synthetic provider error evidence. Always output `fixture_only: true`, `execution_authorized: false`; no source input or clock assertion may authorize an order or make one-way remote latency/actual hardware precision claims.
+
+### Exactly allowed paths
+
+This WO and `.engineering/context-locks/FV-CLOCK-001.md`; `src/clock/integrity.mjs`; `tests/clock/integrity.test.mjs`; `harness/modules.json` limited to the existing `clock` state, test glob and truthful registry note; `tests/bootstrap/impact.test.mjs` adjusting only now-invalid bootstrap documentary assertions and adding clock impact admission regression; `docs/architecture/modules/clock.md`; `docs/architecture/MODULE-READINESS-AND-IMPLEMENTATION-R10.md`; and `docs/architecture/CLOCK-MARKET-DATA-R2.md` limited to an implementation-status note. Nothing else. Keep `policy` and `bootstrap` ACTIVE, other 17 modules PLANNED, all 20 IDs/edges/path owners unchanged, GEF fixed SHA `866fe3af8cccc65c929aaf6a47a924401fa448b3`.
+
+### Deterministic proof
+
+Real owned Node22 module harness with explicit positive same-domain monotonic elapsed and independently synthetic nonoverlapping UTC intervals plus at least 25 adverse cases: null/malformed objects, unsafe numbers/exponents, out-of-range i64, noncanonical decimal, same clock ID but different boot epoch, mismatched domain, monotonic reversal, backwards wall step, inconsistent wall vs monotonic step, unknown sync/bounds and failed quality budgets, unrecognized provider timestamp semantics and unbounded provider clock, wrong contract, ambiguous UTC intervals, untrusted REAL_VENDOR input and missing event fields. Every case must make non-authoritative, immutable, non-executable results and never invoke Date.now, process.hrtime, network, files, environment or host clock. Tests must use hardcoded invented timestamps only and verify no raw commercial data/credentials.
+
+The bootstrap documentation suite must mirror the actual 20-module registry: bootstrap, policy and synthetic clock ACTIVE with nonempty own tests; 17 other product modules PLANNED. All pre-existing R2 fixture documentation and proposed ADR markers remain intact. A changed `src/clock/` owner runs clock's *real* tests and exposes planned market-data/risk/integration reverse dependents as UNTESTED, not a blanket failure.
+
+### Evidence and STOP
+
+Exact-head 4/4 hosted CI (real Windows PS5.1, GEF, public security, Source Pack + actual impacted harness); no unresolved inline threads, narrow diff, no secrets or production source. Owner objective audit labeled `OWNER_SELF_AUDIT_NOT_INDEPENDENT`; normal PR merge only if all verified. The synthetic clock core does **NOT** prove actual time synchronization, source semantics, cross-host network latency, feed/data rights, broker eligibility, independent production security review or a tradable strategy. These are later separately scoped WOs and contractual gates. STOP on any test red, unexpected changed file, state/graph/pin drift, unsafe real-time or active-source claim.
