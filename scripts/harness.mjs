@@ -11,14 +11,12 @@ const registry=validateRegistry(JSON.parse(fs.readFileSync(path.join(root,"harne
 const fail=(message,code=1)=>{console.error("[FAIL] "+message);process.exit(code)};
 const run=(command,argv,inherit=false)=>spawnSync(command,argv,{cwd:root,encoding:"utf8",stdio:inherit?"inherit":"pipe",shell:false});
 function checkDoctor(){
- const required=["AGENTS.md",".gitmodules",".integrations/hive.lock.json",".engineering/SOURCE-HIERARCHY.md",".engineering/CHECKPOINT.md",".engineering/DEFINITION-OF-DONE.md",".engineering/work-orders/FV-BOOT-001.md"];
+ const required=["AGENTS.md",".gitmodules",".engineering/SOURCE-HIERARCHY.md",".engineering/CHECKPOINT.md",".engineering/DEFINITION-OF-DONE.md",".engineering/work-orders/FV-FOUNDATION-002.md",".engineering/context-locks/FV-FOUNDATION-002.md"];
  for(const f of required) if(!fs.existsSync(path.join(root,f))) fail("MISSING_FILE "+f);
- const hive=JSON.parse(fs.readFileSync(path.join(root,".integrations/hive.lock.json"),"utf8"));
- if(hive.version!=="v1.0.3"||hive.commit!=="52bd3dab54dd4f16264072e198ed1fc23168f7fa") fail("HIVE_PIN_MISMATCH");
  const gitlink=run("git",["ls-tree","HEAD","vendor/gef-bootstrap"]);
  if(gitlink.status!==0||!gitlink.stdout.includes("160000 commit 866fe3af8cccc65c929aaf6a47a924401fa448b3")) fail("GEF_GITLINK_MISMATCH_OR_MISSING");
  if(!fs.existsSync(path.join(root,"vendor/gef-bootstrap/package.json"))) fail("GEF_SUBMODULE_NOT_INITIALIZED: git submodule update --init --recursive");
- console.log("[PASS] doctor sourcepack pins gitlink and initialized GEF checkout");
+ console.log("[PASS] doctor checks local sourcepack and initialized pinned GEF checkout");
 }
 function getFiles(base,head){
  if(!/^[a-fA-F0-9]{40}$/.test(base)|| !/^(HEAD|[a-fA-F0-9]{40})$/.test(head)) fail("INVALID_BASE_HEAD");

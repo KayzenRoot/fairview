@@ -11,10 +11,10 @@ const registry=JSON.parse(fs.readFileSync("harness/modules.json","utf8")),impact
 if(impact.unknown.length||impact.planned.length)throw Error("UNVERIFIED_IMPACT");
 const src=fs.readFileSync(".engineering/CHECKPOINT.json");
 const cp=JSON.parse(src);
-const output={schema_version:1,project:"Fairview",work_order:"FV-BOOT-001",base_sha:base,head_sha:head,
+const output={schema_version:1,project:"Fairview",work_order:cp.work_order,base_sha:base,head_sha:head,
 source_checkpoint_status:cp.status,changed_files:changed,impacted_modules:impact.active,
 tests_verified:process.env.EVIDENCE_TESTS_VERIFIED==="1"?["check-sources","security-scan","harness-doctor","affected-module-unit-tests"]:[],
-upstream_validation:"separate_geF_job",windows_real_host:"NOT_TESTED_IN_CI",
+upstream_validation:"separate_geF_job",windows_development_setup:"CHECKED_BY_WINDOWS_CI_NO_EXTERNAL_SERVICES",
 source_checkpoint_sha256:crypto.createHash("sha256").update(src).digest("hex"),
 generated_at:new Date().toISOString()};
 if(!output.tests_verified.length)throw Error("NO_VERIFIED_TEST_PROOF");

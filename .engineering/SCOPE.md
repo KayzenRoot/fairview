@@ -1,7 +1,7 @@
-# V1 scope classification
-NECESSARY now, FV-BOOT-001: establish and validate repository Source Pack, pin GEF v1.0.0 source submodule, supply version-pinned HIVE v1.0.3 local bootstrap and read-only project registration checks, implement test-impact harness foundation, CI governance and PDF-only chat executor handoff.
-NECESSARY for V1 product, later approved WOs: one eligible Forex execution venue and source, two compatible CEX spot connectors, a carefully selected supported Uniswap pool/chain, replay and paper modes, narrowly authorized live orders, independent Risk Kernel, account/position reconciliation, telemetry, incident response, operator UI and audited AI advisory/limited autopilot.
-IMPORTANT after evidence: multi-feed latency optimization and richer market regime analyses.
-FUTURE: all-venue/all-chain coverage, additional algorithms, own Uniswap v4 hooks, commercial billing/multi-tenant console, unvalidated high-frequency performance claims.
-OUT OF SCOPE: guaranteeing profit, bypassing venue policies, MEV predatory exploitation, storing real secrets in Git, activating live trading by default, untested autonomous wallet signing, blanket cleanup.
-Current WO FV-BOOT-001 **does not authorize any live trade, deployment, account creation or host data mutation**. Product scope remains subject to further selected-venue architecture decisions.
+# FairView current scope
+
+**Current implementation WO:** FV-FOUNDATION-002, no auxiliary context/memory-service dependency. Scope: remove obsolete integration files, runtime/build/CI gates and source documentation; retain pinned GEF, Git/Node source harness, Windows Doctor/Install and security/impact checks. Source promotion only by normal scoped PR and exact-head CI; no product module implementation in this migration.
+
+**Future product scope (research proposals, not runtime):** Forex, CEX and on-chain DEX/Uniswap strategies with independent portfolio/risk/ledger and explicit authorized execution permissions, deterministic replay/benchmarks, telemetry, bounded AI and server-authorized browser dashboard.
+
+**Out of scope now:** real venue/account creation, broker integration, on-chain signing, trading, live financial results, credential management, model installation, funded VPS, paid feed retention without licence or automatic product-module activation. Pure synthetic future module work can begin under separately admitted narrow WOs after accepted no-context-source migration without a host semantic-search prerequisite. D-007 rights and independent production-security gates still apply.

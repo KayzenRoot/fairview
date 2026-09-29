@@ -1,7 +1,7 @@
-# Architecture | Planning baseline
-Seams: Web Control Plane (proposed Next.js), Trading Execution Plane (proposed Rust), venue adapters (FIX/REST/WebSocket/DEX when authorized), independent deterministic Risk Kernel, market-event store, order/position ledger, replay/shadow engine, AI advisory separated from critical execution.
-Venue adapters normalize timestamps, tick size, fees, precision, Bid/Ask, sequence gaps, order acknowledgments, fills, rejection and cancel states. Never confuse observed market gap with executable edge; measure end-to-end latency percentiles and live fill outcomes.
-Risk Kernel is independent of agents and strategies: per-user notional, daily loss, max drawdown, leverage, stale feed, health, circuit breaker, kill switch and one-leg recovery; runtime fails closed.
-One module = one explicit boundary with isolated harness, fixtures and deterministic replay. Package/import dependency graph feeds targeted checks; changed shared contracts or unknown paths widen tests, never silently skip.
-HIVE is external local-first read-only context assistant. GEF is vendored via immutable git submodule commit as a governed source workspace. Neither is a dependency of live trading runtime. GEF / HIVE failure must not disable deployed trading risk services.
-No low-level product stack implementation is admitted by FV-BOOT-001; detailed architecture and partner contracts require later ADRs.
+# FairView architecture | current engineering baseline
+
+FairView is a browser-operated, server-executed multi-market research and potential authorized trading system. Trading-oriented product modules remain PLANNED, not implemented: independent Risk/Policy, exact source clocks, licensed market data, durable local Ledger and externally reconciled venue order/fill/position state; separate Forex, CEX and DEX connectors; deterministic Replay/Research; bounded advisory AI and permissioned operator Web UI. No backend account or live execution is authorized by a planning document.
+
+Development architecture: versioned repository Source Pack, accepted ADRs and WOs, context locks, pinned GEF source-workspace Git submodule, Node22 dependency-aware registry/harness and GitHub exact-head CI/Evidence Bundle. Developers read the Git repo directly and use narrowly scoped files, tests and checkpoints. No auxiliary memory server, database, Docker installation or semantic service is needed to build or test the engineering foundation.
+
+Risk must fail closed on permissions, source age/clock, inventory and uncertain external fills. The browser and AI never override risk or directly issue broker/wallet commands. PostgreSQL, Rust/Tokio, CCXT, Uniswap tooling and observability stacks are future separately evaluated options, not installed or adopted under the current no-context-service migration.
