@@ -30,7 +30,7 @@
     },
     {
       "id": "risk",
-      "state": "planned",
+      "state": "active",
       "depends_on": [
         "market-data",
         "clock",
@@ -40,7 +40,9 @@
         "src/risk/",
         "tests/risk/"
       ],
-      "tests": []
+      "tests": [
+        "tests/risk/*.test.mjs"
+      ]
     },
     {
       "id": "forex",
@@ -320,5 +322,5 @@
     ".engineering/DECISIONS-LEDGER.md",
     "src/contracts/"
   ],
-  "note": "FV-LEDGER-001 admits the fifth ACTIVE harness (bootstrap, synthetic policy, clock, market-data and in-memory synthetic ledger). The other 15 product modules remain PLANNED. All active product functions are restricted to fictional deterministic fixtures; no physical persistence, actual provider entitlement, broker connection, order transmission or financial runtime is approved. Every future module needs its own scoped WO, real owned tests, direct active dependencies and exact-head CI. Privileged financial production separately requires approved provider rights, authoritative reconciliation, qualified independent security review, managed secrets and verified private repository."
+  "note": "FV-RISK-001 adds the sixth ACTIVE harness (bootstrap + invented-only policy/clock/market-data/in-memory ledger/risk), with 14 others PLANNED. Risk imports accepted mock Policy/Clock/Market Data APIs, uses only caller-injected frozen fictional portfolio/kill snapshots and NEVER supplies financial ADMIT, real provider rights, durable kill, real authenticated balance, live order or financial execution authority. Exact scoped risk-owned negative fixtures and exact-head CI required. Financial production still requires D-007 provider/legal evidence, verified PRIVATE under D-008, independently durable financial Ledger/Risk kill and qualified HIGH_ASSURANCE audit."
 }
