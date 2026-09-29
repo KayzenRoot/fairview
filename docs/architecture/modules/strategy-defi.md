@@ -1,0 +1,13 @@
+# CEX/DEX and same-chain DEX feasibility | module `strategy-defi`
+
+**PLANNED, NOT IMPLEMENTED.** FV-DISC-001 Round 7; same original module `strategy-defi`, no additional registry IDs. Reserved `src/strategy-defi/`, `tests/strategy-defi/`; existing dependencies: `defi`, `replay`, `portfolio`. Never authorize an order, sign a wallet transaction, deploy a router/hook or imply an atomic hedge.
+
+## Two internal research families
+- `CEX_DEX_SPREAD`: compare independent actual CEX spot executable depth/account-local inventory with same-block Uniswap pool route and exact token/chain/quote currency. Model asynchronous two-leg uncertainty, all fees/slippage, v4 hook behavior when applicable, gas native-to-settlement conversion, chain reorg/finality and CEX order ACK/fill ambiguity. A transfer/bridge/withdrawal cannot be assumed to rebalance instantly. Any later hedge requires separate policy, reconciled balances and independent Risk Kernel admission.
+- `DEX_POOL_ROUTE`: compare explicit directed pools on ONE eventually approved chain, per-hop exact input/output, v3 tick-crossing or v4 hook effects, route-wide gas and reverts, and conservative possible inclusion-price changes. A simulated pool swap is not a real fill, and an atomic router is a separately audited potential future technology rather than a current strategy assumption.
+
+## Proposed contracts and existing technology candidates
+`DexFeasibilityV0`, `CexDexExposurePlanV0`, `DexQuoteEnvelopeV0`, `DexGasCostV0` with R2 block and clocks, R3 Risk Kernel/ledger and R4 deterministic replay. Official Uniswap SDK version by selected v3/v4 pool, viem read-only/simulateContract as potential future tooling, Foundry Anvil for later pinned-block fork regression: https://developers.uniswap.org/docs/protocols/v4/concepts/hooks ; https://viem.sh/docs/contract/simulateContract ; https://www.getfoundry.sh/anvil/index.html . License and chain-provider rights per later exact-version ADR only.
+
+## Future harness and STOP
+Synthetic POOL_FEE_UNMODELED, TOKEN_TRANSFER_FEE, UNBOUNDED_GAS_COST, BASE_FEE_SPIKE, SWAP_REVERT, SLIPPAGE_STATE_DRIFT, SANDWICH_ADVERSE_SELECTION, CEX_LEG_UNKNOWN, INSTANT_BRIDGE_ASSUMPTION, PREMATURE_FINALITY and UNLICENSED_RPC_ARCHIVE. Detailed 20-case matrix in R7 main document. **STOP** on any unverified token/contract/hook, chain reorg, unknown gas/conversion, insufficient available balances, loss-limit breach, missing venue permission or incomplete reconciliation. A separate admitted source WO and independently proven FV-FOUNDATION-002 FULL/financial controls must precede any real adapter or signing.

@@ -31,7 +31,11 @@
     {
       "id": "risk",
       "state": "planned",
-      "depends_on": [],
+      "depends_on": [
+        "market-data",
+        "clock",
+        "policy"
+      ],
       "paths": [
         "src/risk/",
         "tests/risk/"
@@ -42,7 +46,10 @@
       "id": "forex",
       "state": "planned",
       "depends_on": [
-        "risk"
+        "risk",
+        "market-data",
+        "clock",
+        "execution"
       ],
       "paths": [
         "src/forex/",
@@ -54,7 +61,10 @@
       "id": "cex",
       "state": "planned",
       "depends_on": [
-        "risk"
+        "risk",
+        "market-data",
+        "clock",
+        "execution"
       ],
       "paths": [
         "src/cex/",
@@ -66,7 +76,10 @@
       "id": "defi",
       "state": "planned",
       "depends_on": [
-        "risk"
+        "risk",
+        "market-data",
+        "execution",
+        "policy"
       ],
       "paths": [
         "src/defi/",
@@ -78,7 +91,8 @@
       "id": "ai",
       "state": "planned",
       "depends_on": [
-        "risk"
+        "risk",
+        "research"
       ],
       "paths": [
         "src/ai/",
@@ -90,7 +104,10 @@
       "id": "web",
       "state": "planned",
       "depends_on": [
-        "risk"
+        "risk",
+        "portfolio",
+        "observability",
+        "ai"
       ],
       "paths": [
         "src/web/",
@@ -107,11 +124,182 @@
         "cex",
         "defi",
         "ai",
-        "web"
+        "web",
+        "policy",
+        "clock",
+        "market-data",
+        "ledger",
+        "execution",
+        "portfolio",
+        "replay",
+        "research",
+        "strategy-forex",
+        "strategy-cex",
+        "strategy-defi",
+        "observability"
       ],
       "paths": [
         "tests/integration/",
         "src/contracts/"
+      ],
+      "tests": []
+    },
+    {
+      "id": "policy",
+      "state": "planned",
+      "depends_on": [],
+      "paths": [
+        "src/policy/",
+        "tests/policy/"
+      ],
+      "tests": []
+    },
+    {
+      "id": "clock",
+      "state": "planned",
+      "depends_on": [],
+      "paths": [
+        "src/clock/",
+        "tests/clock/"
+      ],
+      "tests": []
+    },
+    {
+      "id": "market-data",
+      "state": "planned",
+      "depends_on": [
+        "clock"
+      ],
+      "paths": [
+        "src/market-data/",
+        "tests/market-data/"
+      ],
+      "tests": []
+    },
+    {
+      "id": "ledger",
+      "state": "planned",
+      "depends_on": [
+        "policy"
+      ],
+      "paths": [
+        "src/ledger/",
+        "tests/ledger/"
+      ],
+      "tests": []
+    },
+    {
+      "id": "execution",
+      "state": "planned",
+      "depends_on": [
+        "risk",
+        "market-data",
+        "clock",
+        "ledger"
+      ],
+      "paths": [
+        "src/execution/",
+        "tests/execution/"
+      ],
+      "tests": []
+    },
+    {
+      "id": "portfolio",
+      "state": "planned",
+      "depends_on": [
+        "risk",
+        "ledger"
+      ],
+      "paths": [
+        "src/portfolio/",
+        "tests/portfolio/"
+      ],
+      "tests": []
+    },
+    {
+      "id": "replay",
+      "state": "planned",
+      "depends_on": [
+        "market-data",
+        "clock",
+        "execution",
+        "ledger",
+        "risk"
+      ],
+      "paths": [
+        "src/replay/",
+        "tests/replay/"
+      ],
+      "tests": []
+    },
+    {
+      "id": "research",
+      "state": "planned",
+      "depends_on": [
+        "market-data",
+        "replay"
+      ],
+      "paths": [
+        "src/research/",
+        "tests/research/"
+      ],
+      "tests": []
+    },
+    {
+      "id": "strategy-forex",
+      "state": "planned",
+      "depends_on": [
+        "forex",
+        "replay",
+        "portfolio"
+      ],
+      "paths": [
+        "src/strategy-forex/",
+        "tests/strategy-forex/"
+      ],
+      "tests": []
+    },
+    {
+      "id": "strategy-cex",
+      "state": "planned",
+      "depends_on": [
+        "cex",
+        "replay",
+        "portfolio"
+      ],
+      "paths": [
+        "src/strategy-cex/",
+        "tests/strategy-cex/"
+      ],
+      "tests": []
+    },
+    {
+      "id": "strategy-defi",
+      "state": "planned",
+      "depends_on": [
+        "defi",
+        "replay",
+        "portfolio"
+      ],
+      "paths": [
+        "src/strategy-defi/",
+        "tests/strategy-defi/"
+      ],
+      "tests": []
+    },
+    {
+      "id": "observability",
+      "state": "planned",
+      "depends_on": [
+        "market-data",
+        "clock",
+        "execution",
+        "ledger",
+        "risk"
+      ],
+      "paths": [
+        "src/observability/",
+        "tests/observability/"
       ],
       "tests": []
     }
@@ -124,5 +312,5 @@
     ".engineering/DECISIONS-LEDGER.md",
     "src/contracts/"
   ],
-  "note": "Any file without explicit ownership fails closed; planned module changes cannot be released without activation and tests."
+  "note": "Planning-only FV-DISC-001 draft: bootstrap stays the sole active harness. All product paths reserved; no product src/ or tests/ files have been created. Product-source admission requires the accepted native Git/Node22/pinned GEF foundation, a separately admitted per-module Work Order, nonempty deterministic tests and exact-head CI. Financially privileged deployment also requires independent security review, verified private-repo status and authorized venue/chain/data rights."
 }

@@ -1,0 +1,12 @@
+# DEX/Uniswap on-chain observation | module `defi`
+
+**PLANNED, NOT IMPLEMENTED.** FV-DISC-001 Round 7 read-only design. Reserved `src/defi/`, `tests/defi/`; unchanged dependencies: `risk`, `market-data`, `execution`, `policy`. No chain, pool or data provider is selected; no RPC request or wallet is created by this work.
+
+## Responsibility and proposed contracts
+One future explicitly approved EVM chain and one verified Uniswap v3 OR v4 pool at first. Bind `DexPoolEvidenceV0` exact pool/deployment/codehash, token contract and decimals, fee/tick/liquidity and v4 hook context to `DexBlockAnchorV0` chain ID, blockHash, parent ancestry, local observation and chain-appropriate HEAD/SAFE/FINALIZED/UNKNOWN. Produce `DexQuoteEnvelopeV0` from same-block liquidity and rights-checked quote semantics, plus chain-specific `DexGasCostV0` with base/priority and any real additional fees. A stale subgraph, unsupported pool/hook or mixed-block state is non-actionable. v3/v4 route simulation is **not** proof a real future transaction will fill or preserve its price.
+
+## Existing technology to evaluate
+Official Uniswap v3/v4 SDK and verified contracts only when deployment selected; viem `readContract`, `multicall`, `simulateContract` and `watchBlocks` for a separately admitted **future read-only** Public Client; optional Foundry Anvil *future* synthetic/pinned-fork tests, never secrets or real RPC data in public CI. Original docs: https://developers.uniswap.org/docs/protocols/v4/overview ; https://developers.uniswap.org/docs/protocols/v4/concepts/hooks ; https://viem.sh/docs/contract/readContract ; https://viem.sh/docs/contract/simulateContract ; https://www.getfoundry.sh/anvil/index.html . Upstream exact license/version and provider's RPC/data terms still OPEN.
+
+## First independently gated harness and STOP
+Future pure synthetic WRONG_CHAIN_ID, FAKE_TOKEN_SYMBOL, WRONG_POOL_VERSION, UNKNOWN_V4_HOOK, MIXED_BLOCK_STATE, BLOCK_PARENT_REORG, RPC_FORK_DISAGREEMENT, STALE_SUBGRAPH, INSUFFICIENT_TICK_LIQUIDITY, TOKEN_TRANSFER_FEE and PREMATURE_FINALITY. All 20 proposed R7 negative fixtures appear in `docs/architecture/DEX-UNISWAP-FEASIBILITY-R7.md`, not a working runtime. **STOP** without chain, token, pool/hook, exact-block proof, legal RPC rights, independent risk or R8 FULL/independent review.

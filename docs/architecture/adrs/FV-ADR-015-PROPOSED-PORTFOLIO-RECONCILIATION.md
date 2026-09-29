@@ -1,0 +1,20 @@
+# FV-ADR-015 | Evidence-bound portfolio reconciliation and reservations
+
+**Status: PROPOSED_NOT_ADOPTED.** FV-DISC-001 Round 8 is planning-only: no product ledger database, selected account, custody service, reconciliation implementation or financial approval.
+
+## Decision proposal
+Preserve existing `portfolio` module, dependent on current `risk` and `ledger` graph entries, with immutable evidence-linked `BalancePositionObservationV0`, `ReconciliationCursorV0`, `InventoryReservationV0`, `ReconciliationDiscrepancyV0`, `PortfolioSnapshotV0` and `PortfolioRiskViewV0`. The local Ledger owns committed immutable intent/fill evidence but CANNOT guarantee a remote broker order outcome. Each external venue adapter must supply authenticated, fully paginated scoped order/fill/position and balance history or relevant canonical chain/block receipts, with explicit as-of/watermark and expiry. A snapshot that lacks required source completeness, has a possible lost-ACK fill, contradictory balances or orphaned chain receipt is `UNRECONCILED` or `DISCREPANCY_LOCKED`; it is not a zero position.
+
+Keep exact venue/account/asset/contract units separate. CEX-local balances are not automatically margin for another exchange. Forex CFD/spot and chain token positions cannot be merged by ticker alone. Pending withdrawal/deposit/bridge is unavailable until independently confirmed; finalized on-chain state is chain-specific. Account for expected commissions, financing, funding, collateral and worst plausible unknown fills before exposing a limited, expiring `PortfolioRiskViewV0` to independent Risk Kernel. Derived dashboard PnL and asynchronous read models are non-authoritative for pretrade admission.
+
+## Technology and concurrency guard
+Evaluate a separate FairView product PostgreSQL database with exact-decimal immutable Ledger evidence, unique scoped financial event identifiers, versioned ledger-sequence/watermark portfolio projections and atomic local reservation transactions. PostgreSQL SERIALIZABLE may reject a concurrent local transaction with SQLSTATE `40001`: bounded retries may repeat the LOCAL snapshot/reservation computation only; NEVER repeat an unknown externally sent order. A materialized view can help a noncritical read-only dashboard, but its refresh cadence makes it unsuitable for authoritative immediate risk decisions.
+
+Official references: https://www.postgresql.org/docs/18/transaction-iso.html ; https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html ; https://www.postgresql.org/docs/18/sql-refreshmaterializedview.html .
+
+## Explicit architecture boundary and alternative
+Avoid introducing a `risk -> portfolio` registry dependency because `portfolio -> risk` already exists: the future immutable snapshot contract will be independently reviewed at the integration boundary. No realtime risk authorization is delegated to asynchronous Portfolio dashboard projections. Rejected: balance absence treated as zero, Redis/dash cache as financial source of truth, a broker ACK as a fill, a grafana ACK as reconciliation, cross-venue funds assumed instantly fungible, and local DB transaction as externally atomic.
+
+**Activation proof:** separately admitted, independent FV-FOUNDATION-002 FULL review and permitted venue read-only API/retention evidence; synthetic duplicate fill, lost ACK possible fill, incomplete cursor, concurrent reservation conflict, SQLSTATE 40001 LOCAL retry with zero duplicate external sends, missing fees, on-chain reorg, stale snapshot/kill persistence and read-only backup/restore. This ADR does not approve product implementation or trading.
+
+**Accepted foundation D-009:** pure synthetic module admission depends on current Git-only source governance, exact-head CI and real module-owned tests. Financially privileged operation additionally requires independent security and actual provider/data-use rights. No separate background host acceptance is required.

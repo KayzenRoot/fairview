@@ -1,0 +1,9 @@
+# FV-DISC-001 | Context lock after native source-foundation migration
+
+Base protected main accepted at `694fe60c759ab5a5f91ffaa32b599899bc614f83`, PR #18 merged, post-merge CI `36507914601` four completed SUCCESS. Planning DRAFT PR #17 historical head before reconciliation: `ffbd05cc0f5e6b50a7af13f4de8fd94dfeb54de9`. Merge the actual accepted native Git/Node22/GEF foundation into this branch **without a force push**; use protected main as the base tree and import ONLY the documented 57 planning delta paths. Retain immutable old audit records in Git history/issue comments but do not re-add obsolete host installation scripts, locks, cloud context-service gates, runbooks or test suites.
+
+**Restricted planning paths:** .engineering/work-orders/FV-DISC-001-PLANNING-PROPOSAL.md; matching .engineering/context-locks/FV-DISC-001-PLANNING-PROPOSAL.md; docs/architecture/; harness/modules.json with exactly 20 original proposed module IDs and only bootstrap ACTIVE; tests/bootstrap/impact.test.mjs design assertions. Everything else inherits protected main and stays untouched. All R1-R10 technical ADRs still PROPOSED_NOT_ADOPTED, and real market/network/code operations are excluded.
+
+**Source gate:** accepted current Git-only source baseline, real admitted per-module future WO, exact-source CI, nonempty owned deterministic negative tests and direct dependency readiness; no locally installed indexing, semantic provider or Docker daemon is a prerequisite. High-assurance financial release independently requires named lawful account/chain/data rights, immutable Ledger+Risk/Portfolio reconciliation, PRIVATE repo, managed secrets and qualified independent security review.
+
+**STOP:** if inherited foundation files are resurrected, planned product is activated, old external-service gate persists, current exact-head CI is incomplete, evidence mismatches or review findings remain critical, do not merge this PR or start financially privileged development.

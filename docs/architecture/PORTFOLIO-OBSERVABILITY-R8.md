@@ -1,0 +1,98 @@
+# FV-DISC-001 | Round 8: Portfolio reconciliation and trading observability
+
+
+## 1. Trust boundaries: money truth, derived state and diagnostics
+
+The future Portfolio module needs three DISTINCT truths: (A) local immutable Ledger intent/attempt/fill/reconciliation facts, whose database durability does not guarantee what the external broker actually did; (B) authenticated, scoped and *complete* external venue order/fill/balance/position history or a chain-specific canonical block/receipt with appropriate finality; and (C) explicitly versioned derived portfolio projections. An asynchronous dashboard projection is NOT the primary pre-trade authority. Missing external evidence, mismatched watermarks or possible fills due to lost ACK are genuine exposure uncertainty, not zero balances or proof no trade occurred.
+
+Proposed source-of-truth split:
+- **Ledger** owns committed local immutable OrderIntentV0, OrderAttemptV0 (MAY_HAVE_SENT) and authenticated externally corroborated fill/unknown events. Future product financial databases must remain distinct from developer tooling.
+- **Execution/venue adapter** owns the protocol-correct, authenticated remote order/fill/position queries and verification that pages/cursors cover the required intervals. No provider-agnostic assumption that one stream alone contains full history.
+- **Portfolio** owns immutable, evidence-linked `PortfolioSnapshotV0` projections, venue-local spendable vs reserved balances, contract-specific positions, pending transfers, margin and known/worst-case unknown exposure; it never fabricates external fills or clears an incident on timeout.
+- **Risk Kernel** independently validates the specific current, versioned `PortfolioRiskViewV0` and kill/config generation at admission/dispatch. Portfolio depends on existing `risk` and `ledger` registry paths for the planned architecture; do NOT add a backward `risk -> portfolio` registry dependency creating a cycle. The authority and read interface will be a separately audited immutable snapshot/integration contract when modules are admitted.
+- **Observability** emits *non-authoritative* redacted metrics, traces and incident notifications, using privacy-preserving correlation references into restricted Ledger/Portfolio evidence stores. A Grafana alert ACK or telemetry span is never an order fill, financial reconciliation, capital-limit reset or kill release.
+
+## 2. Portfolio typed contract proposal
+
+| Contract | Essential fields and invariants |
+|---|---|
+| `BalancePositionObservationV0` | `venue_id`, legal `account_scope`, `instrument_contract_id`/token exact chain/address/issuer, local source query and authenticated provider ref, **complete** pagination/cursor provenance and as-of UTC plus local receive monotonic/clock-domain/error, wallet blockHash/finality where relevant, exact decimal available/locked/pending balance, current position/contract units and unsettled fees/funding, `source_completeness`. Unknown fields remain UNKNOWN. |
+| `ReconciliationCursorV0` | external venue/account, query start/end interval and fully paginated watermark/session generation, provider order/fill/position cursors and gap status; DEX chain ID and canonical blockHash/parentHash/finality; local Ledger high-watermark and `verified_at`/expiry; linked private source receipts. Missing pages, stream gap, truncated history or orphaned block cannot claim COMPLETE. |
+| `InventoryReservationV0` | atomic local scoped reservation ID and intent/risk/config generation; venue/account/asset exact ID, amount and precision, expected commission/fee currency, reserved/available and expiry, potential **maximum external fill** for `MAY_HAVE_SENT` or unknown order, constrained release only after authoritative venue evidence, reconciliation or a separately approved policy. Funds on account A cannot be lent instantly to B. |
+| `ReconciliationDiscrepancyV0` | immutable discrepancy ID, affected scope/asset/position, `MISSING_FILL | DUPLICATE_FILL | BALANCE_MISMATCH | HISTORY_GAP | ORPHANED_CHAIN_BLOCK | FEE_OR_CARRY_MISMATCH | UNKNOWN_EXTERNAL_EFFECT`, internal vs external amounts and receipt hashes, max plausible risk, incident ID, state `OPEN | INVESTIGATING | AUTHENTICATED_RESOLVED`, independently reviewed final evidence and timestamp. Never erase the observed discrepancy on a later reset. |
+| `PortfolioSnapshotV0` | immutable snapshot ID, ledger sequence/hash/high-watermark, per-external-source COMPLETE cursors, `balance_by_venue_account_asset`, exact realized PnL **with signed accounting policy/cost-basis version**, unrealized PnL and mark source/age/clock uncertainty, fee/carry/funding accruals, per-venue margin/collateral, pending chain finality/transfers, unknown-fill worst-case and funds reserved by pending intents, `reconciliation_state`, `snapshot_version`, `valid_until` and private evidence references. |
+| `PortfolioRiskViewV0` | signed/scoped immutable snapshot ref, reconciled watermark and freshness, worst plausible open exposure from unknown fills, free vs reserved inventory/margin by permitted venue/account, currency/chain conversion and provenance, limits/config generation, independent kill epoch, `VALID | STALE | UNRECONCILED | DISCREPANCY_LOCKED` status and explicit reason codes. Risk may use it ONLY if version, permission, clock and scope remain current. |
+
+### Cross-market accounting and materialization
+Forex spot/CFD positions, CEX spot inventory and on-chain token amounts have distinct contract/settlement, lot precision, funding, margin, chain-finality and currency conversion semantics. Do not sum same ticker strings across venues or use stale reference feed mid-prices as executable realizable liquidation prices. An accurate mark-to-market needs independent mark source, as-of time and confidence; realized PnL requires verified fills and fees and a versioned lot accounting policy (e.g., FIFO vs average cost) approved before use. Cross-chain bridged/wrapped tokens are separate assets unless explicitly normalized under a reviewed conversion and bridge settlement state.
+
+A transfer **PENDING** between a CEX and blockchain, between brokers, or between CEX exchanges is **not immediately spendable**. Reserve at the actual source and destination scope; credit destination availability ONLY after authenticated venue confirmation and/or chain-specific finality per selected network. On-chain transactions can revert, be replaced or reorg; event indexers may lag the canonical chain. Unknown chain canonicality or missing venue transfer proof locks affected scope, rather than optimistically releasing cash/margin.
+
+### Startup and incremental reconciliation (later implementation only)
+1. Restore local Ledger append-only events, last durable checkpoint and persistent independent kill state. Freeze affected new risk-increasing dispatch before network recovery.
+2. Authenticate external read-only queries with exact venue legal entity/account permissions, full order and execution history (pagination + query interval + session resets), live balance and open positions; for future selected DEX include chain ID/blockHash/parent ancestry/finality and applicable token transfers/receipts.
+3. Join scoped external execution identifiers, **only where provider documents identifier uniqueness**. Repeated fill reports deduplicate idempotently; ambiguous or conflicting identifiers and missing history become discrepancies, not silently overwritten records.
+4. Produce a proposed `ReconciliationCursorV0` with authenticated completeness and Ledger high-watermark, compute exact-decimal per-account asset balance/position and worst-case unknown `MAY_HAVE_SENT` fill bounds. Validate all outstanding `InventoryReservationV0` and pending transfer effects.
+5. Publish a new immutable `PortfolioSnapshotV0` and versioned `PortfolioRiskViewV0` ONLY for complete reconciled scopes. If any critical source is missing or stale, leave `UNRECONCILED`/`DISCREPANCY_LOCKED`, maintain prior immutable snapshot as historical only, deny new exposure and raise an incident. Any protective unwind needs a separately admitted, explicitly venue-permitted new Risk Kernel decision.
+6. Refresh *optional* read-only dashboard summaries asynchronously. A delayed PostgreSQL materialized view, graph or cache never becomes the Risk Kernel's latest authoritative snapshot.
+
+Use an atomic, audited scoped commit/reservation design in a future separate Portfolio WO; PostgreSQL serializable transaction conflicts (SQLSTATE `40001`) require bounded retry of **local projection/reservation database transactions**, NEVER automatic resend of an externally uncertain broker order. The official PostgreSQL materialized-view docs describe concurrent refresh conditions and permit an eventually consistent **dashboard-only** copy; it is not a valid risk-control freshness guarantee. Official: https://www.postgresql.org/docs/18/transaction-iso.html ; https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html ; https://www.postgresql.org/docs/18/sql-refreshmaterializedview.html .
+
+## 3. Observability typed contract proposal
+
+| Contract | Essential fields and boundaries |
+|---|---|
+| `TradingTraceEnvelopeV0` | restricted randomly generated `trace_id`/`span_id` and one-way opaque/order correlation ref, stage `QUOTE_CAPTURE | NORMALIZE | SIGNAL | RISK | LEDGER | DISPATCH | ACK | FILL | RECONCILE | INCIDENT`, source/venue **coarse pseudonym** not financial account/PII, capture `clock_domain_id`, software/config generation, redaction status, optional source event UTC semantics, hash pointer into private Ledger/Portfolio evidence; no raw financial payload in exported span. |
+| `LatencyMeasurementV0` | precise `stage_name`, `start/end_local_monotonic_ns` from the **same documented clock domain**, sample population (`SYNTHETIC | DEMO | REAL_OBSERVED`), `n`, instrument/venue-class coarse labels, histogram bucket/resolution and error bounds, `p50/p95/p99` estimates only with sufficient tail samples, `missing_count`, `dropped_count` and `UNMEASURABLE` reason. No unjustified cross-host one-way latency. |
+| `TelemetryQualityV0` | exporter/collector uptime, queue capacity and backpressure, sampled/drop/redaction counts, last heartbeat and clock health, metric label cardinality budget/overflow, incident pipeline and alert-route health, private storage retention and expiry, and `HEALTHY | DEGRADED | UNAVAILABLE` quality status. Telemetry completeness is **not** broker order-history completeness. |
+| `IncidentEnvelopeV0` | nonfinancial-safe incident ID, class, severity, affected scoped venue/strategy (pseudonym or coarse), originating immutable risk/ledger/portfolio evidence hashes, monotonic and UTC/uncertainty, detection/acknowledgment/mitigation timestamps, durable kill epoch if any, operator/independent reviewer outcome, recovery authorization reference and expiry. Alert ACK is separate from reconciled incident closure. |
+| `OperatorAlertRouteV0` | severity-to-tenant/operator contact policy, delivery provider/ack/retry/dedup scope, escalation and suppressed alert window, restricted redacted payload schema, watchdog for dropped/unrouted critical alerts and source provenance. Never include API/wallet keys, detailed customer balance/trade logs or licensed raw ticks in notification text. |
+
+### Measurement and cost controls
+OpenTelemetry metrics and tracing are **candidates**. Official metrics docs describe cardinality limits and an overflow data point; enforce explicit low-cardinality labels such as `stage`, `component`, `venue_class`, `quality_state` and `mode`. Never use `account_id`, wallet address, `order_id`, `trace_id`, instrument-by-customer or raw URL as a metric label. Trace IDs belong in restricted trace storage or a redacted, short-lived exemplar, not a potentially unbounded time-series identity. Rust SDK maturity for exact chosen version requires validation; OpenTelemetry spec maturity does not prove a specific language SDK is production-stable. Official: https://opentelemetry.io/docs/concepts/signals/metrics/ ; https://opentelemetry.io/docs/specs/otel/metrics/data-model/ ; https://opentelemetry.io/docs/specs/otel/metrics/sdk/ .
+
+Prometheus classic or native histograms are **candidate** aggregates. Bucket layouts and percentile approximation/accuracy matter; p99 of a tiny sample, missing timings or merged unlike cold/warm/synthetic/demo trials is not an independent low-latency benchmark. Publish histogram version, p50/p95/p99 where statistically defensible, **n**, sampling and invalid-trial counts plus the selected clock-domain and instrument scope. Official: https://prometheus.io/docs/practices/histograms/ ; https://prometheus.io/docs/prometheus/latest/querying/functions/ .
+
+Grafana/Alertmanager can route/group notifications to contact points. An actual future alerting system needs a separate tested priority path for unacknowledged critical kill, reconciliation discrepancy, sequence gap, inability to reconcile a potentially sent order and mandated monitoring outage. Configure group/dedup/escalation by coarse scope and verify notification delivery. Silencing an alert must never clear a trading kill or mark a financial incident resolved. Official: https://grafana.com/docs/grafana/latest/alerting/fundamentals/notifications/ ; https://prometheus.io/docs/alerting/latest/configuration/ .
+
+**Safety design:** critical execution, Risk Kernel and Ledger cannot block on synchronous telemetry export or wait for an external cloud collector. Saturation drops/degrades **diagnostic telemetry** with a prominent health/incident and preserves immutable mandatory local evidence. If independently required audit evidence, mandated operator oversight or critical alert path is missing, a separately specified fail-closed **operational PAUSE** denies new risk increases. Alerts are NEVER the only safety kill mechanism; critical incident origin must be persisted independently before best-effort notification. No collector restart, dashboard acknowledgment or AI action changes portfolio exposure.
+
+## 4. Deterministic negative fixture matrix (future activated module harnesses, NOT current tests)
+
+| Scenario ID | Synthetic fault | Expected fail-closed and evidence response |
+|---|---|---|
+| DUPLICATE_EXTERNAL_FILL | Same scoped execution ID arrives via stream and REST | Apply financial fill once under documented ID scope; retain duplicate audit evidence |
+| CONFLICTING_FILL_IDS | Broker returns conflicting/missing execution IDs | DISCREPANCY_LOCKED, authenticated venue reconciliation |
+| LOST_ACK_OPEN_POSITION | Broker order may have filled with no ACK | Reserve worst-case unknown exposure and block new risk-increasing orders |
+| INCOMPLETE_HISTORY_CURSOR | Missing page or expired private order-history cursor | UNRECONCILED, no inferred zero order/fill |
+| BALANCE_POSITION_DRIFT | External actual balance conflicts with local projection | Preserve immutable discrepancy and freeze affected scope |
+| CROSS_ACCOUNT_FUNDS | Venue A balance credited as venue B spendable collateral | DENY double-spend and keep venue-local reservations |
+| PENDING_WITHDRAWAL | Funds debited at source but pending at destination | Not simultaneously spendable at either side |
+| WRONG_ASSET_ISSUER | Same token ticker with different chain/token contract | No unified inventory position or FX conversion |
+| FX_CONVERSION_STALE | Settlement currency mark and FX reference expired | Unrealized PnL/limit exposure UNKNOWN, no optimistic funding |
+| MISSING_FEE_OR_CARRY | Fill confirmed but applicable fee or funding event missing | No settled realized PnL claim or spendable overstatement |
+| RESERVATION_CONFLICT | Two concurrent intents exceed venue-local available funds | At most legal reserved amount, reject one under local transaction safety |
+| SERIALIZATION_RETRY_SIDE_EFFECT | Local SQLSTATE 40001 during reservation | Retry **local** transaction only, never resend broker order |
+| STALE_RISK_VIEW | Derived PortfolioRiskView older than ledger/venue cursor | DENY new exposure; old dashboard graph may remain historical |
+| REORGED_CHAIN_RECEIPT | Assumed finalized token receipt orphaned by chain | Invalidate spendable credit, reconcile canonical ancestry and incident |
+| KILL_PERSIST_AFTER_RESTART | Global risk kill survives crash while dashboard comes back | Dispatch remains stopped until separately authorized risk release |
+| PRIVATE_STREAM_GAP | Account order-status WebSocket disconnects | Authenticated full history; keep affected scope UNRECONCILED |
+| CROSS_CLOCK_LATENCY | Subtracts local monotonic values from different hosts/epochs | UNMEASURABLE; no 1-way venue latency claim |
+| THIN_P99_SAMPLE | Dashboard displays p99 from too few timings | INSUFFICIENT_TAIL_SAMPLE and show n/uncertainty |
+| METRIC_CARDINALITY_SPIKE | Per-order or wallet address accidentally used as labels | Reject sensitive/high-cardinality labels; report overflow and incident |
+| EXPORTER_BACKPRESSURE | Trace/metric exporter bounded queue fills | Critical risk/ledger path remains isolated; visible diagnostic loss |
+| COLLECTOR_UNAVAILABLE | External OTel collector unreachable | Mandatory evidence still durable locally; separate policy for monitoring PAUSE |
+| ALERT_DELIVERY_FAILURE | Critical kill/discrepancy notification undelivered | Escalation/out-of-band watchdog, no silent financial-incident closure |
+| ALERT_ACK_NOT_RECEIPT | Operator acknowledges Grafana alert while broker unknown | Ledger state stays UNKNOWN_NEEDS_RECONCILIATION |
+| SECRET_OR_TICK_LEAK | API key, wallet secret, PII or licensed tick enters metric/log | Redaction and privacy gate FAIL; no public CI artifact/report |
+
+These **24** row IDs are acceptance obligations for future `tests/portfolio/` and `tests/observability/`, not currently executed runtime tests. Hosted bootstrap CI only confirms documents, ADR markers, 20-module registry and planned dependency impact.
+
+## 5. Future narrow implementation sequence and STOP
+
+2. Separate Observability WO: mock/redacted traces, bounded metrics histograms and sensitive-field rejection, synthetic delayed/failed collector and notification escalation, plus actual module harness; no real account logs/keys in hosted public CI.
+3. Later integration WO with exact named permitted broker/exchange/RPC sources and legal/commercial data rights: authenticated read-only history and canonical-chain reconciliation, combined risk-kill/restart/incident drills and matched R4 benchmark. Any financially funded deployment needs PRIVATE repo proof, external secret store, signed owner risk limits, independent review and a separate high-assurance operational release.
+
+**STOP CONDITION:** this PR remains DRAFT PLANNING ONLY. No financial runtime, product DB, account enrollment, wallet or broker keys, sync telemetry collector, monitoring credentials, live order, pinned-source mutation, independent-review claim or canonical checkpoint promotion.
+
+**Current foundation boundary (owner D-009):** Git/Source Pack/Node 22 and the pinned GEF submodule are the only development foundation dependencies. Foundation migration PR #18 was merged at `694fe60c759ab5a5f91ffaa32b599899bc614f83`; its exact-main CI completed 4/4 successfully. There is no separate host retrieval/indexing prerequisite for a narrowly admitted pure synthetic module Work Order. All product modules in this planning PR remain PLANNED; real provider permissions, financial security review and actual runtime tests are still distinct gates. **STOP:** no product code activation or financial operation is authorized by these design documents.
