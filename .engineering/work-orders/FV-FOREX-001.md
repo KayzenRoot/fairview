@@ -1,0 +1,35 @@
+# FV-FOREX-001 | One local synthetic Forex reference-vs-venue diagnostic, NOT a broker adapter
+Date: 2026-09-29. Risk class for this STRICT NO-REAL-AUTHORITY source increment: STANDARD; funded Forex remains HIGH_ASSURANCE BLOCKED.
+
+## OBJECTIVE
+Admit one pure Node22 source-only `forex` owner to diagnostically compose actual accepted synthetic Clock, Market Data, Risk and in-memory Execution functions over invented, licence-free reference-vs-venue fixture quotes. Output only low-cardinality immutable redacted observation/no-signal states, never financial pricing claims, execution grants or real broker adapters. This does NOT implement strategy-forex.
+
+## CONTEXT / SOURCE CHECK
+Frozen protected main `2759aaf75b9d3bee8850e0f64c2b92e72b21c5c5`, following FV-GOV-010 PR #44 normal merge and exact-main GitHub Actions [36586163047](https://github.com/KayzenRoot/fairview/actions/runs/36586163047) 4/4 SUCCESS (actual Windows PowerShell5.1, pinned GEF, public safety, full Source Pack). Prior accepted FV-WEB-001 PR #43 source run36584627476 full THIRTEEN strictly synthetic owned suites 530/530; docs-only GOV010 did not change source or tests. Current registry: exact 20 module IDs, 13 ACTIVE fixture-only source owners, 7 PLANNED. `forex` direct deps `risk`, `market-data`, `clock`, `execution` are ACTIVE mock-only; `strategy-forex`, `cex`, `defi`, other planned sources remain unimplemented. Zero open PRs observed at freeze. D-005/006/009 retired external context runtime: Git/Source Pack/Node22 and pinned GEF only. Current repository is PUBLIC synthetic development per D-008; NO real funded use.
+
+## SCOPE (NECESSARY, one owner)
+Docs-first standalone FIRST commit of this WO, paired exact immutable Context Lock SECOND standalone commit, both before source/test. New pure `src/forex/diagnostic.mjs` exports only `diagnoseSyntheticForexVenue`; new nonempty adverse `tests/forex/diagnostic.test.mjs`. Strict `schema_version:0`, `source_class:SYNTHETIC_FIXTURE`, `mode:SYNTHETIC_RESEARCH_ONLY`, same exact invented instrument/scope across reference, venue and actual mock Risk/Execution inputs; source `normalizeSyntheticClockSample`, `normalizeSyntheticQuote`, `assessSyntheticQuoteQuality`, `evaluateSyntheticRisk`, `createSyntheticExecution` must be DIRECTLY invoked, with no trust in caller verdicts. Only independent fabricated reference quote (INDICATIVE, reference venue null) versus separate fictional venue EXECUTABLE quote, purely for redacted completeness diagnostics, never calculated edge or usable broker order. Preflight all nested input for exotic prototype/getter/cycle/sparse/oversize/forged source, and exact context equality before mocks. Any missing/uncertain, stale/gap, unknown fake kill, denied mock Risk, mismatched identity/rights or malformed input must DENY or NON_ACTIONABLE with no quote/ID leakage. Never infer broker permission from public provider docs. Every output is recursively immutable low-cardinality public DTO with `fixture_only:true` and every real network/execution/credential/persistence/provider/kill/reconciliation/performance/alert/auth/model-review authority flag false.
+
+## EXACT FILE ALLOWLIST (NINE PATHS)
+1. This `.engineering/work-orders/FV-FOREX-001.md` (new FIRST commit).
+2. `.engineering/context-locks/FV-FOREX-001.md` (new SECOND commit).
+3. `src/forex/diagnostic.mjs` (new only source).
+4. `tests/forex/diagnostic.test.mjs` (new real owned adverse suite).
+5. `harness/modules.json` ONLY forex planned→active, forex own test glob, existing note; ZERO other owner ID/dependency/path/test/state mutation.
+6. `tests/bootstrap/impact.test.mjs` ONLY stale active/planned Forex expectations, exact synthetic owner file existence and reverse graph proof.
+7. `tests/bootstrap/evidence-contract.test.mjs` ONLY stale planned Forex expectations and real Forex owner proof.
+8. `docs/architecture/modules/forex.md` narrow synthetic status addendum; original R1 legal/venue policy and real adapter remain FUTURE.
+9. `docs/architecture/MODULE-READINESS-AND-IMPLEMENTATION-R10.md` narrow factual fixture-only candidate addendum; no real venue claim.
+NO other source/docs/tests/security/decisions/CI/GEF/toolchain/graph edits. Source Pack existing checkpoint is not promoted here.
+
+## OUT OF SCOPE / ARCHITECTURE RULES / CONSTRAINTS
+No broker, app registration, actual network/API/HTTP/stream/FIX, OAuth, real feed, legal-entity assumption, strategy signal, profitability, spread-based action, real order, hedge, wallet, secret, hosted UI, autonomous AI, real alert, database or time oracle. Keep proposed ADR001 and D-007 actual specific provider rights OPEN; D-008 public-fixture development and independently verified PRIVATE before funded OPEN. Do not change independent Risk/Ledger/kill design or make false production/durability claims. No external context service or new NPM dependency. Retain GEF gitlink `866fe3af8cccc65c929aaf6a47a924401fa448b3`.
+
+## ACCEPTANCE CRITERIA / TESTS
+The own suite must prove complete invented no-authority positive, deterministic repeat, direct five upstream mock calls, distinct reference/venue providers, exact invented instrument/context, frozen redacted output and NO public pricing/scope identifiers. Negative cases must cover real-vendor injection; unlicensed/mismatched feeds, stale/throttled/indicative venue and invalid clock; mismatched Risk intent/quote/scope and Ledger; independent fake kill engaged/unknown; spoofed caller authority/prompts, getter/cycle/proto/sparse/malformed/oversized fixtures. Require true owned suite (not compile-only), impacted bootstrap tests, `node scripts/check-sources.mjs`, security scan, Node22 doctor, pinned GEF, hosted Windows PowerShell5.1, exact PR HEAD GitHub 4/4 checks; exact file diff and redacted Evidence Bundle. Do not represent invented venue executable quote as actual executable market quote.
+
+## DELIVERABLES / REVIEW FORMAT
+Branch `feat/fv-forex-001-synthetic-venue-diagnostics`, source/test/registry + narrow own bootstrap/docs in this exact allowlist, full redacted Evidence Bundle base/head SHA, named tests/pass counts, CI URLs and all real failure corrections; pt-BR objective author audit `NOT_INDEPENDENT`, no known HIGH/CRITICAL or unresolved reviewer comments, exact-head normal guarded PR merge only after evidence; then exact-new-main hosted 4/4 and all FOURTEEN actual owned synthetic suites. Later separately scoped FV-GOV-011 DOCS-only reconciliation if needed; do not self-promote FV-CP-0002-PROPOSED.
+
+## STOP CONDITION
+Any change to frozen main before branch, broken lock, source or test outside allowlist, real vendor/rights/finance request, failed checks or unexplained behavior => STOP and same-WO Correction Delta; no next increment before objectively passing review. Actual funded Forex remains blocked by D-007, D-008, independent persistent financial Ledger/Risk/kill, full broker reconciliation and qualified independent HIGH_ASSURANCE review.
