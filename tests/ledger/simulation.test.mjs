@@ -12,3 +12,62 @@ const sent=()=>apply(newLog(),ev(1,"MAY_HAVE_SENT"));
 const receipt=(p={})=>({source_class:"SYNTHETIC_FIXTURE",complete:true,account_id:"MOCK_A",venue_id:"MOCK_V",instrument_contract_id:"MOCK_FX",cursor:"MOCK_CURSOR",reported_filled_units:"0",order_status:"OPEN",...p});
 const noAuthority=r=>{assert.equal(r.fixture_only,true);assert.equal(r.persisted,false);assert.equal(r.execution_authorized,false);};
 test("synthetic local-intent fixture cannot authorize execution or claim durability",()=>{const r=createSyntheticLedger(intent());assert.equal(r.status,"CREATED");assert.equal(r.ledger.phase,"INTENT_DURABLE");assert.equal(r.ledger.filled_units,"0");noAuthority(r);noAuthority(r.ledger);});
+
+test("forged real venue and incomplete synthetic scope cannot initialize",()=>{
+ const real=createSyntheticLedger(intent({source_class:"REAL_VENDOR"}));
+ assert.equal(real.status,"DENY");assert.equal(real.reason_code,"REAL_VENUE_NOT_SUPPORTED");
+ for(const patch of [{quantity_units:"0"},{quantity_units:"1.5"},{account_id:"OTHER"},{venue_id:"OTHER"},{intent_key:"*"},{created_at_utc:"yesterday"}]){
+  const result=createSyntheticLedger(intent(patch));assert.equal(result.status,"DENY",JSON.stringify(patch));
+ }
+});
+test("an expired fictional policy never initializes an intent",()=>{
+ const p=policy();p.now_utc="2026-10-01T00:00:00.000Z";
+ const r=createSyntheticLedger(intent({policy_request:p}));
+ assert.equal(r.status,"DENY");assert.equal(r.reason_code,"POLICY_FIXTURE_NOT_ELIGIBLE");
+});
+test("an explicit presend marker is required before ACK or simulated fill",()=>{
+ const s=newLog();
+ for(const type of ["ACK","LOST_ACK","CRASH_RESTART","CANCEL_REQUESTED"]){
+  const r=appendSyntheticLedgerEvent(s,ev(1,type));assert.equal(r.status,"DENY");
+  assert.equal(r.ledger,s);
+ }
+ const sentState=sent();
+ assert.equal(sentState.phase,"MAY_HAVE_SENT");
+ assert.equal(sentState.attempt_id,"ATT_1");noAuthority(sentState);
+});
+test("ACK is a fictional event, and no extra send attempt is admitted",()=>{
+ const ack=apply(sent(),ev(2,"ACK"));
+ assert.equal(ack.phase,"ACKNOWLEDGED");
+ const extra=appendSyntheticLedgerEvent(ack,ev(3,"MAY_HAVE_SENT",{attempt_id:"ATT_2"}));
+ assert.equal(extra.status,"DENY");assert.equal(extra.reason_code,"UNAUTHORIZED_ATTEMPT_REUSE");
+});
+test("duplicate identical event is idempotent while conflicting duplicate freezes",()=>{
+ const s=sent();const same=appendSyntheticLedgerEvent(s,ev(1,"MAY_HAVE_SENT"));
+ assert.equal(same.status,"IGNORED_DUPLICATE");assert.equal(same.ledger,s);
+ const conflict=appendSyntheticLedgerEvent(s,ev(1,"ACK"));
+ assert.equal(conflict.status,"LOCKED");assert.equal(conflict.ledger.phase,"DISCREPANCY_LOCKED");
+ assert.equal(conflict.ledger.unknown_external_effect,true);
+});
+test("a gap in the ordered local fixture does not silently mend evidence",()=>{
+ const s=sent();
+ const gap=appendSyntheticLedgerEvent(s,ev(3,"ACK"));
+ assert.equal(gap.reason_code,"EVENT_SEQUENCE_GAP");assert.equal(gap.ledger,s);
+ assert.equal(s.events.length,1);
+});
+test("invented partial fills preserve exact integer cumulative units",()=>{
+ const s=apply(sent(),ev(2,"FILL",{quantity_units:"4",execution_id:"EXEC_1"}));
+ assert.equal(s.phase,"PARTIALLY_FILLED");assert.equal(s.filled_units,"4");
+ const full=apply(s,ev(3,"FILL",{quantity_units:"6",execution_id:"EXEC_2"}));
+ assert.equal(full.phase,"FILLED");assert.equal(full.filled_units,"10");noAuthority(full);
+ const late=appendSyntheticLedgerEvent(full,ev(4,"ACK"));
+ assert.equal(late.status,"DENY");
+});
+test("two events may not reuse the same execution ID or overfill the intent",()=>{
+ const p=apply(sent(),ev(2,"FILL",{quantity_units:"4",execution_id:"EXEC_1"}));
+ const same=appendSyntheticLedgerEvent(p,ev(3,"FILL",{quantity_units:"2",execution_id:"EXEC_1"}));
+ assert.equal(same.status,"LOCKED");assert.equal(same.reason_code,"CONFLICTING_EXECUTION_ID");
+ assert.equal(same.ledger.filled_units,"4");
+ const over=appendSyntheticLedgerEvent(p,ev(3,"FILL",{quantity_units:"7",execution_id:"EXEC_2"}));
+ assert.equal(over.status,"LOCKED");assert.equal(over.reason_code,"OVERFILL_DISCREPANCY");
+ assert.equal(over.ledger.filled_units,"4");
+});
