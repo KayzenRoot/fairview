@@ -58,6 +58,15 @@ function canonical(x,depth=0,ctx={nodes:0,seen:new Set()}){
  }
  ctx.seen.delete(x);return out;
 }
+// Accepted Risk/Ledger require deeply frozen fixture views. Freeze only OUR
+// recursively cloned canonical input, never caller-provided objects.
+function freezeFixture(x){
+ if(x!==null&&typeof x==="object"){
+  for(const value of Object.values(x))freezeFixture(value);
+  Object.freeze(x);
+ }
+ return x;
+}
 function normalizedEvents(raw){
  if(!Array.isArray(raw)||raw.length<1||raw.length>64)return null;
  const clean=canonical(raw);
@@ -73,7 +82,7 @@ function normalizedEvents(raw){
  if(indices.size!==clean.length)return null;
  const sorted=clean.sort((a,b)=>a.insertion_index-b.insertion_index);
  const text=JSON.stringify(canonical(sorted));
- return {events:sorted,dataset_sha256:digest(text)};
+ return {events:freezeFixture(sorted),dataset_sha256:digest(text)};
 }
 /** Dataset identity is a synthetic metadata digest, NOT a data licence or validated run. */
 export function hashSyntheticReplayEvents(events){
