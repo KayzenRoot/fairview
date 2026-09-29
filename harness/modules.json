@@ -232,7 +232,7 @@
     },
     {
       "id": "replay",
-      "state": "planned",
+      "state": "active",
       "depends_on": [
         "market-data",
         "clock",
@@ -244,7 +244,9 @@
         "src/replay/",
         "tests/replay/"
       ],
-      "tests": []
+      "tests": [
+        "tests/replay/*.test.mjs"
+      ]
     },
     {
       "id": "research",
@@ -326,5 +328,5 @@
     ".engineering/DECISIONS-LEDGER.md",
     "src/contracts/"
   ],
-  "note": "FV-GOV-005 observed accepted source after reviewed FV-EXECUTION-001 PR #33 normal merge: protected main b4c8e7be4c6f828af971504dfcbb61a2404dffd5 and exact postmerge run 36566190623 4/4, full EIGHT ACTUAL owned synthetic-only suites 388/388 PASS (bootstrap76/risk39/policy57/clock56/market-data79/ledger27/execution27/portfolio27). Twenty original IDs/dependencies/paths/state/test globs UNCHANGED: 8 ACTIVE EXCLUSIVELY invented-only local harnesses and 12 PLANNED. Execution calls accepted Risk mock/Market Data/Clock and accepted NON-DURABLE in-memory Ledger, no broker network, actual order, externally authenticated fills, persistent independent kill, durable local presend, real queue or hedge. execution_authorized:false, network_performed:false, persisted:false, authenticated_provider_evidence:false, kill_durable:false, financial_reconciliation_complete:false. D-007 legal provider/account/data rights, D-008 verified PRIVATE before funded release, proposed ADR-004/005/006 and qualified independent HIGH_ASSURANCE financial review remain OPEN. This free-text note is only truthful observational reconciliation, not new module admission or checkpoint promotion."
+  "note": "FV-REPLAY-001 branch CANDIDATE from protected main 4f5a4ae2d18b7cccda222eeaee4836fab9469166 (run 36566796296 4/4, prior eight invented-only suites 388/388). Nine ACTIVE EXCLUSIVELY strictly invented in-memory source harnesses / eleven PLANNED only after reviewed exact-head CI + normal merge. Exactly 20 unchanged module IDs/edges. Replay imports ACTUAL MOCK Clock, Market Data, Risk, non-durable Ledger and no-network Execution for deterministic 64-event one-domain canonical SHA-256 self-generated metadata fixtures. No provider-data licence, real broker execution, true p99/ROI/comparative benchmark, cross-domain order, independent persistent kill, authenticated funds or durable Ledger. Every result explicitly execution_authorized:false, network_performed:false, persisted:false, authenticated_provider_evidence:false, kill_durable:false, financial_reconciliation_complete:false, real_market_performance_established:false, comparative_benchmark_supported:false. D-007 real provider rights and independent reviewer, D-008 PUBLIC dev/PRIVATE-before-funded, proposed R3/R4 ADRs and HIGH_ASSURANCE finance remain OPEN."
 }

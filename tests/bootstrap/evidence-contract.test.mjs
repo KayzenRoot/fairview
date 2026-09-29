@@ -55,7 +55,8 @@ test("fictional market-data direct owner is tested while still-planned strategy 
  assert.deepEqual(impact.direct_active,["market-data"]);
  assert.deepEqual(impact.direct_planned,[]);
  assert(impact.active.includes("risk"));
- for(const id of ["forex","cex","defi","replay","integration"])assert(impact.planned.includes(id));
+ assert(impact.active.includes("replay"));
+ for(const id of ["forex","cex","defi","integration"])assert(impact.planned.includes(id));
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
 
@@ -67,7 +68,8 @@ test("fictional ledger direct ownership has executable tests without pretending 
  assert(impact.active.includes("ledger"));
  assert(impact.active.includes("portfolio"));
  assert(impact.active.includes("execution"));
- for(const id of ["replay","integration"])
+ assert(impact.active.includes("replay"));
+ for(const id of ["integration"])
   assert(impact.planned.includes(id),"UNTESTED_REVERSE_DEPENDENCY "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
@@ -80,7 +82,8 @@ test("FV-RISK-001 fake risk direct source is owned by executable harness, while 
  assert(x.active.includes("risk"));
  assert(x.active.includes("portfolio"));
  assert(x.active.includes("execution"));
- for(const id of ["forex","cex","defi","replay","integration"])
+ assert(x.active.includes("replay"));
+ for(const id of ["forex","cex","defi","integration"])
   assert(x.planned.includes(id),"UNTESTED_FINANCIAL_DEPENDENT "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
@@ -102,7 +105,18 @@ test("FV-EXECUTION-001 directly owned fake Execution stays separated from still-
  assert.deepEqual(impact.direct_active,["execution"]);
  assert.deepEqual(impact.direct_planned,[]);
  assert(impact.active.includes("execution"));
- for(const id of ["forex","cex","defi","replay","observability","integration"])
+ assert(impact.active.includes("replay"));
+ for(const id of ["forex","cex","defi","observability","integration"])
   assert(impact.planned.includes(id),"FUTURE_UNTESTED "+id);
+ assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
+});
+
+
+test("FV-REPLAY-001 direct invented source owner is actually tested while research and financial strategies remain untested",()=>{
+ const impacted=calculateImpact(registry,["src/replay/deterministic.mjs"]);
+ assert.deepEqual(impacted.direct_active,["replay"]);
+ assert.deepEqual(impacted.direct_planned,[]);
+ for(const id of ["research","strategy-forex","strategy-cex","strategy-defi","integration"])
+  assert(impacted.planned.includes(id),"PLANNED_DEPENDENT_NOT_TESTED "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
