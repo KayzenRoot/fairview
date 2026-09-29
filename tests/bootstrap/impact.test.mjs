@@ -118,7 +118,7 @@ test("Round 3 ledger-risk-execution contract documents unknown broker effects an
     const row=design.split(/\r?\n/).find(line=>line.startsWith("| "+scenario+" | "));
     assert(row&&row.split("|").length>=4,"R3_MISSING_DESIGN_FIXTURE "+scenario);
   }
-  for(const id of ["ledger","risk","execution"]){
+  for(const id of ["risk","execution"]){
     assert.equal(r.modules.find(m=>m.id===id)?.state,"planned","R3_PREMATURE_MODULE_ACTIVATION "+id);
     const charter=fs.readFileSync(new URL("../../docs/architecture/modules/"+id+".md",import.meta.url),"utf8");
     assert(charter.includes("PLANNED, NOT IMPLEMENTED"));
@@ -140,7 +140,7 @@ test("Round 3 ADRs remain proposals and changed future trading source fails clos
     assert.deepEqual(impacted.planned,[]);
     assert.deepEqual(impacted.unknown,[]);
   }
-  for(const id of ["ledger","risk","execution"]){
+  for(const id of ["risk","execution"]){
     const impact=calculateImpact(r,["src/"+id+"/pending.rs"]);
     assert(impact.planned.includes(id),"R3_MISSING_OWNERSHIP "+id);
     assert(impact.planned.includes("integration"),"R3_MISSING_INTEGRATION_IMPACT "+id);
@@ -419,7 +419,7 @@ test("Round 10 readiness inventory exactly mirrors the canonical 20-module DAG a
       const dependencyWave=waves.findIndex(w=>w.includes(dep));
       assert(dependencyWave>=0&&dependencyWave<wave,"R10_DEPENDENCY_WAVE_INVALID "+mod.id+" -> "+dep);
     }
-    if(mod.id==="policy"||mod.id==="clock"||mod.id==="market-data"){
+    if(["policy","clock","market-data","ledger"].includes(mod.id)){
       assert.equal(mod.state,"active","R10_SYNTHETIC_MODULE_NOT_ADMITTED "+mod.id);
       assert.deepEqual(mod.tests,["tests/"+mod.id+"/*.test.mjs"],"R10_SYNTHETIC_TEST_OWNER_MISSING "+mod.id);
     }else if(mod.id!=="bootstrap"){
@@ -480,12 +480,12 @@ test("admitted synthetic policy remains testable with unimplemented downstream d
  assert.deepEqual(result.direct_active,["policy"]);
  assert.deepEqual(result.direct_planned,[]);
  assert.deepEqual(result.active,["policy"]);
- assert(result.planned.includes("ledger"));
+ assert(result.active.includes("ledger"));
  assert(result.planned.includes("risk"));
  assert(result.planned.includes("integration"));
  assert.deepEqual(result.unknown,[]);
 });
-test("active risk with its admitted upstream may validate, while execution with planned ledger is still blocked",()=>{
+test("risk and execution could pass dependency checks, but an early strategy still fails closed",()=>{
  const candidate=structuredClone(r);
  const risk=candidate.modules.find(m=>m.id==="risk");
  risk.state="active";
@@ -494,13 +494,16 @@ test("active risk with its admitted upstream may validate, while execution with 
  const execution=candidate.modules.find(m=>m.id==="execution");
  execution.state="active";
  execution.tests=["tests/execution/*.test.mjs"];
+ assert.equal(validateRegistry(candidate),candidate);
+ const strategy=candidate.modules.find(m=>m.id==="strategy-forex");
+ strategy.state="active";strategy.tests=["tests/strategy-forex/*.test.mjs"];
  assert.throws(()=>validateRegistry(candidate),/ACTIVE_DEPENDENCY_NOT_ACTIVE/);
 });
-test("mixed admitted upstream source and directly edited planned ledger remain fail-closed",()=>{
+test("mixed admitted upstream source and directly edited planned risk remain fail-closed",()=>{
  const candidate=structuredClone(r);
- const result=calculateImpact(candidate,["src/policy/eligibility.mjs","src/clock/time.mjs","src/ledger/durable.mjs"]);
+ const result=calculateImpact(candidate,["src/policy/eligibility.mjs","src/clock/time.mjs","src/risk/durable.mjs"]);
  assert.deepEqual(result.direct_active,["policy","clock"]);
- assert.deepEqual(result.direct_planned,["ledger"]);
+ assert.deepEqual(result.direct_planned,["risk"]);
  assert(result.active.includes("market-data"));
  assert(result.planned.includes("integration"));
 });
@@ -511,7 +514,7 @@ test("harness enforces direct-planned denial and exposes truthful inactive closu
  assert(!harness.includes('if(result.planned.length) fail('));
 });
 
-test("FV-MARKET-DATA-001 is the only newly admitted owner, with synthetic clock prerequisite",()=>{
+test("FV-MARKET-DATA-001 retains its active synthetic ownership, with synthetic clock prerequisite",()=>{
  const market=r.modules.find(m=>m.id==="market-data");
  assert.equal(market.state,"active");
  assert.deepEqual(market.depends_on,["clock"]);
@@ -522,8 +525,8 @@ test("FV-MARKET-DATA-001 is the only newly admitted owner, with synthetic clock 
  for(const id of ["risk","forex","cex","defi","replay","observability","integration"])
   assert(impact.planned.includes(id),"MISSING_REVERSE_IMPACT "+id);
  assert.deepEqual(impact.unknown,[]);
- assert.equal(r.modules.filter(m=>m.state==="active").length,4);
- assert.equal(r.modules.filter(m=>m.state==="planned").length,16);
+ assert.equal(r.modules.filter(m=>m.state==="active").length,5);
+ assert.equal(r.modules.filter(m=>m.state==="planned").length,15);
  const adr=fs.readFileSync(new URL("../../docs/architecture/adrs/FV-ADR-003-PROPOSED-MARKET-DATA-PROVENANCE.md",import.meta.url),"utf8");
  assert(adr.includes("PROPOSED_NOT_ADOPTED"));
  const charter=fs.readFileSync(new URL("../../docs/architecture/modules/market-data.md",import.meta.url),"utf8");
