@@ -462,7 +462,7 @@ test("Round 10 WO and proposed ADRs do not admit source, and future changes prop
   assert(risk.active.includes("risk")&&risk.active.includes("execution")&&risk.active.includes("portfolio")&&risk.planned.includes("integration"));
   assert.deepEqual(risk.unknown,[]);
   const ai=calculateImpact(r,["src/ai/advisory.rs"]);
-  assert(ai.active.includes("ai")&&ai.planned.includes("web")&&ai.planned.includes("integration"));
+  assert(ai.active.includes("ai")&&ai.active.includes("web")&&ai.planned.includes("integration"));
   assert.deepEqual(ai.unknown,[]);
 });
 
