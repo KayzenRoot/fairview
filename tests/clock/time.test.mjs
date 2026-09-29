@@ -28,8 +28,8 @@ test("validated lossless nanosecond sample stays immutable with exact JSON strin
 test("REAL_VENDOR time is denied without genuine independently adopted provider evidence",()=>{
  deny(normalizeSyntheticClockSample(sample({source_class:"REAL_VENDOR"})),"TRUSTED_CLOCK_NOT_IMPLEMENTED");
 });
-for(const x of [null,undefined,{},[],false,0,"2026-09-29",Object.create(null)]){
- test("malformed top-level synthetic input is DENY "+String(x),()=>deny(normalizeSyntheticClockSample(x),"INVALID_SAMPLE"));
+for(const [i,x] of [null,undefined,{},[],false,0,"2026-09-29",Object.create(null)].entries()){
+ test("malformed top-level synthetic input is DENY case "+i,()=>deny(normalizeSyntheticClockSample(x),"INVALID_SAMPLE"));
 }
 for(const [label,patch,reason="INVALID_SAMPLE"] of [
  ["wrong schema",{schema_version:1}],["unknown class",{source_class:"CLOUD_MODEL"}],
