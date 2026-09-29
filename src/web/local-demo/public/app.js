@@ -99,6 +99,11 @@ const setText = (selector, value) => {
   const target = document.querySelector(selector);
   if (target) target.textContent = value;
 };
+/**
+ * Clears every read-model label and marks the hypothetical pause note as degraded.
+ * This prevents an earlier snapshot from remaining visible after a rejected response.
+ * @returns {void}
+ */
 function markReadModelUnavailable() {
   for (const selector of [
     "#mode-value",
@@ -118,18 +123,35 @@ function markReadModelUnavailable() {
   setText("#pause-note-text", "No accepted view is available. No real operation is represented.");
   document.querySelector("#pause-note").dataset.state = "degraded";
 }
+/**
+ * Displays a plain-text failure message and removes accepted model labels from the page.
+ * @param {string} message Local status text; assigned through `textContent`, never parsed as HTML.
+ * @returns {void}
+ */
 function showUnavailable(message) {
   snapshotStatus.dataset.state = "error";
   statusText.textContent = message;
   setText("#scenario-value", "SNAPSHOT_UNAVAILABLE");
   markReadModelUnavailable();
 }
+/**
+ * Requires the complete fixed flag set with only `fixture_only` true.
+ * These display flags are non-authoritative and cannot grant an operation.
+ * @param {Record<string, unknown>|null|undefined} flags Flags received in the snapshot.
+ * @returns {boolean} Whether the snapshot preserves the synthetic-only flag contract.
+ */
 function hasSafeFlags(flags) {
   if (!flags || Object.keys(flags).length !== flagKeys.length) return false;
   return flagKeys.every((key) =>
     Object.hasOwn(flags, key) && flags[key] === (key === "fixture_only"),
   );
 }
+/**
+ * Validates the bounded snapshot contract before rendering mapped synthetic labels.
+ * Unknown schemas, statuses, scenarios, or flags fail closed to unavailable display values.
+ * @param {unknown} snapshot Value decoded from the local snapshot response.
+ * @returns {void}
+ */
 function applySnapshot(snapshot) {
   if (
     snapshot?.schema_version !== 0 ||
@@ -182,6 +204,12 @@ function applySnapshot(snapshot) {
     document.querySelector(selector).dataset.state = degraded ? "degraded" : "complete";
   }
 }
+/**
+ * Fetches one fixed same-origin fixture and renders only if its monotonic request token is current.
+ * Stale fetches, body completions, and errors are discarded so older selections cannot overwrite newer ones.
+ * @param {"healthy"|"degraded"|"denied"} scenario Allowlisted synthetic fixture selected in the UI.
+ * @returns {Promise<void>} Resolves after the current response or error has been handled.
+ */
 async function loadSnapshot(scenario) {
   const requestId = ++latestSnapshotRequestId;
   if (!["healthy", "degraded", "denied"].includes(scenario)) {
@@ -211,6 +239,12 @@ async function loadSnapshot(scenario) {
     showUnavailable("Local snapshot is unavailable.");
   }
 }
+/**
+ * Selects a known page shell, falling back to Overview for unknown navigation identifiers.
+ * Non-Overview entries remain explicitly planned placeholders without operational controls.
+ * @param {string} viewId Requested fixed navigation key.
+ * @returns {void}
+ */
 function applyView(viewId) {
   const view = hasView(viewId) ? views[viewId] : views.overview;
   currentView = hasView(viewId) ? viewId : "overview";

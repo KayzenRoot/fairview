@@ -394,10 +394,25 @@ const isAllowedOrigin = (origin, port) =>
   origin === `http://127.0.0.1:${port}` ||
   origin === `http://localhost:${port}`;
 
+/**
+ * Writes a local-preview response with the baseline no-store security headers.
+ * @param {import("node:http").ServerResponse} res Response for the current request.
+ * @param {number} status HTTP status code to send.
+ * @param {unknown} body A fixed local message or already-redacted response value.
+ * @param {Record<string, string>} [extraHeaders={}] Narrow route-specific headers, such as `Allow`.
+ * @returns {void}
+ */
 function send(res, status, body, extraHeaders = {}) {
   res.writeHead(status, {...responseHeaders(), ...extraHeaders});
   res.end(typeof body === "string" ? body : JSON.stringify(body));
 }
+/**
+ * Validates the accepted Web read model and copies only its fixed display enums and authority flags.
+ * Raw fixture inputs and unrecognized values never cross the local API boundary.
+ * @param {object} result Result returned by the accepted synthetic operator read-model composer.
+ * @param {"healthy"|"degraded"|"denied"} scenario Fixed fixture key used for the public scenario label.
+ * @returns {Readonly<object>} Frozen, bounded snapshot containing no raw fixture fields.
+ */
 function safeProjection(result, scenario) {
   if (!RESULT_STATUSES.has(result.status) || !RESULT_REASONS.has(result.reason_code)) {
     throw new Error("UNEXPECTED_ACCEPTED_READ_MODEL_ENUM");
@@ -435,6 +450,12 @@ function safeProjection(result, scenario) {
   });
 }
 
+/**
+ * Composes one fixed invented scenario and returns its validated redacted display snapshot.
+ * @param {"healthy"|"degraded"|"denied"} [scenario="healthy"] Allowlisted local fixture selector.
+ * @returns {Readonly<object>} Snapshot with fixed enums and `fixture_only`/false authority flags.
+ * @throws {TypeError} When the caller supplies a scenario outside the fixed fixture set.
+ */
 export function createDemoSnapshot(scenario = "healthy") {
   if (!["healthy", "degraded", "denied"].includes(scenario)) {
     throw new TypeError("Unknown synthetic scenario.");
@@ -443,6 +464,11 @@ export function createDemoSnapshot(scenario = "healthy") {
   return safeProjection(result, scenario);
 }
 
+/**
+ * Accepts only the snapshot route with no query or one of its three fixed scenario queries.
+ * @param {string|undefined} rawUrl Unparsed HTTP request target from Node's request object.
+ * @returns {boolean} Whether the target exactly matches an allowed read-only API URL.
+ */
 function isAllowedApiTarget(rawUrl) {
   return rawUrl === "/api/demo-snapshot" ||
     rawUrl === "/api/demo-snapshot?scenario=healthy" ||
@@ -450,6 +476,12 @@ function isAllowedApiTarget(rawUrl) {
     rawUrl === "/api/demo-snapshot?scenario=denied";
 }
 
+/**
+ * Creates the loopback preview server with exact host, origin, method, asset, and API allowlists.
+ * @param {{port?: number}} [options={}] Local port; zero is allowed for isolated tests.
+ * @returns {import("node:http").Server} Unstarted HTTP server; construction performs no bind or network I/O.
+ * @throws {TypeError} When the requested port is not an integer from 0 through 65535.
+ */
 function createLocalDemoServer({port = PORT} = {}) {
   if (!Number.isInteger(port) || port < 0 || port > 65535) {
     throw new TypeError("Local preview port must be an integer between 0 and 65535.");
@@ -494,6 +526,12 @@ function createLocalDemoServer({port = PORT} = {}) {
   });
 }
 
+/**
+ * Starts the preview exclusively on 127.0.0.1 and resolves only after the listener is ready.
+ * Importing this module does not call this function or start a listener.
+ * @param {{port?: number}} [options={}] Local port; zero asks the OS for an ephemeral test port.
+ * @returns {Promise<import("node:http").Server>} The listening loopback-only server.
+ */
 export function startLocalDemo({port = PORT} = {}) {
   const server = createLocalDemoServer({port});
   return new Promise((resolveStart, rejectStart) => {

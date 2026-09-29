@@ -49,6 +49,11 @@ const MODEL_KEYS = [
   "hypothetical_pause_hint",
 ];
 
+/**
+ * Runs a test callback against an ephemeral server and always closes its loopback listener.
+ * @param {(context: {server: import("node:http").Server, port: number}) => Promise<void>} run Test body.
+ * @returns {Promise<void>} Resolves when the callback and server cleanup complete.
+ */
 async function withServer(run) {
   const server = await startLocalDemo({port: 0});
   const address = server.address();
@@ -62,6 +67,13 @@ async function withServer(run) {
     });
   }
 }
+/**
+ * Sends one HTTP request to 127.0.0.1 while allowing tests to vary the checked headers and method.
+ * @param {number} port Ephemeral local port returned by `withServer`.
+ * @param {string} requestPath Exact request target to exercise.
+ * @param {{host?: string, origin?: string, headers?: Record<string, string>, method?: string}} [options={}] Request variations.
+ * @returns {Promise<{status: number, headers: import("node:http").IncomingHttpHeaders, body: string}>} Buffered local response.
+ */
 function request(port, requestPath, options = {}) {
   return new Promise((resolveResponse, rejectResponse) => {
     const headers = {
@@ -87,6 +99,11 @@ function request(port, requestPath, options = {}) {
   });
 }
 const parseJson = (response) => JSON.parse(response.body);
+/**
+ * Creates a promise whose completion the test controls to make response races deterministic.
+ * @template T
+ * @returns {{promise: Promise<T>, resolve: (value: T) => void, reject: (reason?: unknown) => void}} Deferred controls.
+ */
 function deferred() {
   let resolvePromise;
   let rejectPromise;
@@ -96,6 +113,11 @@ function deferred() {
   });
   return {promise, resolve: resolvePromise, reject: rejectPromise};
 }
+/**
+ * Builds the minimal mutable DOM element shape consumed by the real preview script in VM tests.
+ * @param {string} [value=""] Initial select value when modeling the scenario selector.
+ * @returns {object} Fake element with text, dataset, attributes, and event-listener storage.
+ */
 function fakeElement(value = "") {
   return {
     textContent: "",
@@ -109,6 +131,11 @@ function fakeElement(value = "") {
     removeAttribute(name) { this.attributes.delete(name); },
   };
 }
+/**
+ * Executes the actual app script with a deterministic fake DOM and deferred same-origin fetches.
+ * The harness captures the startup request so tests can resolve responses in any chosen order.
+ * @returns {Promise<{elements: Map<string, object>, requests: Array<object>, startupPromise: Promise<void>, selectScenario: (scenario: string) => Promise<void>}>} UI controls and captured requests.
+ */
 async function createUiHarness() {
   const source = await readFile(APP_PATH, "utf8");
   const startupCall = "loadSnapshot(scenarioSelect.value);";
@@ -164,6 +191,12 @@ async function createUiHarness() {
     },
   };
 }
+/**
+ * Creates a minimal successful JSON response, with an overridable body promise for late-body tests.
+ * @param {object|undefined} snapshot Synthetic snapshot returned by the default body reader.
+ * @param {() => Promise<object|undefined>} [json] Body reader, optionally deferred to control completion order.
+ * @returns {{ok: boolean, headers: {get: (name: string) => string|null}, json: () => Promise<object|undefined>}} Fetch response stub.
+ */
 function apiResponse(snapshot, json = () => Promise.resolve(snapshot)) {
   return {
     ok: true,
@@ -171,6 +204,12 @@ function apiResponse(snapshot, json = () => Promise.resolve(snapshot)) {
     json,
   };
 }
+/**
+ * Asserts the selected fixture maps to its expected redacted labels and degraded/ready state.
+ * @param {{elements: Map<string, {textContent: string, dataset: Record<string, string>}>}} harness Fake UI returned by `createUiHarness`.
+ * @param {"healthy"|"degraded"|"denied"} selectedScenario Fixture whose visible state is being checked.
+ * @returns {void}
+ */
 function assertDisplayedScenario(harness, selectedScenario) {
   const expected = {
     healthy: {
