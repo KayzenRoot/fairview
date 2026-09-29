@@ -130,10 +130,11 @@ test("healthy and incomplete snapshots invoke the accepted Web read model and ex
   ]);
   assert.deepEqual(Object.keys(healthy.read_model).sort(), [...MODEL_KEYS].sort());
   assert.deepEqual(Object.keys(healthy.flags).sort(), [...FLAG_KEYS].sort());
-  assert.equal(healthy.flags.fixture_only, true);
-  for (const key of FLAG_KEYS.filter((name) => name !== "fixture_only")) {
-    assert.equal(healthy.flags[key], false, key);
-    assert.equal(incomplete.flags[key], false, key);
+  for (const snapshot of [healthy, incomplete, denied]) {
+    assert.equal(snapshot.flags.fixture_only, true);
+    for (const key of FLAG_KEYS.filter((name) => name !== "fixture_only")) {
+      assert.equal(snapshot.flags[key], false, key);
+    }
   }
   for (const raw of [
     "invented-tenant",
@@ -161,7 +162,7 @@ test("healthy and incomplete snapshots invoke the accepted Web read model and ex
   assert.doesNotMatch(source, /from ["'][^"']*replay\/deterministic\.mjs/);
 });
 
-test("only the fixed healthy and incomplete fixture query values are accepted", async () => {
+test("only the fixed fixture scenarios are accepted", async () => {
   await withServer(async ({port}) => {
     for (const requestPath of [
       "/api/demo-snapshot",
