@@ -1,0 +1,3 @@
+# FV-POLICY-001 | Source context lock
+
+Base: accepted main 69ef5e6649d00ec06c1d6ba6adb0f7e5c97a637d. Governed by FV-POLICY-001.md, source hierarchy and R1 policy design. Allowed edits are only the two FV-POLICY-001 governance files, src/policy/eligibility.mjs, tests/policy/eligibility.test.mjs, harness/modules.json for the policy status and test glob, tests/bootstrap/impact.test.mjs, docs/architecture/modules/policy.md and docs/architecture/MODULE-READINESS-AND-IMPLEMENTATION-R10.md. Keep every other module and the pinned GEF unchanged. Pure synthetic only: no provider verification, external access, confidential data or execution authority. Actual deterministic tests and exact-head four-job CI must pass. No checkpoint promotion without review.
