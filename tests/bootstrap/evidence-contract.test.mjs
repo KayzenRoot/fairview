@@ -12,9 +12,9 @@ test("exact Git HEAD and explicit base bind only a CI-verified evidence receipt"
 test("a directly edited still-planned module or unknown path fails Evidence Bundle",()=>{
  assert(code.includes("impact.unknown.length||impact.direct_planned.length"));
  assert(!code.includes("impact.unknown.length||impact.planned.length"));
- const changed=calculateImpact(registry,["src/forex/deny.mjs"]);
- assert.deepEqual(changed.direct_planned,["forex"]);
- assert(changed.planned.includes("strategy-forex"));
+ const changed=calculateImpact(registry,["src/cex/deny.mjs"]);
+ assert.deepEqual(changed.direct_planned,["cex"]);
+ assert(changed.planned.includes("strategy-cex"));
  assert.equal(changed.unknown.length,0);
 });
 test("an active policy owner can provide proof with explicit untested planned downstream",()=>{
@@ -56,7 +56,8 @@ test("fictional market-data direct owner is tested while still-planned strategy 
  assert.deepEqual(impact.direct_planned,[]);
  assert(impact.active.includes("risk"));
  assert(impact.active.includes("replay"));
- for(const id of ["forex","cex","defi","integration"])assert(impact.planned.includes(id));
+ assert(impact.active.includes("forex"));
+ for(const id of ["cex","defi","integration"])assert(impact.planned.includes(id));
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
 
@@ -83,7 +84,8 @@ test("FV-RISK-001 fake risk direct source is owned by executable harness, while 
  assert(x.active.includes("portfolio"));
  assert(x.active.includes("execution"));
  assert(x.active.includes("replay"));
- for(const id of ["forex","cex","defi","integration"])
+ assert(x.active.includes("forex"));
+ for(const id of ["cex","defi","integration"])
   assert(x.planned.includes(id),"UNTESTED_FINANCIAL_DEPENDENT "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
@@ -107,7 +109,8 @@ test("FV-EXECUTION-001 directly owned fake Execution stays separated from still-
  assert(impact.active.includes("execution"));
  assert(impact.active.includes("replay"));
  assert(impact.active.includes("observability"));
- for(const id of ["forex","cex","defi","integration"])
+ assert(impact.active.includes("forex"));
+ for(const id of ["cex","defi","integration"])
   assert(impact.planned.includes(id),"FUTURE_UNTESTED "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
@@ -172,3 +175,16 @@ test("FV-WEB-001 actual bounded mock read-model is evidence-owned with four dire
   assert(calculateImpact(registry,[src]).active.includes("web"),"MISSING_WEB_UPSTREAM "+src);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
+test("FV-FOREX-001 fixture-only adapter owns an executable harness and keeps actual strategies unexecuted",()=>{
+ const own=calculateImpact(registry,["src/forex/diagnostic.mjs","tests/forex/diagnostic.test.mjs"]);
+ assert.deepEqual(own.direct_active,["forex"]);
+ assert.deepEqual(own.direct_planned,[]);
+ assert(own.active.includes("forex"));
+ assert(own.planned.includes("strategy-forex")&&own.planned.includes("integration"));
+ for(const upstream of ["src/risk/evaluate.mjs","src/market-data/quote.mjs",
+  "src/clock/time.mjs","src/execution/simulation.mjs"])
+  assert(calculateImpact(registry,[upstream]).active.includes("forex"),
+   "UNVERIFIED_LOCAL_FOREX_REVERSE_IMPACT "+upstream);
+ assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
+});
+
