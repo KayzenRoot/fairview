@@ -1,11 +1,7 @@
-# FairView current scope | post-migration source baseline
+# FairView scope | FV-LEDGER-001 invented-only lifecycle
 
-**Observed, NOT independently promoted checkpoint:** PR #18 merged the owner-authorized withdrawal of the external development context runtime. Current protected-main source is native Git/Source Pack/Node>=22 and pinned GEF v1.0.0; PRs #17, #19, #20, #21 and #23 subsequently merged. The registry has 20 IDs with bootstrap and three pure synthetic-only product kernels ACTIVE in isolated harness terms; the remaining 16 modules are PLANNED. No live product runtime exists.
+**OBSERVED MAIN:** Native Git/Source Pack/Node>=22 and pinned GEF with 20 canonical owners, bootstrap + three invented-only product cores ACTIVE at merge `37ab859aa8e2d8fff02ab910ac7e948ce331e0ca`; PR #24 source-truth correction and exact-main 4/4 run 36558015617 confirmed. Checkpoint FV-CP-0002 still unpromoted.
 
-**Current admitted WO:** FV-GOV-001, strictly documentation and source-evidence reconciliation. Correct stale baseline/checkpoint/planning statements. No product implementation or module activation in this scope.
+**ADMITTED CURRENT BRANCH FV-LEDGER-001:** only ledger-owned pure deterministic in-memory fictional intent-event state source with adverse tests, literal dependency on accepted synthetic Policy, minimal permitted module-registry / stale-bootstrap-test and canonical-status updates. Branch target 5 ACTIVE incl. bootstrap / 15 PLANNED; does not imply its PR has yet been independently reviewed or merged.
 
-**Next candidate:** a separately admitted FV-LEDGER-001 narrow synthetic contract and failure-proof work order; proposed PostgreSQL deployment and real broker persistence remain future independently reviewed design decisions, not implied by fictional in-memory tests.
-
-**Long-term product scope (research/proposals):** Forex, CEX and on-chain DEX/Uniswap strategies with independent risk/policy, durable ledger, execution/portfolio reconciliation, deterministic replay/benchmarks, observability, bounded AI and server-authorized browser control.
-
-**Out of scope now:** real venue/account creation, paid/real feed imports, real broker order or signing, live PnL, funding, privileged AI/Web trading, storage/deployment changes, unverified credentials or provider licence grants, production security acceptance. D-007 provider rights and D-008 PRIVATE-before-financial-production restrictions remain open.
+**OUT OF SCOPE:** true database/WAL durability, cross-process uniqueness, external order or authenticated fills, actual venue credentials/rights/data, runtime financial risk execution, funded demo/paper/live deployment, extra development services, GEF pin changes, independent security approval or checkpoint promotion. Forex/CEX/DEX, Risk/reconciled Portfolio, Replay, observability and Web/AI remain separately governed future work. D-007/D-008 and HIGH_ASSURANCE release gates remain open.
