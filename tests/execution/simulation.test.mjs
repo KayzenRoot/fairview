@@ -72,7 +72,7 @@ const input=(p={})=>({schema_version:0,source_class:"SYNTHETIC_FIXTURE",
  mock_queue_capacity:2,...p});
 const event=(n,type,p={})=>({schema_version:0,source_class:"SYNTHETIC_FIXTURE",
  intent_key:"invented-intent-1",event_id:"mock-event-"+n,sequence:String(n),
- captured_at_utc:"2026-09-15T12:00:00.001Z",type,attempt_id:"mock-attempt-1",
+ captured_at_utc:"2026-09-15T12:00:00."+String(n).padStart(3,"0")+"Z",type,attempt_id:"mock-attempt-1",
  quantity_units:null,execution_id:null,receipt:null,...p});
 const receipt=(p={})=>({source_class:"SYNTHETIC_FIXTURE",complete:true,
  account_id:scope.account_id,venue_id:scope.venue_id,
@@ -80,7 +80,7 @@ const receipt=(p={})=>({source_class:"SYNTHETIC_FIXTURE",complete:true,
  reported_filled_units:"0",order_status:"OPEN",...p});
 const action=(e,p={})=>({schema_version:0,source_class:"SYNTHETIC_FIXTURE",
  event:e,fresh_risk_request:e.type==="MAY_HAVE_SENT"?risk():null,
- mock_now_utc:"2026-09-15T12:00:00.002Z",mock_queue_free_slots:1,...p});
+ mock_now_utc:new Date(Date.parse(e.captured_at_utc)+1).toISOString(),mock_queue_free_slots:1,...p});
 const noAuthority=x=>{assert.equal(x.fixture_only,true);
  assert.equal(x.execution_authorized,false);assert.equal(x.network_performed,false);
  assert.equal(x.persisted,false);assert.equal(x.authenticated_provider_evidence,false);
@@ -317,7 +317,8 @@ test("duplicates, gaps, conflicting IDs and overfill are rejected or discrepancy
   "MOCK_ATTEMPT_ALREADY_RECORDED");
  deny(advanceSyntheticExecution(s,action(event(3,"ACK"))),
   "MOCK_LEDGER_EVENT_SEQUENCE_GAP");
- const conflict=advanceSyntheticExecution(s,action(event(1,"ACK")));
+ const conflict=advanceSyntheticExecution(s,action(event(1,"ACK",
+  {captured_at_utc:"2026-09-15T12:00:00.003Z"})));
  assert.equal(conflict.status,"DISCREPANCY_LOCKED");noAuthority(conflict);
  let filled=apply(s,event(2,"FILL",{quantity_units:"40",execution_id:"fill-1"}));
  const dup=advanceSyntheticExecution(filled,action(event(3,"FILL",
@@ -333,7 +334,8 @@ test("event timestamp and invented clock order must be explicit, ordered and non
   {captured_at_utc:"2026-09-15T12:00:00.000Z"}))),
   "STALE_OR_FUTURE_MOCK_EVENT_TIME");
  deny(advanceSyntheticExecution(s,action(event(2,"ACK",
-  {captured_at_utc:"2026-09-15T12:00:00.003Z"}))),
+  {captured_at_utc:"2026-09-15T12:00:00.003Z"}),
+  {mock_now_utc:"2026-09-15T12:00:00.002Z"})),
   "STALE_OR_FUTURE_MOCK_EVENT_TIME");
  deny(advanceSyntheticExecution(s,action(event(2,"ACK"),
   {mock_now_utc:"2026-09-15T12:00:00.000Z"})),
@@ -381,6 +383,7 @@ test("rejected separately attempted mock Recovery does not clear original fictio
 test("cross-tenant legs, repeated leg identity and caller data never create an implicit net",()=>{
  const a=created();
  const clone=created();deny(summarizeSyntheticLegs([a,clone]),"INVALID_TWO_LEG_FIXTURE");
+ deny(summarizeSyntheticLegs([a,created({leg_id:"mock-leg-B"})]),"INVALID_TWO_LEG_FIXTURE");
  deny(summarizeSyntheticLegs([a,a]),"INVALID_TWO_LEG_FIXTURE");
  deny(summarizeSyntheticLegs([a,{}]),"INVALID_TWO_LEG_FIXTURE");
  deny(summarizeSyntheticLegs([]),"INVALID_TWO_LEG_FIXTURE");
