@@ -5,7 +5,7 @@
   "project": "Fairview",
   "brand": "Next Labs",
   "github_repo": "KayzenRoot/fairview",
-  "work_order": "FV-GOV-004",
+  "work_order": "FV-GOV-005",
   "authority": "GIT_SOURCEPACK_GEF_NODE22",
   "source_main_before_migration": "9eb01876adf2e1f2408b451e8cc08abb123173a5",
   "migration_pr": 18,
@@ -14,12 +14,12 @@
   "independent_approval": false,
   "approval_receipt": "NOT_INDEPENDENTLY_PROMOTED",
   "latest_observed_main": {
-    "sha": "bba69fde7cc768e09c6737aa32356bfccb13f8ae",
+    "sha": "b4c8e7be4c6f828af971504dfcbb61a2404dffd5",
     "observed_on": "2026-09-29",
-    "latest_merged_module_pr": 31,
+    "latest_merged_module_pr": 33,
     "latest_merged_correction_pr": 27,
-    "baseline_governance_pr": 30,
-    "exact_main_push_workflow_run": 36563735216,
+    "baseline_governance_pr": 32,
+    "exact_main_push_workflow_run": 36566190623,
     "hosted_required_jobs_passed": 4,
     "hosted_required_jobs_total": 4,
     "owned_ledger_tests_on_correction_pr_head": "27/27",
@@ -27,12 +27,22 @@
     "owner_audit": "NOT_INDEPENDENT",
     "owned_risk_tests_on_risk_pr_head": "39/39",
     "bootstrap_tests_on_risk_pr_head": "72/72",
-    "full_active_tests_on_main": "359/359",
+    "full_active_tests_on_main": "388/388",
     "portfolio_source_pr_head": "3debe648ea8f7f7484fa889cf999c70aa1a15e26",
     "portfolio_source_pr_exact_head_run": 36563548889,
     "owned_portfolio_tests_on_portfolio_pr_head": "27/27",
     "bootstrap_tests_on_portfolio_pr_head": "74/74",
-    "portfolio_same_pr_correction_delta": "FV-PORTFOLIO-001-CORR-001"
+    "portfolio_same_pr_correction_delta": "FV-PORTFOLIO-001-CORR-001",
+    "execution_source_pr_head": "00f3ac29841ae9aad8efc7b4c1e848b8e5fcfc27",
+    "execution_source_pr_exact_head_run": 36565986439,
+    "execution_initial_failed_head_run": 36565772795,
+    "execution_intermediate_failed_head_run": 36565904156,
+    "owned_execution_tests_on_execution_pr_head": "27/27",
+    "bootstrap_tests_on_execution_pr_head": "76/76",
+    "execution_same_pr_correction_deltas": [
+      "FV-EXECUTION-001-CORR-001",
+      "FV-EXECUTION-001-CORR-002"
+    ]
   },
   "registry": {
     "total": 20,
@@ -43,9 +53,10 @@
       "clock",
       "market-data",
       "ledger",
+      "execution",
       "portfolio"
     ],
-    "planned": 13,
+    "planned": 12,
     "active_product_scope": "SYNTHETIC_FIXTURE_ONLY",
     "ledger_storage": "IN_MEMORY_NON_DURABLE",
     "ledger_external_authority": false,
@@ -56,7 +67,14 @@
     "portfolio_persisted": false,
     "portfolio_provider_evidence": false,
     "portfolio_real_balance_verified": false,
-    "portfolio_financial_reconciliation_complete": false
+    "portfolio_financial_reconciliation_complete": false,
+    "execution_scope": "SYNTHETIC_IN_MEMORY_NO_NETWORK_NO_BROKER",
+    "execution_authorized": false,
+    "execution_network_performed": false,
+    "execution_persisted": false,
+    "execution_authenticated_provider_evidence": false,
+    "execution_kill_durable": false,
+    "execution_financial_reconciliation_complete": false
   },
   "gef": {
     "tag": "v1.0.0",
