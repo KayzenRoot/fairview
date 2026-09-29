@@ -1,20 +1,23 @@
 # Time integrity and latency budgets | module `clock`
 
-**PLANNED, NOT IMPLEMENTED.** FV-DISC-001 Round 2 planning; no clock daemon change, PTP installation or active runtime. Source reservation: `src/clock/`; harness reservation: `tests/clock/`; no upstream module dependency.
+**ACTIVE SYNTHETIC FIXTURE CORE only via FV-CLOCK-001; no real capture or timestamp authority.** Reserved module ownership: `src/clock/` and `tests/clock/`. Actual source `src/clock/integrity.mjs` and real owned `tests/clock/integrity.test.mjs` implement exactly the invented time-quality and uncertainty slice authorized by FV-CLOCK-001. The original R2 `docs/architecture/CLOCK-MARKET-DATA-R2.md` and FV-ADR-002 remain **proposed future production design**, not adopted Rust/chrony/PTP infrastructure.
 
-## Single responsibility
-Provide local monotonic timing with a strict clock-domain/boot boundary, wall-UTC capture with measured local error, optional provider event-UTC provenance and source-specific clock uncertainty, cross-domain ordering status and an explicit sync-health decision. `Instant` measures local elapsed time; `SystemTime` can step and is not suitable for unchecked latency deltas. Providers' timestamp accuracy cannot be inferred from ours.
+## What is implemented
 
-## Proposed interfaces
-- `CaptureClock.now_pair()`: returns local receive monotonic and wall UTC values sampled closely with a `clock_domain_id`, `sync_state` and `estimated_clock_error_ns` or explicit UNKNOWN.
-- `ProviderClockEvidence`: timestamp semantics, provider claimed precision, independently confirmed sync/error bound if available, source doc reference and expiry. Absent evidence remains UNKNOWN.
-- `ClockQualityPolicy.evaluate()`: `HEALTHY | DEGRADED | UNSYNCHRONIZED | UNKNOWN`; uncertainty > instrument-approved bound, backward wall step or domain mismatch cannot pass as a known cross-host ordering.
-- `DurationInDomain`: returns elapsed nanoseconds only for the same monotonic domain, otherwise `CROSS_DOMAIN`. After restart issue a new domain; do not join persisted `Instant` values.
+Pure Node22 exports `assessSyntheticCapture`, `elapsedSyntheticInDomain` and `compareSyntheticSourceEvents`. Synthetic capture inputs must explicitly include `source_class: SYNTHETIC_FIXTURE`, `clock_domain_id`, `receive_epoch_id`, canonical lossless signed 64-bit decimal-string nanosecond local monotonic/wall values, nullable explicitly bounded `estimated_clock_error_ns` and `HEALTHY | DEGRADED | UNSYNCHRONIZED | UNKNOWN` state. All policy error/step bounds are supplied by the deterministic test fixture; no default timing SLA or actual clock capture.
 
-## Technology ADR candidates
-Rust `Instant`/`SystemTime` for future native app capture, optional chrony tracking for approved Linux NTP infrastructure, linuxptp `ptp4l`+`phc2sys` only if NIC PHC, driver, network grandmaster and measured requirement justify it. No guarantee from nanosecond precision display, PTP package install or virtualized Windows host. Research and official references in `docs/architecture/CLOCK-MARKET-DATA-R2.md` and `docs/architecture/adrs/FV-ADR-002-PROPOSED-TIME-INTEGRITY.md`.
+- `assessSyntheticCapture`: rejects malformed or non-synthetic observations, unknown/unhealthy synchronization, missing clock error or error exceeding a fixture-specific bound. Only a **synthetic** healthy result reports the configured local budget as satisfied; it cannot attest a real host clock.
+- `elapsedSyntheticInDomain`: checks **same monotonic domain AND same process/boot epoch**, rejects backwards monotonic value, backwards wall UTC, excessive wall/monotonic delta disagreement and unhealthy/unknown clock error. It returns a lossless decimal-string elapsed duration labeled `LOCAL_SYNTHETIC_SAME_DOMAIN_ONLY`; never subtracts cross-host or persisted opaque native `Instant` values.
+- `compareSyntheticSourceEvents`: only identical exact contract IDs and synthetic `EVENT` timestamp semantics with explicit fictional source-UTC uncertainty, fictional provider clock error and evidence references. Order only strictly separated conservative UTC intervals; overlapping or touching intervals are `AMBIGUOUS_INTERVAL`. Provider error unknown/excessive, batched/sent event semantics or genuine venue-like input remain non-actionable.
 
-## Activated harness design, not current tests
-Simulated `UNKNOWN_CLOCK`, `CROSS_DOMAIN`, `BACKWARD_WALL`, `STALE_FEED`, restarted process epoch and changed `sync_state`. Must fail closed without relying on the real CI runner clock. Record clock health provenance and thresholds in instrument-specific Risk Kernel policy.
+Every result has `fixture_only: true`, `execution_authorized: false` and `remote_one_way_latency_proven: false` even for `HEALTHY` or synthetically `ORDERED`. No real broker/account/market data, network, filesystem, `Date.now`, real hardware capture or OS clock mutation is present in the source.
 
-**STOP:** without source-specific clock and applicable error budget, no one-way cross-provider latency or actionable low-latency signal may be claimed. Remain PLANNED until separate admitted activation WO, FV-FOUNDATION-002 independent FULL gate and exact-head tests.
+## Technology path and exact R2 trust boundary
+
+A future **separately admitted** real `CaptureClock` must sample host monotonic and wall UTC with independently measured synchronization uncertainty and source-specific documented remote time semantics; serializing a native monotonic origin requires a new domain/epoch. Rust `Instant`/`SystemTime`, chrony and linuxptp are design candidates only, requiring actual host, hardware, permission and independently measured error before adoption. Displaying nanoseconds is NOT proof of submillisecond cross-host timing. Synthetic source classification is NOT sufficient for Risk Kernel or trading admission. Do not use this module to infer real one-way provider latency.
+
+## Owned module tests and STOP
+
+The executable harness includes hardcoded invented negative fixtures for unsafe JS numbers, i64 overflow and noncanonical strings, absent/invalid source evidence, same-ID different-epoch restart, cross-domain monotonic comparison, backwards/wall-step timing, unknown sync/error, excess local/provider budgets, batch/send semantics, mixed instrument contracts, overlapping uncertainty intervals and REAL_VENDOR denial. All results remain deeply non-executable. The old R2 documentary fixtures remain documented; market-data, risk, replay and integration are still PLANNED and report UNTESTED when impacted.
+
+**STOP:** no installation or real-world capture, no account or venue permission, no provider source timestamp verification, no risk/trading/order gateway and no actual performance guarantee. Real market-data and clock calibration must each be scoped and tested under later independent WOs.

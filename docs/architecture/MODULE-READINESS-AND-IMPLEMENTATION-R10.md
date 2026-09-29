@@ -1,6 +1,6 @@
 # FV-DISC-001 | Round 10: canonical 20-module readiness and proposed admission order
 
-**Status: R10 dependency-plan baseline with FV-POLICY-001 proposed source activation.** Protected main includes the accepted Git/Node22/GEF foundation and completed R0-R10 planning, followed by merged harness PR #19 at `69ef5e6649d00ec06c1d6ba6adb0f7e5c97a637d`. In FV-POLICY-001, the registry marks bootstrap and the first **synthetic-only** policy harness ACTIVE and leaves 18 other modules PLANNED. Only `src/policy/eligibility.mjs` plus its real fictional fixtures are implemented. No provider-specific entitlement verification, real orders, security production review or live execution is approved.
+**Status: graph-derived R10 baseline with FV-POLICY-001 and FV-CLOCK-001 strictly synthetic owned source additions.** Protected main includes the accepted Git/Node22/GEF foundation and completed R0-R10 planning, followed by merged harness PR #19 at `69ef5e6649d00ec06c1d6ba6adb0f7e5c97a637d`. The registry now marks bootstrap, the **synthetic-only** policy harness and the **synthetic-only** clock harness ACTIVE, leaving 17 other modules PLANNED. The only product source implemented is `src/policy/eligibility.mjs` and `src/clock/integrity.mjs`, each with owned invented tests. No provider-specific entitlement verification, real orders, security production review or live execution is approved.
 
 ## 1. Exact graph-derived module inventory
 
@@ -17,7 +17,7 @@ All `depends_on` values and owned paths below are **literal from the registered 
 | `web` | PLANNED | 8 | `risk`, `portfolio`, `observability`, `ai` | `src/web/` / `tests/web/` | R9 secure Web/AI; ADR-017 |
 | `integration` | PLANNED | 9 | `risk`, `forex`, `cex`, `defi`, `ai`, `web`, `policy`, `clock`, `market-data`, `ledger`, `execution`, `portfolio`, `replay`, `research`, `strategy-forex`, `strategy-cex`, `strategy-defi`, `observability` | `src/contracts/` / `tests/integration/` | R0 Architecture + R10 ADR-020 |
 | `policy` | ACTIVE | 1 | none | `src/policy/` / `tests/policy/` | FV-POLICY-001 implemented fictional-only Node22 evaluator; R1 and ADR-001 remain provider-research proposals |
-| `clock` | PLANNED | 1 | none | `src/clock/` / `tests/clock/` | R2 clock/market-data; ADR-002 |
+| `clock` | ACTIVE | 1 | none | `src/clock/` / `tests/clock/` | FV-CLOCK-001 strictly fictional Node22 nanosecond/domain evaluator; R2 and ADR-002 remain future provider-clock research |
 | `market-data` | PLANNED | 2 | `clock` | `src/market-data/` / `tests/market-data/` | R2 provenance; ADR-003 |
 | `ledger` | PLANNED | 2 | `policy` | `src/ledger/` / `tests/ledger/` | R3 Ledger/Risk/Execution; ADR-004 |
 | `execution` | PLANNED | 4 | `risk`, `market-data`, `clock`, `ledger` | `src/execution/` / `tests/execution/` | R3 order-state/hedge; ADR-006 |
@@ -29,7 +29,7 @@ All `depends_on` values and owned paths below are **literal from the registered 
 | `strategy-defi` | PLANNED | 6 | `defi`, `replay`, `portfolio` | `src/strategy-defi/` / `tests/strategy-defi/` | R7 DEX feasibility; ADR-014 |
 | `observability` | PLANNED | 5 | `market-data`, `clock`, `execution`, `ledger`, `risk` | `src/observability/` / `tests/observability/` | R8 Portfolio/Observability; ADR-016 |
 
-The `integration` module's literal 18 dependencies remain unchanged. `bootstrap` is an existing, independently checked native source-tooling foundation in protected main; it is not a registered graph dependency of each product module. Every future active module still needs its own admitted Work Order, real nonempty owned tests, dependency impact evidence and current exact-head CI. Only the scoped FV-POLICY-001 fictional evaluator and its dedicated test directory now exist; other product source/test directories remain reserved, not created.
+The `integration` module's literal 18 dependencies remain unchanged. `bootstrap` is an existing, independently checked native source-tooling foundation in protected main; it is not a registered graph dependency of each product module. Every future active module still needs its own admitted Work Order, real nonempty owned tests, dependency impact evidence and current exact-head CI. Only the scoped FV-POLICY-001 and FV-CLOCK-001 fictional evaluators and their dedicated test directories now exist; all other product source/test directories remain reserved, not created.
 
 ## 2. Proposed implementation waves extracted from the existing DAG
 
@@ -69,7 +69,7 @@ All third-party entries here are **carried forward from R1–R9 and the repo's T
 | `web` | Next.js App Router DAL + optional TanStack Query, read-only SSE | Server RBAC/BOLA, stale stream/cache, kill ACK ambiguity, UI offline | Auth provider, tenant scope, private deployment, control-plane approval |
 | `integration` | Typed contracts + module-owned seam tests; full release harness LAST | All dep modules ACTIVE, cross-domain adverse replay, independent full suite and signed release | All 18 graph dependencies and exact approved deployment/security/venue receipts |
 | `policy` | Dependency-free Node22 synthetic evaluator implemented in FV-POLICY-001; Rust remains an unadopted option | Exact fictional scope, expired/revoked rights, malformed evidence and all real-vendor inputs DENY in the owned harness | Any external entitlement verifier still requires real legal venue/feed rights and qualified review |
-| `clock` | Rust Instant/SystemTime; conditional chrony/PTP after host proof | UNKNOWN_CLOCK, CROSS_DOMAIN, backward wall and epoch failures, clock error bounds | Target host/NIC/cross-host uncertainty budget |
+| `clock` | FV-CLOCK-001 Node22 BigInt invented-only local and provider interval evaluation; Rust Instant/SystemTime and optional measured chrony/PTP are separate future candidates | UNKNOWN_CLOCK, CROSS_DOMAIN, BACKWARD_WALL, WALL_STEP_OR_CLOCK_DRIFT, inaccurate provider bounds and touching/overlapping intervals | Any REAL provider capture, PTP/NIC and cross-host uncertainty bound still OPEN |
 | `market-data` | Typed Rust in-process normalization; optional rights-checked Arrow/Parquet | Sequence gaps/out-of-order/stale/throttled feeds, rights/precision and fail-closed book state | Actual data licence, feed semantics and rights |
 | `ledger` | Separate PostgreSQL immutable event ledger/unique local intent/WAL (candidate) | Duplicate-concurrent intent, MAY_HAVE_SENT crash, lost ACK, duplicate fill, recovery | Separate owned product DB, scoped IDs/retention and backup policy |
 | `execution` | Rust/Tokio bounded routing with durable Ledger and mock venue | No blind retry on lost ACK, cancel/fill race, partial leg and rejected hedge, safe reboot | Per-venue status, idempotency and strategy permissions |
@@ -81,7 +81,7 @@ All third-party entries here are **carried forward from R1–R9 and the repo's T
 | `strategy-defi` | Pure simulated CEX/DEX spread and same-chain route model | Hook/gas/reorg/revert/CEX leg unknown, no instant bridge or atomic hedge | Licensed chain/RPC, pool, selected CEX and route permissions |
 | `observability` | Async redacted OTel, Prometheus histograms, Grafana alerts as candidates | Same-domain timing, label/privacy guard, collector outage and alert ACK not receipt | Private operations retention, thresholds and mandatory alert route |
 
-The first actual pure synthetic source WO is `FV-POLICY-001`, isolated to `src/policy/` and actual `tests/policy/` with no network or production authorization. The next proposed candidate is `FV-CLOCK-001` (pure same-domain clock normalization and uncertainty) in its own later scoped WO, not admitted by policy activation. `FV-DATA-001` as described in the existing governed backlog may later encompass normalized data and replay, but this table's graph requires separately scoped `market-data` and `ledger` source admissions before `risk` and `execution`. Any issue-numbering/WO mapping must be explicitly reconciled in a future reviewed planning update rather than silently rewriting the canonical backlog.
+The first actual pure synthetic source WO is `FV-POLICY-001`, isolated to `src/policy/` and actual `tests/policy/` with no network or production authorization. The next separate source WO is `FV-CLOCK-001`, a pure same-domain **synthetic** clock normalization and provider-uncertainty evaluator with its own real `tests/clock/` harness. Neither module provides actual external authorization or time calibration. `FV-DATA-001` as described in the existing governed backlog may later encompass normalized data and replay, but this table's graph requires separately scoped `market-data` and `ledger` source admissions before `risk` and `execution`. Any issue-numbering/WO mapping must be explicitly reconciled in a future reviewed planning update rather than silently rewriting the canonical backlog.
 
 ## 4. Mandatory external blockers and independent approval chain
 
@@ -113,3 +113,7 @@ A 4/4 native source-foundation CI proves repository tooling only, not module run
 ## 7. Round 10 STOP CONDITION
 
 This document remains DRAFT product architecture, with zero financial source or module-status changes. Keep PR #17 OPEN/DRAFT; preserve accepted Git/GEF foundation, protected main and unpromoted planning checkpoint. Real provider permissions, exact-head source tests, qualified independent financial-security review for privileged activation and PRIVATE repository receipt before funded production remain distinct. No secrets, signing, orders or outperformance claim are authorized.
+
+### FV-CLOCK-001 incremental admission
+
+`clock` is ACTIVE solely as a pure fictional local-clock and UTC interval **test harness**: exact canonical i64 nanosecond decimal strings, same-domain/process-epoch monotonic subtraction, conservative wall delta and explicit unknown/unhealthy sync, invented provider EVENT semantics with nonoverlapping error intervals. `SYNTHETIC_FIXTURE` is its only evidence class eligible for an affirmative synthetic result; `REAL_VENDOR` always DENY. This activation does not adopt FV-ADR-002 for any actual hardware, production runtime, feed timestamp or externally measured latency. After this scoped source merge, the true graph will have three ACTIVE IDs (bootstrap, policy, clock) and 17 PLANNED dependents. Future market-data source now has an eligible direct upstream, but remains independently PLANNED until a new separately admitted WO and actual tests.

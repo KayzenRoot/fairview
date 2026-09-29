@@ -158,13 +158,15 @@
     },
     {
       "id": "clock",
-      "state": "planned",
+      "state": "active",
       "depends_on": [],
       "paths": [
         "src/clock/",
         "tests/clock/"
       ],
-      "tests": []
+      "tests": [
+        "tests/clock/*.test.mjs"
+      ]
     },
     {
       "id": "market-data",
@@ -314,5 +316,5 @@
     ".engineering/DECISIONS-LEDGER.md",
     "src/contracts/"
   ],
-  "note": "FV-POLICY-001 activates dependency-free SYNTHETIC_FIXTURE-only policy evaluator with real isolated policy tests. The bootstrap and synthetic policy modules are ACTIVE; the other 18 product modules remain PLANNED. A synthetic eligibility classification never proves broker/venue permissions or grants execution authority. Each later module still requires its own scoped WO, actual tests, valid active dependencies and exact-head CI; financially privileged operation additionally needs independent security, signed legal/data rights, risk and managed secrets."
+  "note": "FV-POLICY-001 and FV-CLOCK-001 implement independent, strictly synthetic-only policy eligibility and clock integrity kernels with real isolated Node22 tests. Bootstrap, synthetic policy and synthetic clock are the ONLY ACTIVE harnesses among 20 IDs; the other 17 financial product modules remain PLANNED. Synthetic clock captures and event-interval ordering NEVER prove real source timestamp semantics, provider latency, actual clock synchronization or execution permission; policy classifications likewise cannot grant actual venue rights. Each dependent module still needs its own admitted WO, valid active direct dependencies, nonempty real tests and exact-head CI. Funded financial operations require independent security/legal/risk and separately authorized deployment."
 }
