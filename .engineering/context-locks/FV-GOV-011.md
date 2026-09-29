@@ -8,7 +8,7 @@ Accepted protected SOURCE main `b70d5be9cd4df3e5b5a3e99a8aaa92c3dfadeb18`, exact
 - `.engineering/SCOPE.md` `19cb3ed24ddec9e29ec654561d300990a32d33a9`.
 - `.engineering/DEFINITION-OF-DONE.md` `ff57da31ecbf294cdb5c0d4ca8afc695da7499cf`.
 - `.engineering/ARCHITECTURE.md` `2daa02569e0862d89f7c792953a1088132be27fb`.
-- `.engineering/INTEGRATION-CONTRACTS.md` `21655a7f9f98fcb52c73f283e6700c6fe649ff0`.
+- `.engineering/INTEGRATION-CONTRACTS.md` `21655a7f9f98fcb52c73f283e6700c6fe649ff0c`.
 - `.engineering/TEST-BENCHMARK-PLAN.md` `c6b22024af5db56f59d3a4f1ec884d8cc053db51`.
 - `docs/architecture/ARBITRAGE-MODULE-MAP.md` `577b2f4036adb0e96f019288d23dd27b65ba2ea6`.
 - `docs/architecture/MODULE-READINESS-AND-IMPLEMENTATION-R10.md` `e8c07633f66e9393678db058a8c328212f28fdff`.
@@ -21,3 +21,7 @@ TWO new own docs first then precisely TWELVE existing above. Only existing regis
 
 ## Risk, evidence and STOP
 Prior accepted source PR #45 exact head `2a4a88cf06e4e974ffa324fc6cc9786250f92761` run36588409485 4/4, Forex29/29, bootstrap88/88; two same-PR Correction Deltas (CORR-001 R10 vs registry; CORR-002 stale invented reference) all retained; normal merge `b70d5be9cd4df3e5b5a3e99a8aaa92c3dfadeb18` exact-main36588730744 4/4/full561. Own GOV-011 EXACT HEAD must pass 4/4 and full 561, redacted Evidence Bundle, 14-file diff exact, pt-BR objective own review NOT_INDEPENDENT and no known HIGH/CRITICAL/substantive unresolved review; normal expected-head merge, then exact-new-main 4/4/full561. FV-CP-0002 remains `MIGRATION_DRAFT_NOT_APPROVED`, `independent_approval:false`; D-007 actual venue/strategy/account/data rights and qualified reviewer OPEN; D-008 current PUBLIC invented-only and independently VERIFIED PRIVATE-before-funded OPEN, independently real durable Ledger/Risk/kill, full authorized provider history reconciliation, qualified external financial-security HIGH_ASSURANCE OPEN. No live trade. STOP on changed accepted base/decision/Scope/DoD/Architecture, missing proof, unexpected diff, false graph/checkpoint, any failed suite; same-WO Correction Delta only.
+
+## FV-GOV-011-CORR-001 | Own-lock transcription correction, no frozen source drift
+
+The SECOND standalone pre-existing-doc lock originally committed at `d720610ab4acea06ac8c1e2193b5bd12209eb3c2` preceded every existing doc edit. During strictly scoped git blob verification after initial five DOCS-ONLY updates in this SAME branch, one original hash was found to have been manually transcribed one character short: the untouched accepted SOURCE main integration contracts blob is `21655a7f9f98fcb52c73f283e6700c6fe649ff0c`, **not** `21655a7f9f98fcb52c73f283e6700c6fe649ff0`. Exact accepted baseline main `b70d5be9cd4df3e5b5a3e99a8aaa92c3dfadeb18`, actual frozen file fetched directly with SHA proof, other eleven locked informational blobs, owner decisions and true source 4/4/561/561 are UNCHANGED. This explicit same-Work-Order Correction Delta amends ONLY the typo in own lock before touching this or any additional existing file; no source changes, force-push or stale baseline inference, no independent checkpoint promotion. This lock is append-corrected AFTER initial five historical doc additions, not deceptively claimed to be in the original SECOND commit. Future edits require fresh blob check and all exact PR/merge gates.
