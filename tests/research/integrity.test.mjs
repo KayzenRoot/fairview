@@ -252,15 +252,15 @@ test("real research mode and unknown versions are denied before evaluating any f
  denied(study([caseOf()],{research_version:"fv-research-experimental"}),"UNPINNED_RESEARCH_VERSION");
  denied(study([caseOf()],{unexpected_output_permission:true}),"INVALID_RESEARCH_REQUEST");
 });
-test("stale, indicative and throttled invented reference quotes are included as inconclusive, not best-trial winners",()=>{
+test("indicative, throttled and insufficient shared fake depth keep all cases inconclusive, not best-trial winners",()=>{
  for(const patch of [{quote_kind:"INDICATIVE"},{delivery:"THROTTLED"}]){
   const c=caseOf(quoteOnly(patch));
   const r=inconclusive(study([c]),"NONACTIONABLE_INVENTED_QUOTE");
   assert.equal(r.reproducible_case_count,0);assert.equal(r.inconclusive_case_count,1);
  }
- const c=caseOf();const stale=inconclusive(study([c],{
-  quality_policy:{...quality,max_receive_age_ns:"0"}}),"NONACTIONABLE_INVENTED_QUOTE");
- assert.equal(stale.case_count,1);
+ const c=caseOf();const strictDepth=inconclusive(study([c],{
+  quality_policy:{...quality,min_depth_levels:3}}),"NONACTIONABLE_INVENTED_QUOTE");
+ assert.equal(strictDepth.case_count,1);
 });
 test("unknown fake source-event timestamp never qualifies an observed executable market quote",()=>{
  const c=capture({source_event_utc_ns:null,source_event_uncertainty_ns:null,
@@ -341,9 +341,9 @@ test("fake cancel request and false alert cannot declare broker cancel or financ
 });
 test("malformed event kind, duplicate insertion index or no quote remains inconclusive",()=>{
  const x=quoteOnly();x[0].kind="REAL_TRADE";
- inconclusive(study([caseOf(x)]),"INVALID_INVENTED_DATASET");
+ inconclusive(study([{manifest:manifest(quoteOnly()),events:x}]),"INVALID_INVENTED_DATASET");
  const y=frames();y[1].insertion_index=0;
- inconclusive(study([caseOf(y)]),"INVALID_INVENTED_DATASET");
+ inconclusive(study([{manifest:manifest(quoteOnly()),events:y}]),"INVALID_INVENTED_DATASET");
  const z=[envelope(0,"EXECUTION_EVENT",capture(),action(event(1,"ACK")))];
  inconclusive(study([caseOf(z)]),"ACCEPTED_REPLAY_REJECTED");
 });
