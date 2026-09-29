@@ -117,7 +117,8 @@ test("FV-REPLAY-001 direct invented source owner is actually tested while resear
  const impacted=calculateImpact(registry,["src/replay/deterministic.mjs"]);
  assert.deepEqual(impacted.direct_active,["replay"]);
  assert.deepEqual(impacted.direct_planned,[]);
- for(const id of ["research","strategy-forex","strategy-cex","strategy-defi","integration"])
+ assert(impacted.active.includes("research"));
+ for(const id of ["strategy-forex","strategy-cex","strategy-defi","ai","web","integration"])
   assert(impacted.planned.includes(id),"PLANNED_DEPENDENT_NOT_TESTED "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
@@ -129,5 +130,19 @@ test("FV-OBSERVABILITY-001 real direct owned diagnostics still leave Web/Integra
  assert.deepEqual(x.direct_planned,[]);
  for(const id of ["web","integration"])
   assert(x.planned.includes(id),"UNTESTED_OBSERVABILITY_DEPENDENT "+id);
+ assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
+});
+
+
+test("FV-RESEARCH-001 real directly owned synthetic A/A source has proof without promoting future AI/Web or real financial Integration",()=>{
+ const x=calculateImpact(registry,["src/research/integrity.mjs"]);
+ assert.deepEqual(x.direct_active,["research"]);
+ assert.deepEqual(x.direct_planned,[]);
+ assert(x.active.includes("research"));
+ for(const id of ["ai","web","integration"])
+  assert(x.planned.includes(id),"UNTESTED_RESEARCH_REVERSE "+id);
+ const replay=calculateImpact(registry,["src/replay/deterministic.mjs"]);
+ const data=calculateImpact(registry,["src/market-data/quote.mjs"]);
+ assert(replay.active.includes("research")&&data.active.includes("research"));
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });

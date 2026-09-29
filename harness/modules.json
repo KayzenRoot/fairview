@@ -250,7 +250,7 @@
     },
     {
       "id": "research",
-      "state": "planned",
+      "state": "active",
       "depends_on": [
         "market-data",
         "replay"
@@ -259,7 +259,9 @@
         "src/research/",
         "tests/research/"
       ],
-      "tests": []
+      "tests": [
+        "tests/research/*.test.mjs"
+      ]
     },
     {
       "id": "strategy-forex",
@@ -330,5 +332,5 @@
     ".engineering/DECISIONS-LEDGER.md",
     "src/contracts/"
   ],
-  "note": "FV-GOV-007 observed accepted reviewed source FV-OBSERVABILITY-001 PR #37 normal merge: protected main 4f6ab4f6e9fe26d7c9355fe45d7ad13fc2503cf7, exact push 36571892886 4/4, ALL TEN ACTUAL strictly invented-only source harnesses 448/448 PASS (bootstrap80/risk39/policy57/clock56/market-data79/ledger27/execution27/portfolio27/replay30/observability26). Original initial PR HEAD CI 36571561840 Obs25/26 FAIL due cyclic malicious fixture not strict early DENY; SAME WO/PR CORR-001 added fail-closed no-getter cycle/depth preflight, corrected HEAD dcaf182fe14e188a7d1b5e4b4749f5dec2e3ad8e run 36571671942 4/4, Obs26/26 bootstrap80/80, no skipped test. EXACT twenty original IDs/edges/states/paths/test globs UNCHANGED: 10 ACTIVE ONLY fictional local source / 10 PLANNED. Obs only redacted low-cardinality local diagnostic over actual MOCK Clock/Market Data/Risk, NON-DURABLE Ledger and NO-NETWORK Execution, WeakSet-owned bounded fake collector; every output fixture_only:true execution_authorized:false network_performed:false persisted:false authenticated_provider_evidence:false kill_durable:false financial_reconciliation_complete:false real_latency_measured:false alert_delivered:false mandatory_audit_satisfied:false. NO real p99, alert, mandatory audit, provider order, PnL, venue right, real account or independent financial kill. Full R8 24-case financial/real monitoring matrix and proposed ADR-016 UNIMPLEMENTED/UNADOPTED, D-007 actual legal provider/account/data/reviewer OPEN, D-008 PUBLIC fixture dev and VERIFIED PRIVATE before funded OPEN, genuine financial Ledger/Risk/kill/provider authentication and qualified HIGH_ASSURANCE finance independent review outstanding. Informational NOTE only, no new source activation or checkpoint promotion."
+  "note": "FV-RESEARCH-001 BRANCH CANDIDATE frozen reviewed protected GOV-007 source main 358a7e94600113bd1e1cca0d745800de3f31c03c exact-main 36572663541 4/4, TEN previous only-local invented owner suites 448/448. Eleventh source owner Research ACTIVE only for a bounded Node22 A/A identical-input pinned-fixture metadata integrity rehearsal that directly invokes accepted actual MOCK Market Data quote normalization/quality and MOCK Replay hashing and execution TWICE, preserving all incomplete/invalid cases. Original TWENTY literal ID/edges/path owners unchanged; candidate 11 ACTIVE STRICTLY synthetic source / 9 PLANNED only after reviewed exact-head CI, objective NOT_INDEPENDENT self-audit, normal merge and exact-main 4/4/full owned suite proof. No licensed external data, real historical research, broker, PnL/ROI/p50/p95/p99, selected best strategy or competitor comparison. Public flags fixture_only:true execution_authorized:false network_performed:false persisted:false authenticated_provider_evidence:false kill_durable:false financial_reconciliation_complete:false real_market_performance_established:false comparative_benchmark_supported:false real_latency_measured:false. D-007 actual legal provider/account/data/reviewer rights OPEN; D-008 PUBLIC source-only and VERIFIED PRIVATE before FUNDED OPEN, independently durable real Ledger/Risk/kill, authenticated provider order/fill/position reconciliation and qualified financial HIGH_ASSURANCE unfulfilled. R4 full comparison methodology and proposed ADR-007/008 NOT ADOPTED. Checkpoint proposed independent_approval=false."
 }
