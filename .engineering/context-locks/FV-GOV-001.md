@@ -1,0 +1,8 @@
+# FV-GOV-001 | Exact-base context lock
+- Repository: KayzenRoot/fairview; branch: docs/fv-gov-001-checkpoint-reconciliation.
+- Frozen base main: `8da9fc71e35d25cef8849db5d7c218f69875faad`. STOP / STALE if main moves before the diff or if critical source fingerprint changes; rebase via normal non-force process.
+- Canonical authority: current observed Git/CI and accepted owner D-009; `.engineering/CHECKPOINT.md` and `.json` are currently stale PROPOSED records, NEVER independent approval.
+- Inspected exact base file blob hashes: CHECKPOINT.md `beb7e2a11749771409735c84f35ebd05a7768fac`; CHECKPOINT.json `b2f90c2e923eb86ae9ffad1f4a0b9da61e5f6e02`; DECISIONS-LEDGER.md `116b962fbec0b54bdd9d698d15671aba4ab96664`; SCOPE.md `3637c5424f4adcd4d05caed92cce013543c5e92f`; DEFINITION-OF-DONE.md `de7e92f4cf88422119e23b3f0a072da11d9b3772`; ARCHITECTURE.md `ba83bd837afde6136579e4321e3ba974f63b9c02`; R10 `b896d515a5870e01bfe9c45249e472d054c1b895`. Verify with fresh Git reads on review.
+- Source observations: PRs #18, #17, #19, #20, #21, #23 merged on main; #22 unmerged; Actions push run `36518003115` exact main four jobs successful; no open PR at lock creation.
+- Registry frozen: 20 total, four active bootstrap, policy, clock, market-data, sixteen planned; GEF gitlink v1.0.0 `866fe3af8cccc65c929aaf6a47a924401fa448b3` unchanged.
+- No source implementation, branch/history rewriting, unverified approval or developer host-specific claims.
