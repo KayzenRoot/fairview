@@ -10,6 +10,16 @@ const units=x=>typeof x==="string"&&x.length<=20&&U.test(x)&&BigInt(x)<=MAX?BigI
 const TIME=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const utc=x=>typeof x==="string"&&TIME.test(x)&&Number.isFinite(Date.parse(x))&&new Date(x).toISOString()===x;
 const frozen=x=>Object.freeze(x);
+// Process-local provenance is only a fictional-fixture guard, NOT cryptographic
+// identity, cross-process deduplication or durable financial proof.
+const trustedStates=new WeakSet();
+const tracked=state=>{
+ if(state.blocked_new_exposure!==true||!Object.isFrozen(state)||!Object.isFrozen(state.intent)||
+    !Object.isFrozen(state.events)||!Object.isFrozen(state.policy_evidence_refs))
+   throw Error("INVALID_OWNED_FIXTURE");
+ trustedStates.add(state);
+ return state;
+};
 const outcome=(status,reason_code,ledger=null)=>frozen({schema_version:0,status,reason_code,ledger,fixture_only:true,persisted:false,execution_authorized:false});
 const deny=(code,state=null)=>outcome("DENY",code,state);
 const REQUEST=["schema_version","source_class","tenant_id","account_id","venue_id","instrument_contract_id","intent_key","side","quantity_units","created_at_utc","policy_request"];
@@ -30,9 +40,9 @@ export function createSyntheticLedger(raw){
   if(policy.decision!==(req.mode==="DEMO"?"DEMO_ELIGIBLE":"PAPER_ELIGIBLE")||
      !policy.fixture_only||policy.execution_authorized!==false)return deny("POLICY_FIXTURE_NOT_ELIGIBLE");
   const intent=frozen(Object.fromEntries(REQUEST.filter(k=>k!=="policy_request").map(k=>[k,raw[k]])));
-  const state=frozen({schema_version:0,intent,policy_evidence_refs:frozen([...policy.authorization_evidence_refs]),
+  const state=tracked(frozen({schema_version:0,intent,policy_evidence_refs:frozen([...policy.authorization_evidence_refs]),
    phase:"INTENT_DURABLE",attempt_id:null,filled_units:"0",unknown_external_effect:false,
-   blocked_new_exposure:true,events:frozen([]),fixture_only:true,persisted:false,execution_authorized:false});
+   blocked_new_exposure:true,events:frozen([]),fixture_only:true,persisted:false,execution_authorized:false}));
   return outcome("CREATED","IN_MEMORY_INTENT_ONLY",state);
  }catch{return deny("INVALID_INTENT");}
 }
@@ -41,7 +51,7 @@ const EVENT=["schema_version","source_class","intent_key","event_id","sequence",
 const RECEIPT=["source_class","complete","account_id","venue_id","instrument_contract_id","cursor","reported_filled_units","order_status"];
 const terminal=new Set(["FILLED","CANCELED_CONFIRMED"]);
 
-const next=(s,e,patch)=>frozen({...s,...patch,events:frozen([...s.events,frozen({...e,receipt:e.receipt===null?null:frozen({...e.receipt})})])});
+const next=(s,e,patch)=>tracked(frozen({...s,...patch,events:frozen([...s.events,frozen({...e,receipt:e.receipt===null?null:frozen({...e.receipt})})])}));
 const lock=(s,code,e)=>outcome("LOCKED",code,next(s,e,{phase:"DISCREPANCY_LOCKED",unknown_external_effect:true}));
 function receiptValid(rec,s){
  return plain(rec)&&Object.keys(rec).length===RECEIPT.length&&RECEIPT.every(k=>Object.hasOwn(rec,k))&&
@@ -54,9 +64,12 @@ function receiptValid(rec,s){
 }
 export function appendSyntheticLedgerEvent(state,event){
  try{
-  if(!plain(state)||!state.fixture_only||state.persisted!==false||state.execution_authorized!==false||
+  if(!plain(state)||!trustedStates.has(state)||!Object.isFrozen(state)||
+     !Object.isFrozen(state.intent)||!Object.isFrozen(state.events)||
+     !Object.isFrozen(state.policy_evidence_refs)||state.blocked_new_exposure!==true||
+     !state.fixture_only||state.persisted!==false||state.execution_authorized!==false||
      !plain(state.intent)||!Array.isArray(state.events)||!Array.isArray(state.policy_evidence_refs))
-    return deny("INVALID_LEDGER_STATE");
+    return deny("UNTRUSTED_LEDGER_STATE");
   if(!plain(event)||Object.keys(event).length!==EVENT.length||!EVENT.every(k=>Object.hasOwn(event,k))||
      event.schema_version!==0||!["SYNTHETIC_FIXTURE","REAL_VENDOR"].includes(event.source_class))
     return deny("INVALID_EVENT",state);
@@ -70,7 +83,7 @@ export function appendSyntheticLedgerEvent(state,event){
   const duplicate=state.events.find(x=>x.event_id===event.event_id);
   if(duplicate){
    if(JSON.stringify(duplicate)===JSON.stringify(event))return outcome("IGNORED_DUPLICATE","SAME_EVENT_ID_SAME_FACTS",state);
-   return outcome("LOCKED","CONFLICTING_DUPLICATE_EVENT_ID",frozen({...state,phase:"DISCREPANCY_LOCKED",unknown_external_effect:true}));
+   return outcome("LOCKED","CONFLICTING_DUPLICATE_EVENT_ID",tracked(frozen({...state,phase:"DISCREPANCY_LOCKED",unknown_external_effect:true})));
   }
   if(state.events.length>=128)return deny("EVENT_LIMIT",state);
   const last=state.events.at(-1);
@@ -131,5 +144,5 @@ export function appendSyntheticLedgerEvent(state,event){
    return outcome("APPLIED","SYNTHETIC_CANCEL_ONLY",next(state,event,{phase:"CANCELED_CONFIRMED"}));
   }
   return deny("UNHANDLED_EVENT",state);
- }catch{return deny("INVALID_EVENT_OR_STATE",state);}
+ }catch{return deny("INVALID_EVENT_OR_STATE");}
 }

@@ -163,3 +163,53 @@ test("independent in-memory constructions are deterministic but never cross-proc
  assert.equal(second.ledger.persisted,false);
  assert.equal(second.execution_authorized,false);
 });
+
+test("forged caller state cannot bypass independently evaluated synthetic Policy",()=>{
+ const original=sent();
+ const forged={...original,policy_evidence_refs:Object.freeze(["fakeApproval"]),phase:"MAY_HAVE_SENT",attempt_id:"ATT_1"};
+ Object.freeze(forged);
+ const outcome=appendSyntheticLedgerEvent(forged,ev(2,"ACK"));
+ assert.equal(outcome.status,"DENY");assert.equal(outcome.reason_code,"UNTRUSTED_LEDGER_STATE");
+ assert.equal(outcome.ledger,null);assert.equal(original.blocked_new_exposure,true);
+});
+test("forged blocked_new_exposure false cannot be laundered into output or deny ledger",()=>{
+ const forged={...sent(),blocked_new_exposure:false};
+ Object.freeze(forged);
+ const result=appendSyntheticLedgerEvent(forged,ev(2,"ACK"));
+ assert.equal(result.status,"DENY");assert.equal(result.reason_code,"UNTRUSTED_LEDGER_STATE");
+ assert.equal(result.ledger,null);noAuthority(result);
+});
+test("even structurally identical deeply frozen clone is not a producer-owned state",()=>{
+ const real=sent(),clone=structuredClone(real);
+ Object.freeze(clone.intent);Object.freeze(clone.policy_evidence_refs);
+ for(const e of clone.events){if(e.receipt)Object.freeze(e.receipt);Object.freeze(e);}
+ Object.freeze(clone.events);Object.freeze(clone);
+ assert.deepEqual(clone,real);
+ const result=appendSyntheticLedgerEvent(clone,ev(2,"ACK"));
+ assert.equal(result.status,"DENY");assert.equal(result.reason_code,"UNTRUSTED_LEDGER_STATE");
+ assert.equal(result.ledger,null);
+});
+test("module-owned immutable conflict lock still supports only fictional receipt",()=>{
+ const s=sent();
+ const conflicting=appendSyntheticLedgerEvent(s,ev(1,"ACK"));
+ assert.equal(conflicting.status,"LOCKED");assert.equal(conflicting.ledger.phase,"DISCREPANCY_LOCKED");
+ assert.equal(conflicting.ledger.blocked_new_exposure,true);
+ const r=appendSyntheticLedgerEvent(conflicting.ledger,ev(2,"RECONCILE",{receipt:receipt()}));
+ assert.equal(r.status,"APPLIED");assert.equal(r.ledger.blocked_new_exposure,true);
+ noAuthority(r);noAuthority(r.ledger);
+});
+test("hostile getter and proxy state fail closed without returning forged state",()=>{
+ const source=sent(),x={...source};
+ Object.defineProperty(x,"fixture_only",{get(){throw Error("hostile getter")},enumerable:true});
+ const rejected=appendSyntheticLedgerEvent(x,ev(2,"ACK"));
+ assert.equal(rejected.status,"DENY");assert.equal(rejected.ledger,null);
+ const throwing=new Proxy(source,{getPrototypeOf(){throw Error("hostile proxy")}});
+ const guarded=appendSyntheticLedgerEvent(throwing,ev(2,"ACK"));
+ assert.equal(guarded.status,"DENY");assert.equal(guarded.ledger,null);
+});
+test("all legitimately produced mock states keep new exposure conservatively blocked",()=>{
+ let s=newLog();assert.equal(s.blocked_new_exposure,true);
+ for(const e of [ev(1,"MAY_HAVE_SENT"),ev(2,"ACK"),ev(3,"FILL",{quantity_units:"1",execution_id:"EXEC_L"}),ev(4,"LOST_ACK"),ev(5,"RECONCILE",{receipt:receipt({reported_filled_units:"1"})})]){
+  s=apply(s,e);assert.equal(s.blocked_new_exposure,true);assert.equal(s.persisted,false);assert.equal(s.execution_authorized,false);
+ }
+});
