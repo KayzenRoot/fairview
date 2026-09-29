@@ -106,7 +106,8 @@ test("FV-EXECUTION-001 directly owned fake Execution stays separated from still-
  assert.deepEqual(impact.direct_planned,[]);
  assert(impact.active.includes("execution"));
  assert(impact.active.includes("replay"));
- for(const id of ["forex","cex","defi","observability","integration"])
+ assert(impact.active.includes("observability"));
+ for(const id of ["forex","cex","defi","integration"])
   assert(impact.planned.includes(id),"FUTURE_UNTESTED "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
@@ -118,5 +119,15 @@ test("FV-REPLAY-001 direct invented source owner is actually tested while resear
  assert.deepEqual(impacted.direct_planned,[]);
  for(const id of ["research","strategy-forex","strategy-cex","strategy-defi","integration"])
   assert(impacted.planned.includes(id),"PLANNED_DEPENDENT_NOT_TESTED "+id);
+ assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
+});
+
+
+test("FV-OBSERVABILITY-001 real direct owned diagnostics still leave Web/Integration planned reverse dependents unexecuted",()=>{
+ const x=calculateImpact(registry,["src/observability/diagnostics.mjs"]);
+ assert.deepEqual(x.direct_active,["observability"]);
+ assert.deepEqual(x.direct_planned,[]);
+ for(const id of ["web","integration"])
+  assert(x.planned.includes(id),"UNTESTED_OBSERVABILITY_DEPENDENT "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
