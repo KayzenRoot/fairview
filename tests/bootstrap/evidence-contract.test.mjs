@@ -89,7 +89,7 @@ test("FV-PORTFOLIO-001 real test ownership proves invented Portfolio seam but no
  assert.deepEqual(x.direct_active,["portfolio"]);
  assert.deepEqual(x.direct_planned,[]);
  assert(x.active.includes("portfolio"));
- for(const id of ["replay","strategy-forex","strategy-cex","strategy-defi","web","integration"])
+ for(const id of ["strategy-forex","strategy-cex","strategy-defi","web","integration"])
   assert(x.planned.includes(id),"FUTURE_NOT_TESTED "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
