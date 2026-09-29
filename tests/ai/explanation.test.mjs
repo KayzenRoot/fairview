@@ -369,7 +369,7 @@ test("oversized strings, sparse arrays, invalid numbers or large shallow request
  reject(explainSyntheticEvidence(str),"HOSTILE_OR_UNTRUSTED_ADVISORY_REQUEST");
  const sparse=aiInput();sparse.research_request.cases=new Array(2);
  reject(explainSyntheticEvidence(sparse),"HOSTILE_OR_UNTRUSTED_ADVISORY_REQUEST");
- const nonfinite=aiInput();nonfinite.risk_request.limits.worst_case_cost_bps=NaN;
+ const nonfinite=aiInput();nonfinite.risk_request.limits=limits({worst_case_cost_bps:NaN});
  reject(explainSyntheticEvidence(nonfinite),"HOSTILE_OR_UNTRUSTED_ADVISORY_REQUEST");
 });
 test("extra benign root fields, fake signed review and fabricated upstream verdicts cannot alter source truth",()=>{
