@@ -17,27 +17,29 @@ function result(decision,reason_codes,refs=[],expiry=null,rights=[]){
 const deny=reason=>result("DENY",[reason]);
 const matchingScope=(left,right)=>SCOPE_FIELDS.every(k=>left[k]===right[k]);
 const validScope=s=>plain(s)&&SCOPE_FIELDS.every(k=>identifier(s[k]));
-const validGrant=g=>plain(g)&&GRANT_TYPES.includes(g.type)&&identifier(g.ref)&&HASH.test(g.proof_sha256)&&identifier(g.reviewer_ref)&&validScope(g.scope)&&typeof g.revoked==="boolean"&&utc(g.verified_at_utc)!==null&&utc(g.expires_at_utc)!==null&&(!Object.hasOwn(g,"data_scopes")||(Array.isArray(g.data_scopes)&&g.data_scopes.length>0&&g.data_scopes.length<=3&&new Set(g.data_scopes).size===g.data_scopes.length&&g.data_scopes.every(s=>DATA_USES.includes(s))))&&(!Object.hasOwn(g,"delivery")||["SAMPLED","TICK_COMPLETE","UNKNOWN"].includes(g.delivery));
+const validGrant=g=>plain(g)&&GRANT_TYPES.includes(g.type)&&identifier(g.ref)&&typeof g.proof_sha256==="string"&&HASH.test(g.proof_sha256)&&identifier(g.reviewer_ref)&&validScope(g.scope)&&typeof g.revoked==="boolean"&&utc(g.verified_at_utc)!==null&&utc(g.expires_at_utc)!==null&&(!Object.hasOwn(g,"data_scopes")||(Array.isArray(g.data_scopes)&&g.data_scopes.length>0&&g.data_scopes.length<=3&&new Set(g.data_scopes).size===g.data_scopes.length&&g.data_scopes.every(s=>DATA_USES.includes(s))))&&(!Object.hasOwn(g,"delivery")||["SAMPLED","TICK_COMPLETE","UNKNOWN"].includes(g.delivery));
 /**
  * Pure, deterministic eligibility classifications for invented fixtures.
  * This V0 deliberately has no trusted contract verifier: REAL_VENDOR is always DENY.
  * Even synthetic LIVE_CANDIDATE has execution_authorized=false.
  */
-export function evaluateSyntheticEligibility(input){
+function evaluateUnchecked(input){
  if(!plain(input)||input.schema_version!==0||!plain(input.scope)||!validScope(input.scope)||!Object.hasOwn(MODES,input.mode)||!DATA_USES.includes(input.data_use)||!["SYNTHETIC_FIXTURE","REAL_VENDOR"].includes(input.source_class)||utc(input.now_utc)===null||!Array.isArray(input.grants)||input.grants.length>16||(input.requires_tick_complete!==undefined&&typeof input.requires_tick_complete!=="boolean"))return deny("INVALID_REQUEST");
  if(input.source_class!=="SYNTHETIC_FIXTURE")return deny("TRUSTED_PROVIDER_NOT_IMPLEMENTED");
  const now=utc(input.now_utc);
  // Synthetic internal research is a fixture exercise, never venue/data entitlement.
  if(input.mode==="RESEARCH"&&input.data_use==="INTERNAL"&&!input.requires_tick_complete&&input.grants.length===0)return result("RESEARCH_ONLY",["SYNTHETIC_RESEARCH_ONLY"],[],null,["SYNTHETIC_INTERNAL"]);
- const byType=new Map(),refs=[];
+ const byType=new Map(),refs=[],usedRefs=new Set();
  for(const g of input.grants){
   if(!validGrant(g))return deny("INVALID_GRANT_SCHEMA");
   if(!matchingScope(g.scope,input.scope))return deny("GRANT_SCOPE_MISMATCH");
   if(byType.has(g.type))return deny("AMBIGUOUS_GRANTS");
+  if(usedRefs.has(g.ref))return deny("DUPLICATE_EVIDENCE_REF");
+  if(g.type!=="DATA_USE"&&(Object.hasOwn(g,"data_scopes")||Object.hasOwn(g,"delivery")))return deny("UNEXPECTED_GRANT_RIGHTS");
   if(g.revoked)return deny("REVOKED_EVIDENCE");
   if(utc(g.verified_at_utc)>now)return deny("FUTURE_VERIFICATION");
   if(utc(g.expires_at_utc)<=now||utc(g.expires_at_utc)<=utc(g.verified_at_utc))return deny("EXPIRED_EVIDENCE");
-  byType.set(g.type,g);refs.push(g.ref);
+  byType.set(g.type,g);usedRefs.add(g.ref);refs.push(g.ref);
  }
  const required=input.mode==="RESEARCH"?["DATA_USE"]:["ACCOUNT_API","STRATEGY_PERMISSION","DATA_USE","OPERATOR_APPROVAL",...(input.mode==="LIVE_CANDIDATE"?["PRODUCTION_EVIDENCE"]:[])];
  for(const type of required)if(!byType.has(type))return deny("MISSING_"+type);
@@ -46,4 +48,9 @@ export function evaluateSyntheticEligibility(input){
  if(input.requires_tick_complete&&data.delivery!=="TICK_COMPLETE")return deny("TICK_FIDELITY_UNPROVEN");
  const expiry=new Date(Math.min(...[...byType.values()].map(g=>utc(g.expires_at_utc)))).toISOString();
  return result(MODES[input.mode],["SYNTHETIC_CLASSIFICATION_ONLY"],refs,expiry,[input.data_use]);
+}
+
+// Malformed JS objects (including throwing getters) cannot escape as an authorization exception.
+export function evaluateSyntheticEligibility(input){
+ try{return evaluateUnchecked(input);}catch{return deny("INVALID_REQUEST");}
 }
