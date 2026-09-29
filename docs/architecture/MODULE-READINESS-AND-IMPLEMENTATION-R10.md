@@ -4,13 +4,15 @@
 
 ## 1. Exact graph-derived module inventory
 
+**FV-FOREX-001 branch-only candidate caveat:** the Forex table state below reflects this candidate branch registry (14 ACTIVE local dummy source owners / 6 PLANNED); the accepted protected main at the historical top snapshot remains 13/7 until exact-head PR gates, objective review and guarded merge. Forex ACTIVE here confers no real venue/data account entitlement.
+
 All `depends_on` values and owned paths below are **literal from the registered source**, not the desired business sequence. A wave means topological *eligibility AFTER prior independently admitted dependencies*, not a batch approval or permission to code now. Source path reservations are NOT existing implementation files.
 
 | Canonical ID | Current registry state | Earliest graph wave | Exact registered dependencies | Reserved source / harness ownership | Governing design round |
 |---|---|---:|---|---|---|
 | `bootstrap` | ACTIVE | 0 | none | `bootstrap-owned existing paths` / `tests/bootstrap/` | Accepted native Git/Node22/GEF foundation and bootstrap charter |
 | `risk` | ACTIVE | 3 | `market-data`, `clock`, `policy` | `src/risk/` / `tests/risk/` | R3 Ledger/Risk/Execution; ADR-005 |
-| `forex` | PLANNED | 5 | `risk`, `market-data`, `clock`, `execution` | `src/forex/` / `tests/forex/` | R1 provider contract; ADR-001 |
+| `forex` | ACTIVE | 5 | `risk`, `market-data`, `clock`, `execution` | `src/forex/` / `tests/forex/` | R1 provider contract; ADR-001 |
 | `cex` | PLANNED | 5 | `risk`, `market-data`, `clock`, `execution` | `src/cex/` / `tests/cex/` | R6 CEX connectors; ADR-011 |
 | `defi` | PLANNED | 5 | `risk`, `market-data`, `execution`, `policy` | `src/defi/` / `tests/defi/` | R7 DEX/Uniswap; ADR-013 |
 | `ai` | ACTIVE | 7 | `risk`, `research` | `src/ai/` / `tests/ai/` | FV-AI-001 reviewed and MERGED PR #41, fixed-template NO-MODEL local synthetic source; actual R9 generative AI and proposed ADR-018 remain BLOCKED |
