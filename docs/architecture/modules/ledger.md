@@ -1,9 +1,17 @@
-# Durable order-event ledger | module `ledger`
+# Order-event ledger | module `ledger`
 
-**PLANNED, NOT IMPLEMENTED.** FV-DISC-001 Round 3. Reserved `src/ledger/`, `tests/ledger/`; dependency `policy`. Future product ledger storage is separate from developer tooling.
+**ACTIVE SYNTHETIC IN-MEMORY REDUCER ONLY, NOT AN EXTERNAL FINANCIAL LEDGER.** FV-LEDGER-001 admits a small pure Node22 fictional event/state model at `src/ledger/simulation.mjs` with real deterministic `tests/ledger/simulation.test.mjs`. The only direct upstream graph dependency is the already-active **synthetic** `policy` evaluator. No database, broker API, order transmission, external trusted receipts, persistence or wallet is installed.
 
-**Responsibility:** append-only scoped intent, admission, MAY_HAVE_SENT attempt, acknowledgment, execution, cancellation and reconciliation receipts. Local at-most-once intent under scoped PostgreSQL uniqueness is not broker exactly-once. On unknown external outcome, block auto resend and demand authenticated order/fill/position proof.
+## Actual narrow contract
 
-**Technology candidate:** PostgreSQL transactions, unique indexes, WAL and possible future transaction outbox. Official sources: https://www.postgresql.org/docs/18/sql-insert.html ; https://www.postgresql.org/docs/18/wal-intro.html .
+`createSyntheticLedger` accepts an exact fictional `OrderIntentV0`, explicit finite canonical integer order units, immutable account/venue/tenant/instrument/intent identity and an independently evaluated invented policy request. Only complete synthetic DEMO/PAPER classifications initialize a fixture. Even an accepted result is **never an execution permit**: `fixture_only=true`, `persisted=false`, `execution_authorized=false`, `blocked_new_exposure=true`.
 
-**Future harness:** DUPLICATE_INTENT, CRASH_BEFORE_TRANSMIT, LOST_ACK_AFTER_FILL, DUPLICATE_FILL_EVENT, SESSION_GAP and independent backup/restore tests. **STOP** at any unknown remote effect, missing licence, release gate or independent review. Design contract in `docs/architecture/LEDGER-RISK-EXECUTION-R3.md`.
+`appendSyntheticLedgerEvent` is an immutable deterministic local reducer. It records unique sequenced invented event IDs and at most one `MAY_HAVE_SENT` marker, then fictional ACK, partial/complete fill, cancel-requested, cancel-confirmed, lost ACK/crash and an explicit scoped fictional reconciliation receipt. It rejects malformed or real-vendor input, gaps, duplicate conflicts and reused execution IDs. Identical duplicate event bytes are ignored. Fill evidence arriving during cancellation remains counted. A lost ACK or crash becomes `UNKNOWN_NEEDS_RECONCILIATION`; late ACK or cancellation message **cannot** resolve it. Incomplete or contradictory simulated history becomes `DISCREPANCY_LOCKED`. Only complete, matching *invented* reconciliation can clear a *simulated* unknown; this is **not** a real venue or independent financial proof.
+
+The result and nested output collections are frozen for safe fixture replay. No cross-process local uniqueness, ACID transaction, WAL/fsync, authenticated venue ID, actual replay clock or recovery drill is claimed. Neither source code nor tests issue a network call or connect to real financial infrastructure.
+
+## Deferred high-assurance ledger
+
+Proposed FV-ADR-004 remains `PROPOSED_NOT_ADOPTED` for PostgreSQL financial persistence, scoped local uniqueness, durable pre-send marker and separately authenticated broker reconciliation. Candidate official PostgreSQL references: https://www.postgresql.org/docs/18/sql-insert.html and https://www.postgresql.org/docs/18/wal-intro.html . Genuine unknown order outcomes must freeze new exposure and require complete independently authenticated order/fill/position evidence; no blind resend or claim of exactly-once external execution. Before any real account integration: selected lawful provider rights, dedicated financial data store, independent risk admission, crash/restart and backup/restore exercises, private deployment and qualified external security review.
+
+**STOP:** no broker order, funded account, real-data import, actual durable order record, production claim or silent change to the other 19 graph nodes under this narrow synthetic WO.

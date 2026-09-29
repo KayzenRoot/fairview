@@ -184,7 +184,7 @@
     },
     {
       "id": "ledger",
-      "state": "planned",
+      "state": "active",
       "depends_on": [
         "policy"
       ],
@@ -192,7 +192,9 @@
         "src/ledger/",
         "tests/ledger/"
       ],
-      "tests": []
+      "tests": [
+        "tests/ledger/*.test.mjs"
+      ]
     },
     {
       "id": "execution",
@@ -318,5 +320,5 @@
     ".engineering/DECISIONS-LEDGER.md",
     "src/contracts/"
   ],
-  "note": "FV-POLICY-001, FV-CLOCK-001 and FV-MARKET-DATA-001 are dependency-governed SYNTHETIC_FIXTURE-only Node22 kernels with real isolated owned tests. Bootstrap plus these three fictional modules are ACTIVE; the other 16 product modules remain PLANNED. No actual provider/feed licence, venue order-book source, fill, financial execution permission, clock calibration, data export permission or profitability is established by invented inputs. Each later source owner still requires a separate scoped WO, direct dependencies ACTIVE, real negative tests and exact-head CI. Funded/privileged runtime additionally requires provider entitlements, independent risk/security and separately authorized release."
+  "note": "FV-LEDGER-001 admits the fifth ACTIVE harness (bootstrap, synthetic policy, clock, market-data and in-memory synthetic ledger). The other 15 product modules remain PLANNED. All active product functions are restricted to fictional deterministic fixtures; no physical persistence, actual provider entitlement, broker connection, order transmission or financial runtime is approved. Every future module needs its own scoped WO, real owned tests, direct active dependencies and exact-head CI. Privileged financial production separately requires approved provider rights, authoritative reconciliation, qualified independent security review, managed secrets and verified private repository."
 }
