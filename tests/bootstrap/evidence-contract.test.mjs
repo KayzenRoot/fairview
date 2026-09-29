@@ -12,9 +12,9 @@ test("exact Git HEAD and explicit base bind only a CI-verified evidence receipt"
 test("a directly edited still-planned module or unknown path fails Evidence Bundle",()=>{
  assert(code.includes("impact.unknown.length||impact.direct_planned.length"));
  assert(!code.includes("impact.unknown.length||impact.planned.length"));
- const changed=calculateImpact(registry,["src/ledger/durable.mjs"]);
- assert.deepEqual(changed.direct_planned,["ledger"]);
- assert(changed.planned.includes("portfolio"));
+ const changed=calculateImpact(registry,["src/execution/durable.mjs"]);
+ assert.deepEqual(changed.direct_planned,["execution"]);
+ assert(changed.planned.includes("replay"));
  assert.equal(changed.unknown.length,0);
 });
 test("an active policy owner can provide proof with explicit untested planned downstream",()=>{
@@ -23,7 +23,7 @@ test("an active policy owner can provide proof with explicit untested planned do
  assert.deepEqual(changed.direct_planned,[]);
  assert(changed.active.includes("policy"));
  assert(changed.planned.includes("risk"));
- assert(changed.planned.includes("ledger"));
+ assert(changed.active.includes("ledger"));
  assert(changed.planned.includes("integration"));
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
  assert(code.includes("directly_modified_active_modules:impact.direct_active"));

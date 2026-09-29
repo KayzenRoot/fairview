@@ -184,7 +184,7 @@
     },
     {
       "id": "ledger",
-      "state": "planned",
+      "state": "active",
       "depends_on": [
         "policy"
       ],
@@ -192,7 +192,9 @@
         "src/ledger/",
         "tests/ledger/"
       ],
-      "tests": []
+      "tests": [
+        "tests/ledger/*.test.mjs"
+      ]
     },
     {
       "id": "execution",
@@ -318,5 +320,5 @@
     ".engineering/DECISIONS-LEDGER.md",
     "src/contracts/"
   ],
-  "note": "FV-POLICY-001, FV-CLOCK-001 and FV-MARKET-DATA-001 are dependency-governed SYNTHETIC_FIXTURE-only Node22 kernels with real isolated owned tests. Bootstrap plus these three fictional modules are ACTIVE; the other 16 product modules remain PLANNED. No actual provider/feed licence, venue order-book source, fill, financial execution permission, clock calibration, data export permission or profitability is established by invented inputs. Each later source owner still requires a separate scoped WO, direct dependencies ACTIVE, real negative tests and exact-head CI. Funded/privileged runtime additionally requires provider entitlements, independent risk/security and separately authorized release."
+  "note": "FV-POLICY-001, FV-CLOCK-001, FV-MARKET-DATA-001 and FV-LEDGER-001 are synthetic-fixture-only Node22 kernels with real isolated owned tests. Bootstrap plus four invented-only product modules ACTIVE on scoped ledger branch; 15 others PLANNED. Ledger is a pure in-memory mock with durable:false and execution_authorized:false; no actual DB, WAL, provider entitlement, broker fill, cross-process uniqueness, recovery or profit established. Every further owner requires separate WO, active direct dependencies, owned negative tests, exact-head CI; privileged financial runtime additionally requires qualified independent security, provider rights and owner approval."
 }
