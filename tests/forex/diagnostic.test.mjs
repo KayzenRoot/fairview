@@ -178,6 +178,22 @@ test("stale and untrusted venue cannot become a false Forex signal",()=>{
  const c=fixture();c.venue_quote.synthetic_fee_known=false;
  expectNotObservable(c,"VENUE_FIXTURE_NOT_COMPLETE");
 });
+test("stale invented reference beyond identical local quality budget is NON_ACTIONABLE",()=>{
+ const a=fixture();
+ a.reference_quote.capture.local_receive_monotonic_ns="9999999999990000";
+ expectNotObservable(a,"REFERENCE_TIME_BUDGET_NOT_MET");
+});
+test("invented reference receiving after local now is not a reliable research comparison",()=>{
+ const a=fixture();
+ a.reference_quote.capture.local_receive_monotonic_ns="10000000000000201";
+ a.reference_quote.capture.local_receive_wall_utc_ns="1700000000000000200";
+ expectNotObservable(a,"REFERENCE_TIME_BUDGET_NOT_MET");
+});
+test("indicative fake reference exceeding configured clock-error budget cannot be compared",()=>{
+ const a=fixture();
+ a.reference_quote.capture.estimated_clock_error_ns="1001";
+ expectNotObservable(a,"REFERENCE_TIME_BUDGET_NOT_MET");
+});
 test("reference simulated licensing, completeness and delivery required",()=>{
  const a=fixture();a.reference_quote.data_use_scope="EXTERNAL";
  expectNotObservable(a,"REFERENCE_FIXTURE_NOT_COMPLETE");
