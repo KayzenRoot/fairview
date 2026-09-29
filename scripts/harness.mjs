@@ -11,7 +11,7 @@ const registry=validateRegistry(JSON.parse(fs.readFileSync(path.join(root,"harne
 const fail=(message,code=1)=>{console.error("[FAIL] "+message);process.exit(code)};
 const run=(command,argv,inherit=false)=>spawnSync(command,argv,{cwd:root,encoding:"utf8",stdio:inherit?"inherit":"pipe",shell:false});
 function checkDoctor(){
- const required=["AGENTS.md",".gitmodules",".engineering/SOURCE-HIERARCHY.md",".engineering/CHECKPOINT.md",".engineering/DEFINITION-OF-DONE.md",".engineering/work-orders/FV-REMOVE-HIVE-001.md",".engineering/context-locks/FV-REMOVE-HIVE-001.md"];
+ const required=["AGENTS.md",".gitmodules",".engineering/SOURCE-HIERARCHY.md",".engineering/CHECKPOINT.md",".engineering/DEFINITION-OF-DONE.md",".engineering/work-orders/FV-FOUNDATION-002.md",".engineering/context-locks/FV-FOUNDATION-002.md"];
  for(const f of required) if(!fs.existsSync(path.join(root,f))) fail("MISSING_FILE "+f);
  const gitlink=run("git",["ls-tree","HEAD","vendor/gef-bootstrap"]);
  if(gitlink.status!==0||!gitlink.stdout.includes("160000 commit 866fe3af8cccc65c929aaf6a47a924401fa448b3")) fail("GEF_GITLINK_MISMATCH_OR_MISSING");

@@ -1,0 +1,11 @@
+# FV-FOUNDATION-002 | Git + Node22 + pinned GEF native source foundation
+
+**Status: ACTIVE GOVERNANCE RECORD; IMPLEMENTATION IN CURRENT PR STILL PROPOSED, NOT PROMOTED.** Owner 2026-09-28 withdrew the optional external context system. All present and future FairView development runs directly from Git/Source Pack/ADRs/WOs/context locks, native dependency-aware Node harness and fixed GEF source submodule. No separately installed memory/indexing service is necessary for a project source branch or CI.
+
+## Narrow foundation scope and DONE
+Maintain mandatory Source Pack, explicit D-009, independently verifiable Git identities, pinned GEF commit 866fe3af8cccc65c929aaf6a47a924401fa448b3 and unchanged .gitmodules, Node >=22, Windows Doctor/Install without other service dependencies, stand-alone secrets/security scanner, four exact-head required GitHub jobs, module registry and evidence bundle. Public development remains unprivileged; financial production requires PRIVACY, SECURITY, rights and independent HIGH_ASSURANCE acceptance.
+
+The owner-authorized removal was performed on a separate protected-main-based PR and is not complete until its exact-head CI, objective review and normal merge. Old working-tree service-specific files, integration locks, obsolete audit Work Orders and tests must be absent in this foundation. Earlier historical Git commits and issue comments remain immutable and are not active preconditions. Any new module source requires a separately admitted future WO and nonempty owned tests. The baseline registry on the protected main currently contains 8 module IDs, only bootstrap ACTIVE; the distinct existing planning PR #17 proposes a 20-module registry, to reconcile in a separate reviewed delta.
+
+## Source change stop and handoff
+Unknown file ownership and changing pinned GEF silently STOP. Never promote planning docs as runtime tests, claim an independent reviewer by owner self-audit, include production keys in CI or place a funded trade before external legal/account/chain approvals. Read current .engineering/CHECKPOINT.* and D-007/D-008/D-009, record exact Git base/head, changed path closure, real check status and reviewer evidence. Full chat-issued executor prompts use polished downloadable PDF; Work Orders here remain versioned Markdown.

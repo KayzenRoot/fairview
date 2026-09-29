@@ -1,6 +1,6 @@
 # Definition of Done
 
-**Foundation migration FV-REMOVE-HIVE-001 (NOT YET ACCEPTED):**
+**Foundation migration FV-FOUNDATION-002 (NOT YET ACCEPTED):**
 1. No obsolete external-context provider, install lock, local service test or semantic-index FULL gate remains in active FairView tracked source, scripts, CI, test registry or governing documents. Old reviews stay only in immutable Git history/issues.
 2. GEF v1.0.0 exact pinned gitlink remains unchanged; clone/submodule initialization and Node >=22 local Doctor/Install operate independently. No Python/Docker/model requirement.
 3. Source Pack integrity, security scanner, native impact selector, fail-closed unknown/planned edits, current Windows PowerShell 5.1 script parser and independent GEF gate pass on exact migration PR HEAD.

@@ -1,6 +1,6 @@
 # FairView current scope
 
-**Current implementation WO:** FV-REMOVE-HIVE-001, no auxiliary context/memory-service dependency. Scope: remove obsolete integration files, runtime/build/CI gates and source documentation; retain pinned GEF, Git/Node source harness, Windows Doctor/Install and security/impact checks. Source promotion only by normal scoped PR and exact-head CI; no product module implementation in this migration.
+**Current implementation WO:** FV-FOUNDATION-002, no auxiliary context/memory-service dependency. Scope: remove obsolete integration files, runtime/build/CI gates and source documentation; retain pinned GEF, Git/Node source harness, Windows Doctor/Install and security/impact checks. Source promotion only by normal scoped PR and exact-head CI; no product module implementation in this migration.
 
 **Future product scope (research proposals, not runtime):** Forex, CEX and on-chain DEX/Uniswap strategies with independent portfolio/risk/ledger and explicit authorized execution permissions, deterministic replay/benchmarks, telemetry, bounded AI and server-authorized browser dashboard.
 

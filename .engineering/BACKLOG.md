@@ -1,6 +1,6 @@
 # FairView backlog
 
-NOW: FV-REMOVE-HIVE-001 owner-authorized migration. Remove obsolete external-context integration scripts, test dependencies, host gates, documentation links and stale source references. Preserve pinned GEF v1.0.0, native Source Pack, Node22 harness, security scanner, exact-head CI and checkpoint evidence; document the old audit state as superseded, not independently accepted.
+NOW: FV-FOUNDATION-002 owner-authorized migration. Remove obsolete external-context integration scripts, test dependencies, host gates, documentation links and stale source references. Preserve pinned GEF v1.0.0, native Source Pack, Node22 harness, security scanner, exact-head CI and checkpoint evidence; document the old audit state as superseded, not independently accepted.
 
 NEXT (after exact-head migration CI and normal reviewed merge): reconcile open draft FV-DISC-001 PR #17 against the migrated main without force-push or reinserting withdrawn integration references. Use its planning designs as PROPOSALS, not source activation.
 

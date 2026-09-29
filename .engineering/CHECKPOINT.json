@@ -1,85 +1,40 @@
 {
-  "schema_version": "1.0",
-  "checkpoint": "FV-CP-0001",
-  "status": "REPO_BASELINE_AUDITED_LOCAL_PENDING",
+  "schema_version": "1.1",
+  "checkpoint": "FV-CP-0002-PROPOSED",
+  "status": "MIGRATION_DRAFT_NOT_APPROVED",
   "project": "Fairview",
   "brand": "Next Labs",
-  "work_order": "FV-BOOT-001",
-  "issue": 1,
-  "pr": 2,
-  "branch": "feat/fv-boot-001-gef-hive-foundation",
-  "base_sha": "547d42121698cd35f2d41fc7675376e8ffb02121",
-  "audited_implementation_head_sha": "cbca78a8ea0d963cbf4c646621d5ea8f15599d08",
-  "audit": {
-    "verdict": "APPROVED_REPO_BOOTSTRAP_ONLY",
-    "method": "OWNER_SELF_AUDIT",
-    "independent": false,
-    "pr_comment_id": 5857992894,
-    "ci_run_id": 36335992178,
-    "ci_conclusion": "success",
-    "sourcepack_sha256": "99fc42659accedd9d5a4e7464c6aef0d424b9bcfabb922b638223b5827025ab8",
-    "artifact_sha256": "58931bfb4631e5276e1d5f4a0d43647237513ae43d48d6f24e751aaba721bafa"
-  },
-  "release_candidate_checkpoint_head_status": "REQUIRES_EXACT_HEAD_CI_AND_FINAL_AUDIT_BEFORE_MERGE",
   "github_repo": "KayzenRoot/fairview",
-  "repo_visibility": "public",
-  "github_rulesets_observed": 0,
-  "admin_issue": 3,
+  "work_order": "FV-FOUNDATION-002",
+  "authority": "GIT_SOURCEPACK_GEF_NODE22",
+  "source_main_before_migration": "9eb01876adf2e1f2408b451e8cc08abb123173a5",
+  "migration_pr": "UNKNOWN_UNTIL_CREATED",
+  "migration_merged": false,
+  "independent_approval": false,
+  "approval_receipt": "PENDING_EXACT_HEAD_CI_AND_REVIEW",
+  "registry": {
+    "total": 8,
+    "active": [
+      "bootstrap"
+    ],
+    "planned": 7
+  },
   "gef": {
     "tag": "v1.0.0",
     "commit": "866fe3af8cccc65c929aaf6a47a924401fa448b3",
-    "upstream_ci_verified": true,
-    "user_windows_verified": false
+    "gitlink_unchanged": true,
+    "local_windows_verification": "NOT_OBSERVED_BY_THIS_PR"
   },
-  "hive": {
-    "tag": "v1.0.3",
-    "commit": "52bd3dab54dd4f16264072e198ed1fc23168f7fa",
-    "user_windows_verified": false,
-    "projects_root": "D:/Projects",
-    "project_path": "Fairview",
-    "semantic": "NOT_CONFIGURED_OR_NOT_VERIFIED",
-    "state": "LOCAL_VALIDATION_PENDING"
+  "sourcepack": {
+    "native_development": "Git Node22 pinned GEF only",
+    "external_host_gate": "NONE"
   },
-  "production_readiness": "NOT_STARTED",
-  "active_remaining_work": "FV-BOOT-001_LOCAL_INSTALL_AND_VERIFICATION",
-  "next_product_work_order": "BLOCKED_UNTIL_CURRENT_WO_VALIDATED",
-  "last_audit": "APPROVED",
-  "last_audited_head_sha": "cbca78a8ea0d963cbf4c646621d5ea8f15599d08",
-  "next_checkpoint_commit_requires_new_audit": true,
-  "source_main_post_merge": {
-    "sha": "bc8fa90285a13673efce2bcdace25f83f5385e30",
-    "ci_run_id": 36336210392,
-    "conclusion": "success"
+  "production": {
+    "status": "NOT_STARTED",
+    "repo_current_visibility": "PUBLIC_DEV",
+    "private_before_funded_live": true,
+    "requires_independent_financial_security_review": true,
+    "actual_provider_rights": "OPEN"
   },
-  "pending_security_delta": {
-    "work_order": "FV-BOOT-001",
-    "kind": "CORRECTION_DELTA_D008",
-    "status": "REMOTE_AUDITED_CHECKPOINT_FINAL_CI_PENDING",
-    "base_sha": "bc8fa90285a13673efce2bcdace25f83f5385e30",
-    "owner_visibility_decision": "PUBLIC_DEVELOPMENT_PRIVATE_BEFORE_PRODUCTION",
-    "private_visibility_verified": false,
-    "branch_protection_verified": false,
-    "audited_implementation_head_sha": "d973e3f0b149fc931c768ad86cbc55d9b716be24",
-    "review_comment_id": 5858087974,
-    "ci_run_id": 36336822805,
-    "ci_result": "success",
-    "sourcepack_fingerprint": "51555a899766923a866bb36a01ce97933f6d8b61049cf94d1f1a4497cae0f0b9",
-    "artifact_sha256": "b7ca28dd39d6148dbf0b11c81e09d3118208d9e0c9b510cc318a5bbedad81f26",
-    "independent_review": false,
-    "local_hive_validated": false
-  },
-  "checkpoint_integrity_model": {
-    "model": "EXTERNAL_MAIN_RECEIPT_V1",
-    "scope": "LOCAL_DEV_PRECHECK_ONLY",
-    "policy": "LOCAL_HEAD_EQ_ORIGIN_MAIN_EQ_GITHUB_API_MAIN_PLUS_EXACT_SUCCESSFUL_CI_AND_POST_CI_OWNER_ISSUE_RECEIPT",
-    "issue": 1,
-    "receipt_marker": "FAIRVIEW_CHECKPOINT_RECEIPT_V1",
-    "independent_review_proven": false,
-    "financial_production_gate": "BLOCKED",
-    "historical_remote_main_sha": "b7a31098f6850bffd629682b68eedd24706f67e2",
-    "historical_remote_main_ci": 36337000907,
-    "local_windows_validation": "PENDING",
-    "proposed_correction_branch": "fix/fv-boot-001-checkpoint-external-receipt",
-    "correction_final_merge_sha": "UNKNOWN_UNTIL_MERGED"
-  }
+  "historical_evidence": "Immutable Git history and original issue thread; old local-service requirement SUPERSEDED"
 }

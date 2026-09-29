@@ -4,7 +4,7 @@ import path from "node:path";
 import {fileURLToPath} from "node:url";
 import {sourcepackFingerprint} from "./lib/source-fingerprint.mjs";
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
-const mandatory=["SOURCE-HIERARCHY.md","PROJECT-OVERVIEW.md","REQUIREMENTS.md","SCOPE.md","ARCHITECTURE.md","SECURITY.md","TEST-BENCHMARK-PLAN.md","DEPLOYMENT.md","BACKLOG.md","DEFINITION-OF-DONE.md","DECISIONS-LEDGER.md","CHECKPOINT.md","CHECKPOINT.json","INTEGRATION-CONTRACTS.md","PROMPT-DELIVERY.md","work-orders/FV-REMOVE-HIVE-001.md","context-locks/FV-REMOVE-HIVE-001.md"];
+const mandatory=["SOURCE-HIERARCHY.md","PROJECT-OVERVIEW.md","REQUIREMENTS.md","SCOPE.md","ARCHITECTURE.md","SECURITY.md","TEST-BENCHMARK-PLAN.md","DEPLOYMENT.md","BACKLOG.md","DEFINITION-OF-DONE.md","DECISIONS-LEDGER.md","CHECKPOINT.md","CHECKPOINT.json","INTEGRATION-CONTRACTS.md","PROMPT-DELIVERY.md","work-orders/FV-FOUNDATION-002.md","context-locks/FV-FOUNDATION-002.md"];
 const entries=[];let failed=false;
 for(const p of mandatory){const full=path.join(root,".engineering",p);if(!fs.existsSync(full)||!fs.readFileSync(full,"utf8").trim()){console.error("[FAIL] MISSING_SOURCE "+p);failed=true;continue}entries.push([p,fs.readFileSync(full,"utf8")])}
 if(failed)process.exit(1);
