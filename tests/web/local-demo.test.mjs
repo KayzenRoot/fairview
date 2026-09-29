@@ -5,6 +5,7 @@ import {readFile} from "node:fs/promises";
 import http from "node:http";
 import {resolve} from "node:path";
 import {pathToFileURL} from "node:url";
+import vm from "node:vm";
 import test from "node:test";
 import {
   createDemoSnapshot,
@@ -12,6 +13,7 @@ import {
 } from "../../src/web/local-demo/server.mjs";
 
 const SERVER_PATH = resolve("src/web/local-demo/server.mjs");
+const APP_PATH = resolve("src/web/local-demo/public/app.js");
 const FLAG_KEYS = [
   "fixture_only",
   "execution_authorized",
@@ -85,6 +87,117 @@ function request(port, requestPath, options = {}) {
   });
 }
 const parseJson = (response) => JSON.parse(response.body);
+function deferred() {
+  let resolvePromise;
+  let rejectPromise;
+  const promise = new Promise((resolve, reject) => {
+    resolvePromise = resolve;
+    rejectPromise = reject;
+  });
+  return {promise, resolve: resolvePromise, reject: rejectPromise};
+}
+function fakeElement(value = "") {
+  return {
+    textContent: "",
+    value,
+    hidden: false,
+    dataset: {},
+    attributes: new Map(),
+    listeners: new Map(),
+    addEventListener(type, listener) { this.listeners.set(type, listener); },
+    setAttribute(name, attributeValue) { this.attributes.set(name, attributeValue); },
+    removeAttribute(name) { this.attributes.delete(name); },
+  };
+}
+async function createUiHarness() {
+  const source = await readFile(APP_PATH, "utf8");
+  const startupCall = "loadSnapshot(scenarioSelect.value);";
+  const instrumentedSource = source.replace(
+    startupCall,
+    "globalThis.__startupSnapshotPromise = loadSnapshot(scenarioSelect.value);",
+  );
+  assert.notEqual(instrumentedSource, source, "capture the real startup request promise");
+
+  const selectors = [
+    "#snapshot-status", "#snapshot-status-text", "#fixture-scenario",
+    "#overview-panel", "#planned-panel", "#scenario-control", "#mode-value",
+    "#risk-value", "#portfolio-value", "#diagnostic-value", "#model-view",
+    "#advisory-value", "#incident-value", "#session-value", "#pause-note-text",
+    "#pause-note", "#scenario-value", "#breadcrumb-current", "#page-title",
+    "#page-description", "#planned-title", "#planned-description",
+  ];
+  const elements = new Map(selectors.map((selector) => [selector, fakeElement()]));
+  elements.get("#fixture-scenario").value = "healthy";
+  const links = [
+    "overview", "markets", "strategies", "portfolio", "risk", "replay",
+    "incidents", "advisory", "settings",
+  ].map((view) => {
+    const link = fakeElement();
+    link.dataset.view = view;
+    return link;
+  });
+  const document = {
+    querySelector: (selector) => elements.get(selector) ?? null,
+    querySelectorAll: (selector) => selector === "[data-view]" ? links : [],
+  };
+  const requests = [];
+  const fetch = (url, options) => {
+    const request = {url, options, ...deferred()};
+    requests.push(request);
+    return request.promise;
+  };
+  const context = vm.createContext({
+    document,
+    fetch,
+    history: {replaceState() {}},
+    location: {hash: "#overview"},
+  });
+  vm.runInContext(instrumentedSource, context, {filename: APP_PATH});
+  return {
+    elements,
+    requests,
+    startupPromise: context.__startupSnapshotPromise,
+    selectScenario(scenario) {
+      const selector = elements.get("#fixture-scenario");
+      selector.value = scenario;
+      return selector.listeners.get("change")();
+    },
+  };
+}
+function apiResponse(snapshot, json = () => Promise.resolve(snapshot)) {
+  return {
+    ok: true,
+    headers: {get: (name) => name === "content-type" ? "application/json; charset=utf-8" : null},
+    json,
+  };
+}
+function assertDisplayedScenario(harness, selectedScenario) {
+  const expected = {
+    healthy: {
+      scenario: "HEALTHY_FIXTURE",
+      status: "ready",
+      mode: "SYNTHETIC_NONAUTHORITATIVE",
+      risk: "Mock risk · no authority",
+    },
+    degraded: {
+      scenario: "INCOMPLETE_FIXTURE",
+      status: "degraded",
+      mode: "SYNTHETIC_NONAUTHORITATIVE",
+      risk: "Mock risk refused",
+    },
+    denied: {
+      scenario: "DENIED_FIXTURE",
+      status: "degraded",
+      mode: "READ_MODEL_UNAVAILABLE",
+      risk: "READ_MODEL_UNAVAILABLE",
+    },
+  }[selectedScenario];
+  assert.equal(harness.elements.get("#fixture-scenario").value, selectedScenario);
+  assert.equal(harness.elements.get("#scenario-value").textContent, expected.scenario);
+  assert.equal(harness.elements.get("#snapshot-status").dataset.state, expected.status);
+  assert.equal(harness.elements.get("#mode-value").textContent, expected.mode);
+  assert.equal(harness.elements.get("#risk-value").textContent, expected.risk);
+}
 
 test("server import is inert and its supported starter binds only loopback", async () => {
   const moduleUrl = pathToFileURL(SERVER_PATH).href;
@@ -261,6 +374,73 @@ test("API returns only the real redacted model labels and keeps degraded state v
     assert.match(js, /accepted read model denied this fixture; no current view is available/);
     assert.match(js, /READ_MODEL_UNAVAILABLE/);
   });
+});
+
+test("only the latest selected fixture response controls the displayed scenario", async () => {
+  const races = [
+    {stale: "healthy", latest: "denied"},
+    {stale: "degraded", latest: "healthy"},
+    {stale: "denied", latest: "degraded"},
+  ];
+  for (const {stale, latest} of races) {
+    const ui = await createUiHarness();
+    ui.requests[0].resolve(apiResponse(createDemoSnapshot("healthy")));
+    await ui.startupPromise;
+
+    const stalePromise = ui.selectScenario(stale);
+    const staleRequest = ui.requests[1];
+    const latestPromise = ui.selectScenario(latest);
+    const latestRequest = ui.requests[2];
+    assert.equal(staleRequest.url, `/api/demo-snapshot?scenario=${stale}`);
+    assert.equal(latestRequest.url, `/api/demo-snapshot?scenario=${latest}`);
+
+    latestRequest.resolve(apiResponse(createDemoSnapshot(latest)));
+    await latestPromise;
+    assertDisplayedScenario(ui, latest);
+
+    staleRequest.resolve(apiResponse(createDemoSnapshot(stale)));
+    await stalePromise;
+    assertDisplayedScenario(ui, latest);
+  }
+});
+
+test("late response-body completion and fetch errors cannot overwrite the latest fixture", async () => {
+  const ui = await createUiHarness();
+  ui.requests[0].resolve(apiResponse(createDemoSnapshot("healthy")));
+  await ui.startupPromise;
+
+  const body = deferred();
+  const staleBodyPromise = ui.selectScenario("degraded");
+  const staleBodyRequest = ui.requests[1];
+  staleBodyRequest.resolve(apiResponse(undefined, () => body.promise));
+  const latestDeniedPromise = ui.selectScenario("denied");
+  const latestDeniedRequest = ui.requests[2];
+  latestDeniedRequest.resolve(apiResponse(createDemoSnapshot("denied")));
+  await latestDeniedPromise;
+  assertDisplayedScenario(ui, "denied");
+
+  body.resolve(createDemoSnapshot("degraded"));
+  await staleBodyPromise;
+  assertDisplayedScenario(ui, "denied");
+
+  const staleErrorPromise = ui.selectScenario("healthy");
+  const staleErrorRequest = ui.requests[3];
+  const latestDegradedPromise = ui.selectScenario("degraded");
+  const latestDegradedRequest = ui.requests[4];
+  latestDegradedRequest.resolve(apiResponse(createDemoSnapshot("degraded")));
+  await latestDegradedPromise;
+  assertDisplayedScenario(ui, "degraded");
+
+  staleErrorRequest.reject(new Error("delayed local fetch failure"));
+  await staleErrorPromise;
+  assertDisplayedScenario(ui, "degraded");
+
+  const currentErrorPromise = ui.selectScenario("healthy");
+  ui.requests[5].reject(new Error("current local fetch failure"));
+  await currentErrorPromise;
+  assert.equal(ui.elements.get("#snapshot-status").dataset.state, "error");
+  assert.equal(ui.elements.get("#scenario-value").textContent, "SNAPSHOT_UNAVAILABLE");
+  assert.equal(ui.elements.get("#mode-value").textContent, "READ_MODEL_UNAVAILABLE");
 });
 
 test("unknown methods, hosts, and cross-origin requests fail closed without CORS", async () => {

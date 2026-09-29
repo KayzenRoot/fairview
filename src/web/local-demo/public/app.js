@@ -92,6 +92,7 @@ const scenarioSelect = document.querySelector("#fixture-scenario");
 const overviewPanel = document.querySelector("#overview-panel");
 const plannedPanel = document.querySelector("#planned-panel");
 let currentView = "overview";
+let latestSnapshotRequestId = 0;
 const hasView = (viewId) => Object.hasOwn(views, viewId);
 
 const setText = (selector, value) => {
@@ -182,6 +183,7 @@ function applySnapshot(snapshot) {
   }
 }
 async function loadSnapshot(scenario) {
+  const requestId = ++latestSnapshotRequestId;
   if (!["healthy", "degraded", "denied"].includes(scenario)) {
     showUnavailable("Unknown fixture scenario.");
     return;
@@ -196,12 +198,16 @@ async function loadSnapshot(scenario) {
       cache: "no-store",
       redirect: "error",
     });
+    if (requestId !== latestSnapshotRequestId) return;
     if (!response.ok || !response.headers.get("content-type")?.startsWith("application/json")) {
       showUnavailable("Local snapshot is unavailable.");
       return;
     }
-    applySnapshot(await response.json());
+    const snapshot = await response.json();
+    if (requestId !== latestSnapshotRequestId) return;
+    applySnapshot(snapshot);
   } catch {
+    if (requestId !== latestSnapshotRequestId) return;
     showUnavailable("Local snapshot is unavailable.");
   }
 }
