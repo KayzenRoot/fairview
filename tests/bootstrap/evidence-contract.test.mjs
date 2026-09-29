@@ -66,7 +66,8 @@ test("fictional ledger direct ownership has executable tests without pretending 
  assert.deepEqual(impact.direct_planned,[]);
  assert(impact.active.includes("ledger"));
  assert(impact.active.includes("portfolio"));
- for(const id of ["execution","replay","integration"])
+ assert(impact.active.includes("execution"));
+ for(const id of ["replay","integration"])
   assert(impact.planned.includes(id),"UNTESTED_REVERSE_DEPENDENCY "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
@@ -78,7 +79,8 @@ test("FV-RISK-001 fake risk direct source is owned by executable harness, while 
  assert.deepEqual(x.direct_planned,[]);
  assert(x.active.includes("risk"));
  assert(x.active.includes("portfolio"));
- for(const id of ["execution","forex","cex","defi","replay","integration"])
+ assert(x.active.includes("execution"));
+ for(const id of ["forex","cex","defi","replay","integration"])
   assert(x.planned.includes(id),"UNTESTED_FINANCIAL_DEPENDENT "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
@@ -91,5 +93,16 @@ test("FV-PORTFOLIO-001 real test ownership proves invented Portfolio seam but no
  assert(x.active.includes("portfolio"));
  for(const id of ["strategy-forex","strategy-cex","strategy-defi","web","integration"])
   assert(x.planned.includes(id),"FUTURE_NOT_TESTED "+id);
+ assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
+});
+
+
+test("FV-EXECUTION-001 directly owned fake Execution stays separated from still-planned real providers",()=>{
+ const impact=calculateImpact(registry,["src/execution/simulation.mjs"]);
+ assert.deepEqual(impact.direct_active,["execution"]);
+ assert.deepEqual(impact.direct_planned,[]);
+ assert(impact.active.includes("execution"));
+ for(const id of ["forex","cex","defi","replay","observability","integration"])
+  assert(impact.planned.includes(id),"FUTURE_UNTESTED "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
