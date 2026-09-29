@@ -1,0 +1,8 @@
+# FV-CLOCK-001 | Exact source context lock
+
+Base accepted main `a4fba7b5c2c91c730a50c45f934e3cdf16252680`; FV-POLICY-001 is active only for fictional fixtures. This new, separately authorized WO creates a standalone Node22 `clock` synthetic fixture core, NOT real host capture, provider-UTC certification or PTP configuration. Authority: current source hierarchy and R2 design; ADR-002 remains PROPOSED_NOT_ADOPTED for future real-capture decisions.
+
+Only FV-CLOCK-001 WO and this lock, `src/clock/time.mjs`, `tests/clock/time.test.mjs`, `harness/modules.json`, `tests/bootstrap/impact.test.mjs`, `docs/architecture/modules/clock.md` and `docs/architecture/MODULE-READINESS-AND-IMPLEMENTATION-R10.md` may change. No broker, wallet, external model, live data, actual host wallclock/NTP/PTP, GEF pin, CI workflow, accepted ADR, dependency edges or checkpoint promotion. Keep exactly 20 IDs, bootstrap/policy unchanged active, and leave all other modules planned. New clock requires its own nonempty real negative fixtures and exact-head four-job CI. Honest owner self-audit is NOT independent financial security approval. STOP on unknown source path, test/CI fail or material permission changes.
+
+## Narrow existing-Evidence-test compatibility amendment
+Add only `tests/bootstrap/evidence-contract.test.mjs` to the approved path list. Its previously correct direct-planned denial used `clock`, which FV-CLOCK-001 now activates with real tests; switch that one negative case to still-PLANNED `market-data` and verify an active clock edit still preserves unexecuted planned downstream evidence. The production Evidence Bundle code and CI workflow remain unchanged. This approval does not allow any other source, host, credential or dependency changes.
