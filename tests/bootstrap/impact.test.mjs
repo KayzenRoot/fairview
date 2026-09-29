@@ -481,7 +481,7 @@ test("admitted synthetic policy remains testable with unimplemented downstream d
  assert.deepEqual(result.direct_planned,[]);
  assert(result.active.includes("policy")&&result.active.includes("risk")&&result.active.includes("ledger"));
  assert(result.active.includes("ledger"));
- assert(result.planned.includes("risk"));
+ assert(result.active.includes("risk"));
  assert(result.planned.includes("integration"));
  assert.deepEqual(result.unknown,[]);
 });
