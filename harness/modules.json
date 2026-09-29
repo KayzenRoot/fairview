@@ -91,7 +91,7 @@
     },
     {
       "id": "ai",
-      "state": "planned",
+      "state": "active",
       "depends_on": [
         "risk",
         "research"
@@ -100,7 +100,9 @@
         "src/ai/",
         "tests/ai/"
       ],
-      "tests": []
+      "tests": [
+        "tests/ai/*.test.mjs"
+      ]
     },
     {
       "id": "web",
@@ -332,5 +334,5 @@
     ".engineering/DECISIONS-LEDGER.md",
     "src/contracts/"
   ],
-  "note": "FV-GOV-008 latest accepted reviewed FV-RESEARCH-001 PR #39 exact source main ddfcccd8ac104c3e6f0c5078e723380e09ecdbc4, hosted exact postmerge push run 36575588876 4/4 SUCCESS, all ELEVEN actually ACTIVE purely invented local own suites 474/474 PASS: bootstrap82/risk39/policy57/clock56/market-data79/ledger27/execution27/portfolio27/replay30/research24/observability26. Twenty original literal graph IDs/dependencies/paths/owned tests intact: 11 ACTIVE STRICTLY SYNTHETIC source-only / 9 PLANNED. Research directly calls accepted mocked Market Data and pinned self-generated Replay TWICE on identical input to prove only A/A reproducible metadata, counting ALL invalid and inconclusive cases; not historical licensed data, strategy selection/ranking, ROI/profit, observed p99, actual broker/venue fill or provider rights. Own WO commit 8a07c82b878d18f4fa2423d2c9dc544baa57bc7f and lock 4ef18df34d3864be3853c2e52500fbe941e73598 preceded source. First PR run 36574968798 failed bootstrap81/82 due disallowed obsolete service term in own governance docs; same-PR CORR-001 cleaned only those own docs. Intermediate run 36575136136 bootstrap82/82 but Research22/24 due two invalid own test fixtures; same-PR CORR-002 corrected tests ONLY, no weaken runtime. Final exact PR HEAD 9b999735e349ae3b24a1a50c29371b0b06277000 run 36575259756 4/4 with Research24/24/bootstrap82/82; normal merge exact source main as above run36575588876 4/4/474/474. All Research results fixture_only:true execution_authorized:false network_performed:false persisted:false authenticated_provider_evidence:false kill_durable:false financial_reconciliation_complete:false real_market_performance_established:false comparative_benchmark_supported:false real_latency_measured:false. FV-CP-0002-PROPOSED MIGRATION_DRAFT_NOT_APPROVED independent_approval=false, D-007 actual lawful provider/account/data/reviewer rights and D-008 PUBLIC mock-dev VERIFIED PRIVATE-before-funded OPEN, independently durable financial Ledger/Risk/kill/provider-authenticated full reconciliation/HIGH_ASSURANCE unfulfilled. Full R4 historical/comparative methodology and proposed ADR-007/008 FUTURE. NOTE only, no further product activation or independent finance signoff."
+  "note": "FV-AI-001 branch candidate frozen reviewed GOV-008 protected main e6860a468e9b13025bbf2383b7bcedfff792d63c [run36577192857] 4/4 all previous 11 mock source suites 474/474. ONE local fixed-template NO-LLM, NO-MODEL source owner actually calls accepted synthetic Risk and Research to output finite redacted hypothetical evidence labels and refuses tool calls, injections, cross-tenant inputs, real vendors and unversioned modes. Not genuine LLM, not real model inference, not licensed historical/provider feed, broker tool, strategy investment advice, live risk or human approval. All public/nested flags fixture_only:true execution_authorized:false network_performed:false persisted:false authenticated_provider_evidence:false kill_durable:false financial_reconciliation_complete:false real_market_performance_established:false comparative_benchmark_supported:false real_latency_measured:false model_inference_performed:false model_service_connected:false human_review_complete:false tuning_approved:false. All original TWENTY IDs/edges/paths/other states/tests UNCHANGED. Branch candidate 12 ACTIVE strictly synthetic local source / 8 PLANNED only after exact HEAD hosted 4/4, objective NOT_INDEPENDENT self-audit, guarded normal merge, then exact-main full twelve tests. Full financial/R9 secure actual model/provider privacy/tenant and proposed ADR-018 future; checkpoint FV-CP-0002-PROPOSED MIGRATION_DRAFT_NOT_APPROVED independent_approval:false, D-007 actual legal venue/account/data/reviewer OPEN, D-008 PUBLIC fictional-dev verified PRIVATE before funded OPEN, independent durable financial Ledger/Risk/kill and authenticated venue reconciliation/external qualified HIGH_ASSURANCE unfulfilled."
 }
