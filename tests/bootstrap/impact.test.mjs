@@ -4,17 +4,17 @@ const r=JSON.parse(fs.readFileSync(new URL("../../harness/modules.json",import.m
 test("valid canonical graph",()=>assert.equal(validateRegistry(r),r));
 test("scoped script bug runs only bootstrap harness",()=>{const x=calculateImpact(r,["scripts/harness.mjs"]);assert.deepEqual(x.active,["bootstrap"]);assert.deepEqual(x.planned,[]);assert.equal(x.full,false)});
 test("ordinary document change runs bootstrap",()=>{const x=calculateImpact(r,["docs/runbooks/WINDOWS-DEVELOPMENT.md"]);assert.deepEqual(x.active,["bootstrap"]);assert.equal(x.full,false)});
-test("critical security source triggers all active harnesses",()=>{const x=calculateImpact(r,[".engineering/SECURITY.md"]);assert.equal(x.full,true);assert.deepEqual(x.active,["bootstrap","risk","policy","clock","market-data","ledger"])});
+test("critical security source triggers all active harnesses",()=>{const x=calculateImpact(r,[".engineering/SECURITY.md"]);assert.equal(x.full,true);assert.deepEqual(x.active,["bootstrap","risk","policy","clock","market-data","ledger","portfolio"])});
 test("active risk source invokes owned harness while planned dependents remain untested",()=>{const x=calculateImpact(r,["src/risk/kill_switch.rs"]);assert(x.active.includes("risk"));assert(x.planned.includes("forex"));assert(x.planned.includes("integration"))});
 test("unknown file fails closed not invisible",()=>{const x=calculateImpact(r,["random/future-code.rs"]);assert.deepEqual(x.unknown,["random/future-code.rs"]);assert.equal(x.full,true)});
 test("path traversal and backslash fail closed",()=>{const x=calculateImpact(r,["../escape",".\\windows"]);assert.equal(x.unknown.length,2)});
 test("duplicate and cycle reject",()=>{const c=structuredClone(r);c.modules[1].depends_on=["forex"];assert.throws(()=>validateRegistry(c),/CYCLIC_DEPENDENCY/)});
 test("active module must have tests",()=>{const c=structuredClone(r);c.modules.find(m=>m.id==="forex").state="active";assert.throws(()=>validateRegistry(c),/ACTIVE_MODULE_MISSING_TESTS/)});
 
-test("five fictional product kernels have real owned suites, other 14 modules remain planned",()=>{
+test("six fictional product kernels have real owned suites, other 13 modules remain planned",()=>{
  assert.equal(r.modules.length,20);
- assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger"]);
- const sourceById={risk:["src/risk/evaluate.mjs","tests/risk/evaluate.test.mjs"],policy:["src/policy/eligibility.mjs","tests/policy/eligibility.test.mjs"],
+ assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger","portfolio"]);
+ const sourceById={portfolio:["src/portfolio/projection.mjs","tests/portfolio/projection.test.mjs"],risk:["src/risk/evaluate.mjs","tests/risk/evaluate.test.mjs"],policy:["src/policy/eligibility.mjs","tests/policy/eligibility.test.mjs"],
   clock:["src/clock/time.mjs","tests/clock/time.test.mjs"],
    "market-data":["src/market-data/quote.mjs","tests/market-data/quote.test.mjs"],
    ledger:["src/ledger/simulation.mjs","tests/ledger/simulation.test.mjs"]};
@@ -90,7 +90,7 @@ test("Round 2 synthetic clock and market-data source remain separate from actual
   const marketCharter=fs.readFileSync(new URL("../../docs/architecture/modules/market-data.md",import.meta.url),"utf8");
   assert(marketCharter.includes("ACTIVE SYNTHETIC NORMALIZATION ONLY")&&marketCharter.includes("STOP"));
   assert.equal(r.modules.length,20);
-  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger"]);
+  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger","portfolio"]);
 });
 test("Round 2 time and market-data ADRs are proposed and docs stay bootstrap-owned",()=>{
   const docs=["docs/architecture/CLOCK-MARKET-DATA-R2.md","docs/architecture/adrs/FV-ADR-002-PROPOSED-TIME-INTEGRITY.md","docs/architecture/adrs/FV-ADR-003-PROPOSED-MARKET-DATA-PROVENANCE.md"];
@@ -125,7 +125,7 @@ test("Round 3 ledger-risk-execution contract documents unknown broker effects an
     assert(charter.includes("STOP"));
   }
   assert.equal(r.modules.length,20);
-  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger"]);
+  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger","portfolio"]);
 });
 test("Round 3 ADRs remain proposals and changed future trading source fails closed",()=>{
   const names=["FV-ADR-004-PROPOSED-DURABLE-ORDER-LEDGER.md","FV-ADR-005-PROPOSED-INDEPENDENT-RISK-KERNEL.md","FV-ADR-006-PROPOSED-ORDER-STATE-AND-HEDGE.md"];
@@ -164,7 +164,7 @@ test("Round 4 replay design documents reproducibility and all adverse scenario o
     assert(charter.includes("STOP"));
   }
   assert.equal(r.modules.length,20);
-  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger"]);
+  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger","portfolio"]);
 });
 test("Round 4 research ADRs stay proposed and future source changes require activated harness",()=>{
   const names=["FV-ADR-007-PROPOSED-DETERMINISTIC-REPLAY.md","FV-ADR-008-PROPOSED-BENCHMARK-METHODOLOGY.md"];
@@ -200,7 +200,7 @@ test("Round 5 Forex one/two/multi-feed proposal has distinct typed contracts and
   assert(charter.includes("PLANNED, NOT IMPLEMENTED"));
   assert(charter.includes("STOP"));
   assert.equal(r.modules.length,20);
-  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger"]);
+  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger","portfolio"]);
   assert.equal(r.modules.find(m=>m.id==="strategy-forex")?.state,"planned");
   assert.deepEqual(r.modules.find(m=>m.id==="strategy-forex")?.depends_on,["forex","replay","portfolio"]);
 });
@@ -241,7 +241,7 @@ test("Round 6 CEX spot adapter and strategy design protects 20 adverse scenarios
     assert(charter.includes("STOP"));
   }
   assert.equal(r.modules.length,20);
-  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger"]);
+  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger","portfolio"]);
 });
 test("Round 6 ADRs are proposals, and future CEX source remains blocked by planned harness",()=>{
   const names=["FV-ADR-011-PROPOSED-CEX-ORDERBOOK-CONTRACT.md","FV-ADR-012-PROPOSED-CEX-ARBITRAGE-ROUTES.md"];
@@ -283,7 +283,7 @@ test("Round 7 DEX and Uniswap documentation preserves chain/pool/block/exposure 
     assert(charter.includes("STOP"));
   }
   assert.equal(r.modules.length,20);
-  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger"]);
+  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger","portfolio"]);
 });
 test("Round 7 proposed DEX ADRs and future source impact remain governed by bootstrap",()=>{
   const names=["FV-ADR-013-PROPOSED-DEX-POOL-OBSERVATION.md","FV-ADR-014-PROPOSED-CEX-DEX-FEASIBILITY.md"];
@@ -318,14 +318,17 @@ test("Round 8 Portfolio and Observability design gates preserve financial truth 
     const row=design.split(/\r?\n/).find(line=>line.startsWith("| "+scenario+" | "));
     assert(row&&row.split("|").length>=4,"R8_MISSING_ADVERSE_DESIGN_FIXTURE "+scenario);
   }
-  for(const id of ["portfolio","observability"]){
+  assert.equal(r.modules.find(m=>m.id==="portfolio")?.state,"active");
+   const portfolioCharter=fs.readFileSync(new URL("../../docs/architecture/modules/portfolio.md",import.meta.url),"utf8");
+   assert(portfolioCharter.includes("ACTIVE SYNTHETIC-ONLY PROJECTION")&&portfolioCharter.includes("STOP"));
+   for(const id of ["observability"]){
     assert.equal(r.modules.find(m=>m.id===id)?.state,"planned","R8_PREMATURE_ACTIVATION "+id);
     const charter=fs.readFileSync(new URL("../../docs/architecture/modules/"+id+".md",import.meta.url),"utf8");
     assert(charter.includes("PLANNED, NOT IMPLEMENTED"));
     assert(charter.includes("STOP"));
   }
   assert.equal(r.modules.length,20);
-  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger"]);
+  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger","portfolio"]);
   assert.deepEqual(r.modules.find(m=>m.id==="portfolio")?.depends_on,["risk","ledger"]);
   assert.deepEqual(r.modules.find(m=>m.id==="observability")?.depends_on,["market-data","clock","execution","ledger","risk"]);
 });
@@ -342,7 +345,7 @@ test("Round 8 ADR proposals stay nonadopted and planned portfolio/telemetry sour
     assert.deepEqual(impact.unknown,[]);
   }
   const portfolioImpact=calculateImpact(r,["src/portfolio/reconciliation.rs"]);
-  assert(portfolioImpact.planned.includes("portfolio"));
+  assert(portfolioImpact.active.includes("portfolio"));
   assert(portfolioImpact.planned.includes("strategy-forex"));
   assert(portfolioImpact.planned.includes("strategy-cex"));
   assert(portfolioImpact.planned.includes("strategy-defi"));
@@ -372,7 +375,7 @@ test("Round 9 web and AI architecture documents bounded contracts and 24 adversa
     assert(charter.includes("STOP"));
   }
   assert.equal(r.modules.length,20);
-  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger"]);
+  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger","portfolio"]);
   assert.deepEqual(r.modules.find(m=>m.id==="web")?.depends_on,["risk","portfolio","observability","ai"]);
   assert.deepEqual(r.modules.find(m=>m.id==="ai")?.depends_on,["risk","research"]);
 });
@@ -404,7 +407,7 @@ test("Round 10 readiness inventory exactly mirrors the canonical 20-module DAG a
   const design=fs.readFileSync(new URL("../../docs/architecture/MODULE-READINESS-AND-IMPLEMENTATION-R10.md",import.meta.url),"utf8");
   const waves=[["bootstrap"],["policy","clock"],["market-data","ledger"],["risk"],["execution","portfolio"],["forex","cex","defi","replay","observability"],["research","strategy-forex","strategy-cex","strategy-defi"],["ai"],["web"],["integration"]];
   assert.equal(r.modules.length,20);
-  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger"]);
+  assert.deepEqual(r.modules.filter(m=>m.state==="active").map(m=>m.id),["bootstrap","risk","policy","clock","market-data","ledger","portfolio"]);
   assert.deepEqual([...new Set(waves.flat())].sort(),r.modules.map(m=>m.id).sort());
   for(const mod of r.modules){
     const wave=waves.findIndex(w=>w.includes(mod.id));
@@ -419,7 +422,7 @@ test("Round 10 readiness inventory exactly mirrors the canonical 20-module DAG a
       const dependencyWave=waves.findIndex(w=>w.includes(dep));
       assert(dependencyWave>=0&&dependencyWave<wave,"R10_DEPENDENCY_WAVE_INVALID "+mod.id+" -> "+dep);
     }
-    if(["risk","policy","clock","market-data","ledger"].includes(mod.id)){
+    if(["risk","policy","clock","market-data","ledger","portfolio"].includes(mod.id)){
       assert.equal(mod.state,"active","R10_SYNTHETIC_MODULE_NOT_ADMITTED "+mod.id);
       assert.deepEqual(mod.tests,["tests/"+mod.id+"/*.test.mjs"],"R10_SYNTHETIC_TEST_OWNER_MISSING "+mod.id);
     }else if(mod.id!=="bootstrap"){
@@ -453,7 +456,7 @@ test("Round 10 WO and proposed ADRs do not admit source, and future changes prop
   assert(policy.active.includes("policy")&&policy.active.includes("risk")&&policy.planned.includes("integration"));
   assert.deepEqual(policy.unknown,[]);
   const risk=calculateImpact(r,["src/risk/deny.rs"]);
-  assert(risk.active.includes("risk")&&risk.planned.includes("execution")&&risk.planned.includes("portfolio")&&risk.planned.includes("integration"));
+  assert(risk.active.includes("risk")&&risk.planned.includes("execution")&&risk.active.includes("portfolio")&&risk.planned.includes("integration"));
   assert.deepEqual(risk.unknown,[]);
   const ai=calculateImpact(r,["src/ai/advisory.rs"]);
   assert(ai.planned.includes("ai")&&ai.planned.includes("web")&&ai.planned.includes("integration"));
@@ -526,10 +529,31 @@ test("FV-MARKET-DATA-001 retains its active synthetic ownership, with synthetic 
   for(const id of ["forex","cex","defi","replay","observability","integration"])
   assert(impact.planned.includes(id),"MISSING_REVERSE_IMPACT "+id);
  assert.deepEqual(impact.unknown,[]);
- assert.equal(r.modules.filter(m=>m.state==="active").length,6);
- assert.equal(r.modules.filter(m=>m.state==="planned").length,14);
+ assert.equal(r.modules.filter(m=>m.state==="active").length,7);
+ assert.equal(r.modules.filter(m=>m.state==="planned").length,13);
  const adr=fs.readFileSync(new URL("../../docs/architecture/adrs/FV-ADR-003-PROPOSED-MARKET-DATA-PROVENANCE.md",import.meta.url),"utf8");
  assert(adr.includes("PROPOSED_NOT_ADOPTED"));
  const charter=fs.readFileSync(new URL("../../docs/architecture/modules/market-data.md",import.meta.url),"utf8");
  assert(charter.includes("ACTIVE SYNTHETIC NORMALIZATION ONLY")&&charter.includes("execution_authorized: false"));
+});
+
+
+test("FV-PORTFOLIO-001 actual owned fictional projection is tested and future financial dependents remain blocked",()=>{
+ const r0=r.modules.find(m=>m.id==="portfolio");
+ assert.deepEqual(r0.depends_on,["risk","ledger"]);
+ assert.equal(r0.state,"active");
+ assert.deepEqual(r0.tests,["tests/portfolio/*.test.mjs"]);
+ const c=calculateImpact(r,["src/portfolio/projection.mjs"]);
+ assert.deepEqual(c.direct_active,["portfolio"]);
+ assert.deepEqual(c.direct_planned,[]);
+ assert(c.active.includes("portfolio"));
+ for(const id of ["strategy-forex","strategy-cex","strategy-defi","web","integration"])
+  assert(c.planned.includes(id),"UNTESTED_REVERSE_DEPENDENT "+id);
+ const ledger=calculateImpact(r,["src/ledger/simulation.mjs"]);
+ assert(ledger.active.includes("ledger")&&ledger.active.includes("portfolio"));
+ const risk=calculateImpact(r,["src/risk/evaluate.mjs"]);
+ assert(risk.active.includes("risk")&&risk.active.includes("portfolio"));
+ assert(risk.planned.includes("execution"));
+ assert.equal(r.modules.filter(m=>m.state==="active").length,7);
+ assert.equal(r.modules.filter(m=>m.state==="planned").length,13);
 });

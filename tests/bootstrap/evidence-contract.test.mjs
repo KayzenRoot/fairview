@@ -65,7 +65,8 @@ test("fictional ledger direct ownership has executable tests without pretending 
  assert.deepEqual(impact.direct_active,["ledger"]);
  assert.deepEqual(impact.direct_planned,[]);
  assert(impact.active.includes("ledger"));
- for(const id of ["execution","portfolio","replay","integration"])
+ assert(impact.active.includes("portfolio"));
+ for(const id of ["execution","replay","integration"])
   assert(impact.planned.includes(id),"UNTESTED_REVERSE_DEPENDENCY "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
@@ -76,7 +77,19 @@ test("FV-RISK-001 fake risk direct source is owned by executable harness, while 
  assert.deepEqual(x.direct_active,["risk"]);
  assert.deepEqual(x.direct_planned,[]);
  assert(x.active.includes("risk"));
- for(const id of ["execution","portfolio","forex","cex","defi","replay","integration"])
+ assert(x.active.includes("portfolio"));
+ for(const id of ["execution","forex","cex","defi","replay","integration"])
   assert(x.planned.includes(id),"UNTESTED_FINANCIAL_DEPENDENT "+id);
+ assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
+});
+
+
+test("FV-PORTFOLIO-001 real test ownership proves invented Portfolio seam but not still-planned financial execution",()=>{
+ const x=calculateImpact(registry,["src/portfolio/projection.mjs"]);
+ assert.deepEqual(x.direct_active,["portfolio"]);
+ assert.deepEqual(x.direct_planned,[]);
+ assert(x.active.includes("portfolio"));
+ for(const id of ["strategy-forex","strategy-cex","strategy-defi","web","integration"])
+  assert(x.planned.includes(id),"FUTURE_NOT_TESTED "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
