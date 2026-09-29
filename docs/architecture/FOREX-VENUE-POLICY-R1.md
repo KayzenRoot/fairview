@@ -84,5 +84,6 @@ A policy record expires on a changed vendor ToS, revoked app, venue symbol/instr
 
 ### Round 1 STOP / handoff
 
+**STOP: no real orders**, demo accounts, unlicensed reference feeds or actual broker access are authorized by this Round 1 research proposal. All candidate venues remain RESEARCH_ONLY and future source requires its own admitted Work Order and executable negative tests.
 
 **Current foundation boundary (owner D-009):** Git/Source Pack/Node 22 and the pinned GEF submodule are the only development foundation dependencies. Foundation migration PR #18 was merged at `694fe60c759ab5a5f91ffaa32b599899bc614f83`; its exact-main CI completed 4/4 successfully. There is no separate host retrieval/indexing prerequisite for a narrowly admitted pure synthetic module Work Order. All product modules in this planning PR remain PLANNED; real provider permissions, financial security review and actual runtime tests are still distinct gates. **STOP:** no product code activation or financial operation is authorized by these design documents.

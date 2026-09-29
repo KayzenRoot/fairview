@@ -1,4 +1,4 @@
-# Bootstrap | native Git/Node22/GEF development harness
+# Bootstrap | native Git/Node22/GEF development harness | module `bootstrap`
 
 **ACTIVE development tooling only; financial product NOT IMPLEMENTED.** FairView's protected main accepted owner D-009 through migration PR #18 at commit `694fe60c759ab5a5f91ffaa32b599899bc614f83` with 4/4 post-merge CI `36507914601`. Source authority is Git, Source Pack, accepted ADRs, current narrow Work Orders and locks, Node22 impact-driven harness, public-source secret scanner and pinned GEF v1.0.0 submodule SHA `866fe3af8cccc65c929aaf6a47a924401fa448b3`. No separately installed memory, semantic indexing, Docker, Python or host-service validation is a requirement for source development.
 
