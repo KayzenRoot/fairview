@@ -17,6 +17,34 @@ const CLASS=["HEALTHY","MOCK_RISK_DENIED","MOCK_LEDGER_DENIED","MOCK_EXECUTION_D
 const PLAIN=x=>x!==null&&typeof x==="object"&&!Array.isArray(x)&&Object.getPrototypeOf(x)===Object.prototype;
 const exact=(x,fields)=>PLAIN(x)&&Object.keys(x).length===fields.length&&fields.every(k=>Object.hasOwn(x,k));
 const isFixture=x=>PLAIN(x)&&x.schema_version===0&&x.source_class==="SYNTHETIC_FIXTURE";
+// Reject hostile accessors, cycles, exotic objects and unbounded nested input BEFORE
+// executing any accepted mock dependency. Non-mutating: preserve original frozen
+// Risk portfolio/limits/kill provenance and never clone into a false authority.
+function safeFixtureStructure(x,depth=0,stack=new Set(),count={n:0}){
+ if(++count.n>12000||depth>26)return false;
+ if(x===null||typeof x==="boolean"||typeof x==="string")
+  return typeof x!=="string"||x.length<=131072;
+ if(typeof x==="number")return Number.isSafeInteger(x);
+ if(typeof x!=="object"||stack.has(x))return false;
+ if(Array.isArray(x)&&x.length>128||!Array.isArray(x)&&!PLAIN(x)||
+  Object.getOwnPropertySymbols(x).length)return false;
+ stack.add(x);
+ const properties=Object.getOwnPropertyDescriptors(x);
+ const keys=Object.keys(properties);
+ if(keys.length>256||Array.isArray(x)&&keys.length!==x.length+1){
+  stack.delete(x);return false;
+ }
+ for(const key of keys){
+  const d=properties[key];
+  if(key==="__proto__"||key==="constructor"||key==="prototype"||
+   !Object.hasOwn(d,"value")||
+   key!=="length"&&!d.enumerable||
+   key!=="length"&&!safeFixtureStructure(d.value,depth+1,stack,count)){
+    stack.delete(x);return false;
+  }
+ }
+ stack.delete(x);return true;
+}
 const bounded=x=>Number.isSafeInteger(x)&&x>=1&&x<=32;
 const flags=Object.freeze({fixture_only:true,execution_authorized:false,
  network_performed:false,persisted:false,authenticated_provider_evidence:false,
@@ -46,6 +74,7 @@ const diag=(kind,elapsed_ns=null,events=0,phase="NONE",unknown=false)=>mintedObs
  kind==="MOCK_DISCREPANCY_LOCKED"
 });
 function observe(input){
+ if(!safeFixtureStructure(input))return deny("INVALID_DIAGNOSTIC_REQUEST");
  if(!exact(input,OBS_INPUT)||input.schema_version!==0||
   !["SYNTHETIC_FIXTURE","REAL_VENDOR"].includes(input.source_class))
   return deny("INVALID_DIAGNOSTIC_REQUEST");
