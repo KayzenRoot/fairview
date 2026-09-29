@@ -1,6 +1,6 @@
 // FV-FOREX-001: PURE invented reference-versus-venue DIAGNOSTIC ONLY.
 // No provider connection, market edge calculation, trading signal or order authority.
-import {normalizeSyntheticClockSample} from "../clock/time.mjs";
+import {normalizeSyntheticClockSample,elapsedWithinSyntheticDomain} from "../clock/time.mjs";
 import {normalizeSyntheticQuote,assessSyntheticQuoteQuality} from "../market-data/quote.mjs";
 import {evaluateSyntheticRisk} from "../risk/evaluate.mjs";
 import {createSyntheticExecution} from "../execution/simulation.mjs";
@@ -108,6 +108,18 @@ export function diagnoseSyntheticForexVenue(input){
   if(qualityResult.status!=="SYNTHETIC_CANDIDATE_ONLY"||
    venue.provider_sequence===null||venue.full_snapshot!==true)
    return nonaction("VENUE_FIXTURE_NOT_COMPLETE");
+  // An indicative invented reference is NOT exempt from age and error checks.
+  // This check is deliberately separate from the accepted MOCK venue-quality gate.
+  const referenceAge=elapsedWithinSyntheticDomain(refClock.sample,nowClock.sample);
+  if(referenceAge.status!=="ELAPSED"||
+   typeof quality.max_receive_age_ns!=="string"||
+   typeof quality.max_local_clock_error_ns!=="string"||
+   !/^(?:0|[1-9][0-9]*)$/.test(quality.max_receive_age_ns)||
+   !/^(?:0|[1-9][0-9]*)$/.test(quality.max_local_clock_error_ns)||
+   refClock.sample.estimated_clock_error_ns===null||
+   BigInt(referenceAge.elapsed_ns)>BigInt(quality.max_receive_age_ns)||
+   BigInt(refClock.sample.estimated_clock_error_ns)>BigInt(quality.max_local_clock_error_ns))
+   return nonaction("REFERENCE_TIME_BUDGET_NOT_MET");
   const risk=evaluateSyntheticRisk(r);
   if(risk.status!=="SYNTHETIC_MODEL_PASS"||risk.execution_authorized!==false||
    risk.fixture_only!==true||risk.persisted!==false||risk.kill_durable!==false)
