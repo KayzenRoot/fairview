@@ -12,8 +12,8 @@ test("exact Git HEAD and explicit base bind only a CI-verified evidence receipt"
 test("a directly edited still-planned module or unknown path fails Evidence Bundle",()=>{
  assert(code.includes("impact.unknown.length||impact.direct_planned.length"));
  assert(!code.includes("impact.unknown.length||impact.planned.length"));
- const changed=calculateImpact(registry,["src/ledger/durable.mjs"]);
- assert.deepEqual(changed.direct_planned,["ledger"]);
+ const changed=calculateImpact(registry,["src/risk/deny.mjs"]);
+ assert.deepEqual(changed.direct_planned,["risk"]);
  assert(changed.planned.includes("portfolio"));
  assert.equal(changed.unknown.length,0);
 });
@@ -23,7 +23,7 @@ test("an active policy owner can provide proof with explicit untested planned do
  assert.deepEqual(changed.direct_planned,[]);
  assert(changed.active.includes("policy"));
  assert(changed.planned.includes("risk"));
- assert(changed.planned.includes("ledger"));
+ assert(changed.active.includes("ledger"));
  assert(changed.planned.includes("integration"));
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
  assert(code.includes("directly_modified_active_modules:impact.direct_active"));
@@ -55,5 +55,16 @@ test("fictional market-data direct owner is tested while still-planned strategy 
  assert.deepEqual(impact.direct_active,["market-data"]);
  assert.deepEqual(impact.direct_planned,[]);
  for(const id of ["risk","forex","cex","defi","replay","integration"])assert(impact.planned.includes(id));
+ assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
+});
+
+
+test("fictional ledger direct ownership has executable tests without pretending downstream execution exists",()=>{
+ const impact=calculateImpact(registry,["src/ledger/simulation.mjs"]);
+ assert.deepEqual(impact.direct_active,["ledger"]);
+ assert.deepEqual(impact.direct_planned,[]);
+ assert(impact.active.includes("ledger"));
+ for(const id of ["execution","portfolio","replay","integration"])
+  assert(impact.planned.includes(id),"UNTESTED_REVERSE_DEPENDENCY "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
