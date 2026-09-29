@@ -106,7 +106,7 @@
     },
     {
       "id": "web",
-      "state": "planned",
+      "state": "active",
       "depends_on": [
         "risk",
         "portfolio",
@@ -117,7 +117,9 @@
         "src/web/",
         "tests/web/"
       ],
-      "tests": []
+      "tests": [
+        "tests/web/*.test.mjs"
+      ]
     },
     {
       "id": "integration",
@@ -334,5 +336,5 @@
     ".engineering/DECISIONS-LEDGER.md",
     "src/contracts/"
   ],
-  "note": "FV-GOV-009 observed reviewed accepted FV-AI-001 PR #41 normal protected source merge 7a576f719f2b71e311cb0aebac42163179d1b65d exact-main run36579155447 4/4 SUCCESS, FULL TWELVE actually ACTIVE exclusively invented-source owners 501/501 PASS: bootstrap84 risk39 ai25 policy57 clock56 market-data79 ledger27 execution27 portfolio27 replay30 research24 observability26. TWENTY original literal IDs/dependencies/paths/tests maintained: 12 ACTIVE MOCK-ONLY / 8 PLANNED. New AI calls ACTUAL already accepted but SYNTHETIC-only Risk and Research, outputs only fixed low-cardinality redactable mock labels, explicitly NO model/LLM inference, no remote model service, prompt, tool, external RAG, original account/order/quote/secret, real financial advice/trading or independent human approval. Own AI Work Order a218d4abc8b2aa2da85675d9c0930e68a5c9d9e4 and paired lock c68202f0ed01e9f11c1964afbbda13de69bcf7f6 preceded source. Initial exact PR run36578782463 bootstrap84/84 but AI24/25 because one OWN test attempted to mutate an intentionally frozen Risk fixture; SAME PR CORR-001 changed ONLY its owned adversarial fixture constructor, not runtime controls or skipped tests. Corrected HEAD fad1cd6a3b46c9a0a1719339354c6e8d5df19893 exact CI36578881105 4/4 AI25/25 bootstrap84/84, normal source main7a576f719f2b71e311cb0aebac42163179d1b65d run36579155447 4/4 FULL 501/501. All public and nested findings fixture_only:true execution_authorized:false network_performed:false persisted:false authenticated_provider_evidence:false kill_durable:false financial_reconciliation_complete:false real_market_performance_established:false comparative_benchmark_supported:false real_latency_measured:false model_inference_performed:false model_service_connected:false human_review_complete:false tuning_approved:false. Full actual R9 generative/provider/tenant/human-audit matrix and proposed ADR-018 FUTURE; FV-CP-0002-PROPOSED MIGRATION_DRAFT_NOT_APPROVED independent_approval=false, D-007 actual lawful venue/account/data/reviewer rights OPEN, D-008 repo PUBLIC mocked-dev verified PRIVATE before FUNDED OPEN, durable independent real Ledger/Risk/kill authenticated complete brokerage reconciliation and qualified external finance/security HIGH_ASSURANCE unfulfilled. Informational NOTE-only update, ZERO other registry/module or executable changes and NO financial permission."
+  "note": "FV-WEB-001 BRANCH CANDIDATE frozen reviewed protected GOV-009 main 6802a8981f3817cb3c1819b0dd5b2f20ae31ff46 exact-main run36580375485 4/4, TWELVE prior strictly local synthetic owner suites 501/501. One narrow PURE IN-MEMORY read-model Web source DIRECTLY CALLS accepted strictly fictitious Risk, Portfolio, Observability and AI from a single invented exact-scope and local fake session/stream snapshot, emits only redacted fixed low-cardinality hypothetical DTO classes. NO actual browser app, Next.js/React, HTTP/BFF, real login/RBAC/DAL, CSRF, SSE/WS, external LLM/model, live alerts, actual broker/account/quote, database/storage/secret, financial or operator mutation, authenticated provider/history, mandatory incident receipt, genuine independent kill or production capital authority. Every public and nested result fixture_only:true execution_authorized:false network_performed:false persisted:false authenticated_provider_evidence:false real_balance_verified:false kill_durable:false financial_reconciliation_complete:false real_market_performance_established:false comparative_benchmark_supported:false real_latency_measured:false real_alert_delivered:false mandatory_audit_satisfied:false model_inference_performed:false human_review_complete:false session_authenticated:false server_authorization_performed:false live_stream_connected:false operator_command_available:false. Original TWENTY module IDs/edges/paths and ALL other owner states/globs unchanged; Web candidate THIRTEENTH ACTIVE ONLY local fabricated source / SEVEN PLANNED after separately own docs-first WO/lock exact hosted PR-head 4/4, objective author audit NOT_INDEPENDENT, normal guarded merge and full exact-main 13-suite 4/4 proof. Full R9 24-case secure Web/LLM and proposed ADR-017/018 FUTURE, real auth/tenant/server authorization independent review needed. FV-CP-0002-PROPOSED MIGRATION_DRAFT_NOT_APPROVED independent_approval=false, real D-007 lawful provider/account/data/reviewer and D-008 currently public fake development VERIFIED PRIVATE before funded OPEN; independently durable real Ledger/Risk/kill, actual fully authenticated venue reconciliation and external qualified finance/security HIGH_ASSURANCE still UNMET."
 }
