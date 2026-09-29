@@ -139,3 +139,27 @@ test("untrusted malformed event quantities and attempts are denied without state
   assert.equal(r.status,"DENY",JSON.stringify(patch));assert.equal(r.ledger,s);
  }
 });
+
+test("an invented reconciliation receipt cannot fabricate a send before its marker",()=>{
+ const initial=newLog();
+ const attempted=appendSyntheticLedgerEvent(initial,ev(1,"RECONCILE",{attempt_id:null,receipt:receipt()}));
+ assert.equal(attempted.status,"DENY");
+ assert.equal(attempted.reason_code,"PRE_SEND_MARKER_REQUIRED");
+ assert.equal(attempted.ledger,initial);
+});
+test("complete mock open reconciliation retains known partial exposure",()=>{
+ const unknown=apply(sent(),ev(2,"LOST_ACK"));
+ const resolved=apply(unknown,ev(3,"RECONCILE",{receipt:receipt({reported_filled_units:"4",order_status:"OPEN"})}));
+ assert.equal(resolved.phase,"PARTIALLY_FILLED");
+ assert.equal(resolved.filled_units,"4");
+ assert.equal(resolved.unknown_external_effect,false);
+ assert(Object.isFrozen(resolved.events.at(-1).receipt));
+ noAuthority(resolved);
+});
+test("independent in-memory constructions are deterministic but never cross-process uniqueness proof",()=>{
+ const first=createSyntheticLedger(intent()),second=createSyntheticLedger(intent());
+ assert.deepEqual(first,second);
+ assert.equal(first.ledger.events.length,0);
+ assert.equal(second.ledger.persisted,false);
+ assert.equal(second.execution_authorized,false);
+});
