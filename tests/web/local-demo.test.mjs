@@ -148,16 +148,22 @@ async function createUiHarness(initialHash = "#overview") {
 
   const selectors = [
     "#snapshot-status", "#snapshot-status-text", "#snapshot-scenario", "#fixture-scenario",
-    "#overview-panel", "#risk-panel", "#portfolio-panel", "#planned-panel", "#scenario-control", "#mode-value",
+    "#overview-panel", "#risk-panel", "#portfolio-panel", "#incidents-panel", "#advisory-panel",
+    "#planned-panel", "#scenario-control", "#mode-value",
     "#risk-value", "#portfolio-value", "#diagnostic-value", "#model-view",
     "#advisory-value", "#incident-value", "#session-value", "#pause-note-text",
     "#pause-note", "#scenario-value", "#breadcrumb-current", "#page-title",
     "#page-description", "#planned-title", "#planned-description",
     "#risk-view-card", "#risk-page-value", "#risk-pause-value", "#risk-page-context",
     "#portfolio-view-card", "#portfolio-page-value", "#portfolio-certainty", "#portfolio-page-context",
+    "#incident-view-card", "#incident-page-banner", "#incident-page-diagnostic", "#incident-page-context",
+    "#advisory-view-card", "#advisory-page-value", "#advisory-page-context",
+    "#advisory-model-state", "#advisory-human-state",
   ];
   const elements = new Map(selectors.map((selector) => [selector, fakeElement()]));
   elements.get("#fixture-scenario").value = "healthy";
+  elements.get("#advisory-model-state").textContent = "FALSE · NO MODEL";
+  elements.get("#advisory-human-state").textContent = "FALSE · NO HUMAN APPROVAL";
   const links = [
     "overview", "markets", "strategies", "portfolio", "risk", "replay",
     "incidents", "advisory", "settings",
@@ -245,6 +251,9 @@ function assertDisplayedScenario(harness, selectedScenario) {
       portfolio: "Fictional ledger match",
       hint: "NO HINT — HYPOTHETICAL ONLY",
       certainty: "COMPLETE SYNTHETIC FIXTURE",
+      incidentBanner: "No live monitoring or broker state",
+      diagnostic: "In-process diagnostic",
+      advisory: "Fixed template only",
     },
     degraded: {
       scenario: "INCOMPLETE_FIXTURE",
@@ -254,6 +263,9 @@ function assertDisplayedScenario(harness, selectedScenario) {
       portfolio: "Fictional ledger match",
       hint: "YES — HYPOTHETICAL ONLY",
       certainty: "INCOMPLETE SYNTHETIC FIXTURE",
+      incidentBanner: "No live monitoring or broker state",
+      diagnostic: "Local diagnostic refused",
+      advisory: "Fixed template only",
     },
     denied: {
       scenario: "DENIED_FIXTURE",
@@ -263,6 +275,9 @@ function assertDisplayedScenario(harness, selectedScenario) {
       portfolio: "READ_MODEL_UNAVAILABLE",
       hint: "READ_MODEL_UNAVAILABLE",
       certainty: "READ_MODEL_UNAVAILABLE",
+      incidentBanner: "READ_MODEL_UNAVAILABLE",
+      diagnostic: "READ_MODEL_UNAVAILABLE",
+      advisory: "READ_MODEL_UNAVAILABLE",
     },
   }[selectedScenario];
   assert.equal(harness.elements.get("#fixture-scenario").value, selectedScenario);
@@ -275,8 +290,39 @@ function assertDisplayedScenario(harness, selectedScenario) {
   assert.equal(harness.elements.get("#risk-pause-value").textContent, expected.hint);
   assert.equal(harness.elements.get("#portfolio-page-value").textContent, expected.portfolio);
   assert.equal(harness.elements.get("#portfolio-certainty").textContent, expected.certainty);
+  assert.equal(harness.elements.get("#incident-page-banner").textContent, expected.incidentBanner);
+  assert.equal(harness.elements.get("#incident-page-diagnostic").textContent, expected.diagnostic);
+  assert.equal(harness.elements.get("#advisory-page-value").textContent, expected.advisory);
+  assert.equal(harness.elements.get("#advisory-model-state").textContent, "FALSE · NO MODEL");
+  assert.equal(harness.elements.get("#advisory-human-state").textContent, "FALSE · NO HUMAN APPROVAL");
   assert.equal(harness.elements.get("#risk-view-card").dataset.state, expected.status);
   assert.equal(harness.elements.get("#portfolio-view-card").dataset.state, expected.status);
+  assert.equal(harness.elements.get("#incident-view-card").dataset.state, expected.status);
+  assert.equal(harness.elements.get("#advisory-view-card").dataset.state, expected.status);
+}
+
+/**
+ * Asserts every dynamic value from all five implemented views is cleared after an invalid response.
+ * @param {{elements: Map<string, {textContent: string, dataset: Record<string, string>}>}} harness Fake UI under test.
+ * @returns {void}
+ */
+function assertAllImplementedViewsUnavailable(harness) {
+  for (const selector of [
+    "#scenario-value", "#snapshot-scenario", "#mode-value", "#risk-value", "#portfolio-value",
+    "#diagnostic-value", "#model-view", "#advisory-value", "#incident-value", "#session-value",
+    "#risk-page-value", "#risk-pause-value", "#portfolio-page-value", "#portfolio-certainty",
+    "#incident-page-banner", "#incident-page-diagnostic", "#advisory-page-value",
+  ]) {
+    const expected = ["#scenario-value", "#snapshot-scenario"].includes(selector)
+      ? "SNAPSHOT_UNAVAILABLE"
+      : "READ_MODEL_UNAVAILABLE";
+    assert.equal(harness.elements.get(selector).textContent, expected, selector);
+  }
+  for (const selector of ["#risk-view-card", "#portfolio-view-card", "#incident-view-card", "#advisory-view-card"]) {
+    assert.equal(harness.elements.get(selector).dataset.state, "error", selector);
+  }
+  assert.equal(harness.elements.get("#advisory-model-state").textContent, "FALSE · NO MODEL");
+  assert.equal(harness.elements.get("#advisory-human-state").textContent, "FALSE · NO HUMAN APPROVAL");
 }
 
 /**
@@ -295,6 +341,7 @@ function assertScenarioMismatchFailsClosed(harness, requestedScenario, receivedS
     "#scenario-value", "#snapshot-scenario", "#mode-value", "#risk-value", "#portfolio-value",
     "#diagnostic-value", "#model-view", "#advisory-value", "#incident-value", "#session-value",
     "#risk-page-value", "#risk-pause-value", "#portfolio-page-value", "#portfolio-certainty",
+    "#incident-page-banner", "#incident-page-diagnostic", "#advisory-page-value",
   ];
   for (const selector of unavailableSelectors) {
     const expected = ["#scenario-value", "#snapshot-scenario"].includes(selector)
@@ -302,12 +349,15 @@ function assertScenarioMismatchFailsClosed(harness, requestedScenario, receivedS
       : "READ_MODEL_UNAVAILABLE";
     assert.equal(harness.elements.get(selector).textContent, expected, selector);
   }
-  for (const selector of ["#risk-page-context", "#portfolio-page-context", "#pause-note-text"]) {
+  for (const selector of ["#risk-page-context", "#portfolio-page-context", "#incident-page-context", "#advisory-page-context", "#pause-note-text"]) {
     assert.equal(
       harness.elements.get(selector).textContent,
       "Snapshot unavailable or invalid; earlier view values are cleared.",
       selector,
     );
+  }
+  for (const selector of ["#incident-view-card", "#advisory-view-card"]) {
+    assert.equal(harness.elements.get(selector).dataset.state, "error", selector);
   }
 
   const rendered = [...harness.elements.values()].map((element) => element.textContent).join(" ");
@@ -446,6 +496,12 @@ test("local page and assets are served with a restrictive same-origin-only polic
     assert.match(js.headers["content-type"], /^text\/javascript/);
     assert.match(page.body, /SYNTHETIC_NONAUTHORITATIVE/);
     assert.match(page.body, /NÃO AUTORIZA NEGOCIAÇÃO/);
+    assert.match(page.body, /NO REAL ALERT/);
+    assert.match(page.body, /NO ACK/);
+    assert.match(page.body, /NO MONITORING/);
+    assert.match(page.body, /FIXED FICTIONAL TEMPLATE/);
+    assert.match(page.body, /NOT INVESTMENT ADVICE/);
+    assert.match(page.body, /NO HUMAN APPROVAL/);
     assert.match(page.body, /no login, live market data, or trading/i);
     for (const name of [
       "Overview", "Markets", "Strategies", "Portfolio", "Risk",
@@ -501,36 +557,44 @@ test("API returns only the real redacted model labels and keeps degraded state v
   });
 });
 
-test("Risk and Portfolio support hash and mouse navigation without fetching a second snapshot", async () => {
-  const ui = await createUiHarness("#risk");
-  assert.equal(ui.elements.get("#risk-panel").hidden, false);
+test("all five implemented views support hash and mouse navigation without fetching another snapshot", async () => {
+  const ui = await createUiHarness("#incidents");
+  assert.equal(ui.elements.get("#incidents-panel").hidden, false);
   assert.equal(ui.elements.get("#overview-panel").hidden, true);
   assert.equal(ui.elements.get("#scenario-control").hidden, false);
-  assert.equal(ui.links.find((link) => link.dataset.view === "risk").attributes.get("aria-current"), "page");
+  assert.equal(ui.links.find((link) => link.dataset.view === "incidents").attributes.get("aria-current"), "page");
   ui.requests[0].resolve(apiResponse(createDemoSnapshot("healthy")));
   await ui.startupPromise;
 
-  const clickResult = ui.navigate("portfolio");
-  assert.deepEqual(clickResult, {prevented: true, url: "#portfolio"});
-  assert.equal(ui.elements.get("#portfolio-panel").hidden, false);
-  assert.equal(ui.elements.get("#risk-panel").hidden, true);
-  assert.equal(ui.links.find((link) => link.dataset.view === "portfolio").attributes.get("aria-current"), "page");
-  assert.equal(ui.requests.length, 1);
+  const implementedViews = ["overview", "risk", "portfolio", "incidents", "advisory"];
+  for (const view of implementedViews) {
+    const clickResult = ui.navigate(view);
+    assert.deepEqual(clickResult, {prevented: true, url: `#${view}`});
+    for (const panel of implementedViews) {
+      assert.equal(ui.elements.get(`#${panel}-panel`).hidden, panel !== view, `${view} mouse navigation`);
+    }
+    assert.equal(ui.elements.get("#planned-panel").hidden, true);
+    assert.equal(ui.elements.get("#scenario-control").hidden, false);
+    assert.equal(ui.elements.get("#snapshot-status").hidden, false);
+    assert.equal(ui.links.find((link) => link.dataset.view === view).attributes.get("aria-current"), "page");
+    assert.equal(ui.requests.length, 1, `${view} mouse navigation reuses the shared snapshot`);
+  }
+
+  for (const view of implementedViews) {
+    ui.setHash(`#${view}`);
+    assert.equal(ui.elements.get(`#${view}-panel`).hidden, false, `${view} hash navigation`);
+    assert.equal(ui.links.find((link) => link.dataset.view === view).attributes.get("aria-current"), "page");
+    assert.equal(ui.requests.length, 1, `${view} hash navigation reuses the shared snapshot`);
+  }
 
   ui.setHash("#settings");
   assert.equal(ui.elements.get("#planned-panel").hidden, false);
   assert.equal(ui.elements.get("#scenario-control").hidden, true);
   assert.equal(ui.elements.get("#snapshot-status").hidden, true);
-  ui.setHash("#overview");
-  assert.equal(ui.elements.get("#overview-panel").hidden, false);
-  assert.equal(ui.elements.get("#scenario-control").hidden, false);
-  assert.equal(ui.elements.get("#snapshot-status").hidden, false);
-  ui.setHash("#risk");
-  assert.equal(ui.elements.get("#risk-panel").hidden, false);
   assert.equal(ui.requests.length, 1);
 });
 
-test("Risk and Portfolio render all three synthetic states from the shared snapshot and clear while pending", async () => {
+test("all five views render all three shared fixture states and clear while pending", async () => {
   const ui = await createUiHarness();
   ui.navigate("risk");
   ui.requests[0].resolve(apiResponse(createDemoSnapshot("healthy")));
@@ -547,10 +611,17 @@ test("Risk and Portfolio render all three synthetic states from the shared snaps
     assert.equal(ui.elements.get("#portfolio-certainty").textContent, "READ_MODEL_UNAVAILABLE");
     assert.equal(ui.elements.get("#risk-view-card").dataset.state, "loading");
     assert.equal(ui.elements.get("#portfolio-view-card").dataset.state, "loading");
+    assert.equal(ui.elements.get("#incident-page-banner").textContent, "READ_MODEL_UNAVAILABLE");
+    assert.equal(ui.elements.get("#incident-page-diagnostic").textContent, "READ_MODEL_UNAVAILABLE");
+    assert.equal(ui.elements.get("#incident-view-card").dataset.state, "loading");
+    assert.equal(ui.elements.get("#advisory-page-value").textContent, "READ_MODEL_UNAVAILABLE");
+    assert.equal(ui.elements.get("#advisory-view-card").dataset.state, "loading");
 
-    ui.navigate("portfolio");
-    assert.equal(ui.elements.get("#portfolio-panel").hidden, false);
-    assert.equal(ui.elements.get("#scenario-control").hidden, false);
+    for (const view of ["portfolio", "incidents", "advisory", "overview", "risk"]) {
+      ui.navigate(view);
+      assert.equal(ui.elements.get(`#${view}-panel`).hidden, false);
+      assert.equal(ui.elements.get("#scenario-control").hidden, false);
+    }
     assert.equal(ui.requests.length, requestCount + 1, "view navigation reuses the pending request");
 
     ui.requests.at(-1).resolve(apiResponse(createDemoSnapshot(scenario)));
@@ -558,14 +629,18 @@ test("Risk and Portfolio render all three synthetic states from the shared snaps
     assertDisplayedScenario(ui, scenario);
     assert.match(ui.elements.get("#risk-page-context").textContent, /synthetic/i);
     assert.match(ui.elements.get("#portfolio-page-context").textContent, /synthetic|fictional/i);
+    assert.match(ui.elements.get("#incident-page-context").textContent, /synthetic|fictional|diagnostic/i);
+    assert.match(ui.elements.get("#advisory-page-context").textContent, /synthetic|fictional|template/i);
     assert.equal(ui.elements.get("#snapshot-status-text").textContent.includes("denied"), scenario === "denied");
     const accepted = createDemoSnapshot(scenario);
     const rendered = [...ui.elements.values()].map((element) => element.textContent).join(" ");
     assert.equal(rendered.includes(accepted.reason_code), false, "reason codes are never rendered");
 
-    ui.navigate("risk");
-    assert.equal(ui.elements.get("#risk-panel").hidden, false);
-    assertDisplayedScenario(ui, scenario);
+    for (const view of ["overview", "risk", "portfolio", "incidents", "advisory"]) {
+      ui.navigate(view);
+      assert.equal(ui.elements.get(`#${view}-panel`).hidden, false);
+      assertDisplayedScenario(ui, scenario);
+    }
     assert.equal(ui.requests.length, requestCount + 1, "switching screens does not issue another request");
   }
 });
@@ -611,6 +686,83 @@ test("browser UI fails closed on malformed, missing, forged, or unexpected snaps
       },
     },
     {
+      name: "unlisted diagnostic enum",
+      response: () => {
+        const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
+        snapshot.read_model.diagnostic_class = "RAW_DIAGNOSTIC_SENTINEL";
+        return apiResponse(snapshot);
+      },
+    },
+    {
+      name: "unlisted advisory enum",
+      response: () => {
+        const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
+        snapshot.read_model.advisory_class = "REAL_ADVICE_SENTINEL";
+        return apiResponse(snapshot);
+      },
+    },
+    {
+      name: "unlisted incident banner enum",
+      response: () => {
+        const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
+        snapshot.read_model.incident_banner = "REAL_MONITORING_SENTINEL";
+        return apiResponse(snapshot);
+      },
+    },
+    {
+      name: "unlisted overview enum",
+      response: () => {
+        const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
+        snapshot.read_model.mock_view = "REAL_OVERVIEW_SENTINEL";
+        return apiResponse(snapshot);
+      },
+    },
+    {
+      name: "unlisted session enum",
+      response: () => {
+        const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
+        snapshot.read_model.displayed_session_class = "AUTHENTICATED_SESSION_SENTINEL";
+        return apiResponse(snapshot);
+      },
+    },
+    {
+      name: "unlisted stream enum",
+      response: () => {
+        const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
+        snapshot.read_model.stream_class = "LIVE_STREAM_SENTINEL";
+        return apiResponse(snapshot);
+      },
+    },
+    {
+      name: "unlisted redaction enum",
+      response: () => {
+        const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
+        snapshot.read_model.redaction_class = "RAW_DATA_SENTINEL";
+        return apiResponse(snapshot);
+      },
+    },
+    ...[
+      "real_alert_delivered",
+      "mandatory_audit_satisfied",
+      "model_inference_performed",
+      "human_review_complete",
+    ].map((flag) => ({
+      name: `forged ${flag} flag`,
+      response: () => {
+        const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
+        snapshot.flags[flag] = true;
+        return apiResponse(snapshot);
+      },
+    })),
+    {
+      name: "unexpected raw prompt field",
+      response: () => {
+        const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
+        snapshot.read_model.model_prompt = "RAW_PROMPT_SENTINEL";
+        return apiResponse(snapshot);
+      },
+    },
+    {
       name: "unexpected model field",
       response: () => {
         const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
@@ -635,6 +787,14 @@ test("browser UI fails closed on malformed, missing, forged, or unexpected snaps
       },
     },
     {
+      name: "unlisted reason code",
+      response: () => {
+        const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
+        snapshot.reason_code = "RAW_REASON_SENTINEL";
+        return apiResponse(snapshot);
+      },
+    },
+    {
       name: "non-success response",
       response: () => ({...apiResponse(createDemoSnapshot("degraded")), ok: false}),
     },
@@ -655,15 +815,49 @@ test("browser UI fails closed on malformed, missing, forged, or unexpected snaps
     ui.requests[1].resolve(invalid.response());
     await pending;
     assert.equal(ui.elements.get("#snapshot-status").dataset.state, "error", invalid.name);
-    assert.equal(ui.elements.get("#scenario-value").textContent, "SNAPSHOT_UNAVAILABLE", invalid.name);
-    assert.equal(ui.elements.get("#risk-page-value").textContent, "READ_MODEL_UNAVAILABLE", invalid.name);
-    assert.equal(ui.elements.get("#risk-pause-value").textContent, "READ_MODEL_UNAVAILABLE", invalid.name);
-    assert.equal(ui.elements.get("#portfolio-page-value").textContent, "READ_MODEL_UNAVAILABLE", invalid.name);
-    assert.equal(ui.elements.get("#portfolio-certainty").textContent, "READ_MODEL_UNAVAILABLE", invalid.name);
+    assertAllImplementedViewsUnavailable(ui);
     const rendered = [...ui.elements.values()].map((element) => element.textContent).join(" ");
-    for (const sentinel of ["RAW_REASON_SENTINEL", "RAW_FIXTURE_SENTINEL", "RAW_ENVELOPE_SENTINEL", "REAL_RISK_PASS", "REAL_BALANCE_VERIFIED"]) {
+    for (const sentinel of [
+      "RAW_REASON_SENTINEL", "RAW_FIXTURE_SENTINEL", "RAW_ENVELOPE_SENTINEL", "REAL_RISK_PASS",
+      "REAL_BALANCE_VERIFIED", "RAW_DIAGNOSTIC_SENTINEL", "REAL_ADVICE_SENTINEL",
+      "REAL_MONITORING_SENTINEL", "REAL_OVERVIEW_SENTINEL", "AUTHENTICATED_SESSION_SENTINEL",
+      "LIVE_STREAM_SENTINEL", "RAW_DATA_SENTINEL", "RAW_PROMPT_SENTINEL",
+    ]) {
       assert.equal(rendered.includes(sentinel), false, `${invalid.name}: ${sentinel}`);
     }
+  }
+});
+
+test("current denied response with a non-null read model fails closed on all five views", async () => {
+  const ui = await createUiHarness("#advisory");
+  ui.requests[0].resolve(apiResponse(createDemoSnapshot("healthy")));
+  await ui.startupPromise;
+
+  const pending = ui.selectScenario("denied");
+  const invalidDenied = JSON.parse(JSON.stringify(createDemoSnapshot("denied")));
+  invalidDenied.read_model = {};
+  ui.requests[1].resolve(apiResponse(invalidDenied));
+  await pending;
+
+  assert.equal(ui.elements.get("#advisory-panel").hidden, false);
+  assert.equal(ui.elements.get("#snapshot-status").dataset.state, "error");
+  assertAllImplementedViewsUnavailable(ui);
+});
+
+test("valid but wrong current scenario bodies fail closed on Incidents and Advisory", async () => {
+  for (const view of ["incidents", "advisory"]) {
+    const ui = await createUiHarness(`#${view}`);
+    ui.requests[0].resolve(apiResponse(createDemoSnapshot("healthy")));
+    await ui.startupPromise;
+
+    const pending = ui.selectScenario("degraded");
+    const wrongScenario = createDemoSnapshot("healthy");
+    ui.requests[1].resolve(apiResponse(wrongScenario));
+    await pending;
+
+    assert.equal(ui.elements.get(`#${view}-panel`).hidden, false, `${view} remains selected`);
+    assertScenarioMismatchFailsClosed(ui, "degraded", wrongScenario);
+    assert.equal(ui.requests.length, 2, `${view} mismatch does not trigger a retry`);
   }
 });
 
@@ -704,7 +898,7 @@ test("a current healthy request rejects a valid denied snapshot across view navi
   request.resolve(apiResponse(deniedSnapshot));
   await pending;
 
-  for (const view of ["overview", "risk", "portfolio"]) {
+  for (const view of ["overview", "risk", "portfolio", "incidents", "advisory"]) {
     ui.navigate(view);
     assertScenarioMismatchFailsClosed(ui, "healthy", deniedSnapshot);
   }
@@ -774,8 +968,7 @@ test("late response-body completion and fetch errors cannot overwrite the latest
   ui.requests[5].reject(new Error("current local fetch failure"));
   await currentErrorPromise;
   assert.equal(ui.elements.get("#snapshot-status").dataset.state, "error");
-  assert.equal(ui.elements.get("#scenario-value").textContent, "SNAPSHOT_UNAVAILABLE");
-  assert.equal(ui.elements.get("#mode-value").textContent, "READ_MODEL_UNAVAILABLE");
+  assertAllImplementedViewsUnavailable(ui);
 });
 
 test("unknown methods, hosts, and cross-origin requests fail closed without CORS", async () => {

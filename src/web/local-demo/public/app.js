@@ -51,6 +51,11 @@ const scenarioLabels = Object.freeze({
   degraded: "INCOMPLETE_FIXTURE",
   denied: "DENIED_FIXTURE",
 });
+const reasonContracts = Object.freeze({
+  HEALTHY_FIXTURE: "ALL_FOUR_MOCKS_LOCAL_ONLY_NOT_LIVE",
+  INCOMPLETE_FIXTURE: "ONE_OR_MORE_FICTIONAL_SOURCES_INCOMPLETE",
+  DENIED_FIXTURE: "INVALID_OR_CROSS_SCOPE_MOCK_SESSION",
+});
 const flagKeys = Object.freeze([
   "fixture_only",
   "execution_authorized",
@@ -118,14 +123,23 @@ const displayLabels = Object.freeze({
   displayed_session_class: {NOT_AUTHENTICATED_LOCAL_FIXTURE: "No authenticated session"},
 });
 const displayLabel = (field, value) => displayLabels[field]?.[value] ?? "READ_MODEL_UNAVAILABLE";
+const mockViewClasses = new Set(Object.keys(displayLabels.mock_view));
 const riskClasses = new Set(Object.keys(displayLabels.risk_class));
 const portfolioClasses = new Set(Object.keys(displayLabels.portfolio_class));
+const diagnosticClasses = new Set(Object.keys(displayLabels.diagnostic_class));
+const advisoryClasses = new Set(Object.keys(displayLabels.advisory_class));
+const incidentBanners = new Set(Object.keys(displayLabels.incident_banner));
+const sessionClasses = new Set(Object.keys(displayLabels.displayed_session_class));
+const streamClasses = new Set(["BOUNDED_LOCAL_SEQUENCE_ONLY"]);
+const redactionClasses = new Set(["ONLY_BOUNDED_ENUMS_NO_IDENTIFIERS"]);
 const snapshotStatus = document.querySelector("#snapshot-status");
 const statusText = document.querySelector("#snapshot-status-text");
 const scenarioSelect = document.querySelector("#fixture-scenario");
 const overviewPanel = document.querySelector("#overview-panel");
 const riskPanel = document.querySelector("#risk-panel");
 const portfolioPanel = document.querySelector("#portfolio-panel");
+const incidentsPanel = document.querySelector("#incidents-panel");
+const advisoryPanel = document.querySelector("#advisory-panel");
 const plannedPanel = document.querySelector("#planned-panel");
 let currentView = "overview";
 let latestSnapshotRequestId = 0;
@@ -146,7 +160,7 @@ function setState(selector, state) {
   if (target) target.dataset.state = state;
 }
 /**
- * Clears every read-model label on Overview, Risk, and Portfolio for a non-renderable state.
+ * Clears every read-model label on all five implemented views for a non-renderable state.
  * The scenario label is supplied only from a fixed local map, never from untrusted response text.
  * @param {"loading"|"degraded"|"denied"|"error"} state Current safe display state.
  * @param {string} scenarioLabel Fixed scenario display label or unavailable marker.
@@ -166,6 +180,9 @@ function markReadModelUnavailable(state = "error", scenarioLabel = "SNAPSHOT_UNA
     "#risk-pause-value",
     "#portfolio-page-value",
     "#portfolio-certainty",
+    "#incident-page-banner",
+    "#incident-page-diagnostic",
+    "#advisory-page-value",
   ]) {
     setText(selector, "READ_MODEL_UNAVAILABLE");
   }
@@ -173,6 +190,8 @@ function markReadModelUnavailable(state = "error", scenarioLabel = "SNAPSHOT_UNA
     "#risk-value", "#portfolio-value", "#diagnostic-value", "#advisory-value",
     "#risk-page-value", "#risk-pause-value", "#portfolio-page-value", "#portfolio-certainty",
     "#risk-page-context", "#portfolio-page-context", "#risk-view-card", "#portfolio-view-card", "#pause-note",
+    "#incident-page-banner", "#incident-page-diagnostic", "#incident-page-context", "#incident-view-card",
+    "#advisory-page-value", "#advisory-page-context", "#advisory-view-card",
   ]) {
     setState(selector, state);
   }
@@ -184,6 +203,8 @@ function markReadModelUnavailable(state = "error", scenarioLabel = "SNAPSHOT_UNA
   }[state] ?? "No accepted synthetic view is available.";
   setText("#risk-page-context", stateCopy);
   setText("#portfolio-page-context", stateCopy);
+  setText("#incident-page-context", stateCopy);
+  setText("#advisory-page-context", stateCopy);
   setText("#pause-note-text", stateCopy);
   setText("#scenario-value", scenarioLabel);
   setText("#snapshot-scenario", scenarioLabel);
@@ -254,6 +275,7 @@ function applySnapshot(snapshot, requestedScenario) {
     !expectedStatus ||
     snapshot.scenario !== scenarioLabels[requestedScenario] ||
     expectedStatus !== snapshot.status ||
+    snapshot.reason_code !== reasonContracts[snapshot.scenario] ||
     !hasSafeFlags(snapshot.flags)
   ) {
     showUnavailable("Snapshot did not match the synthetic display contract.");
@@ -273,8 +295,15 @@ function applySnapshot(snapshot, requestedScenario) {
   if (
     !hasExactModel(model) ||
     model.mode_label !== "SYNTHETIC_NONAUTHORITATIVE" ||
+    !mockViewClasses.has(model.mock_view) ||
+    !sessionClasses.has(model.displayed_session_class) ||
+    !streamClasses.has(model.stream_class) ||
     !riskClasses.has(model.risk_class) ||
     !portfolioClasses.has(model.portfolio_class) ||
+    !diagnosticClasses.has(model.diagnostic_class) ||
+    !advisoryClasses.has(model.advisory_class) ||
+    !incidentBanners.has(model.incident_banner) ||
+    !redactionClasses.has(model.redaction_class) ||
     typeof model.hypothetical_pause_hint !== "boolean"
   ) {
     showUnavailable("Snapshot did not match the synthetic display contract.");
@@ -295,6 +324,9 @@ function applySnapshot(snapshot, requestedScenario) {
     model.hypothetical_pause_hint ? "YES — HYPOTHETICAL ONLY" : "NO HINT — HYPOTHETICAL ONLY",
   );
   setText("#portfolio-page-value", displayLabel("portfolio_class", model.portfolio_class));
+  setText("#incident-page-banner", displayLabel("incident_banner", model.incident_banner));
+  setText("#incident-page-diagnostic", displayLabel("diagnostic_class", model.diagnostic_class));
+  setText("#advisory-page-value", displayLabel("advisory_class", model.advisory_class));
   setText(
     "#portfolio-certainty",
     degraded ? "INCOMPLETE SYNTHETIC FIXTURE" : "COMPLETE SYNTHETIC FIXTURE",
@@ -317,6 +349,18 @@ function applySnapshot(snapshot, requestedScenario) {
       ? "Incomplete fictional sources; the class is uncertain and is not a real reconciliation."
       : "Complete fictional fixture; no account value or actual ledger is represented.",
   );
+  setText(
+    "#incident-page-context",
+    degraded
+      ? "Incomplete fictional sources; this local diagnostic is not a delivered alert."
+      : "Fictional in-process diagnostic only; no monitoring or acknowledgement exists.",
+  );
+  setText(
+    "#advisory-page-context",
+    degraded
+      ? "Fixed fictional template only; no model inference or human review was performed."
+      : "Fixed fictional template only; no investment advice, model, or human approval exists.",
+  );
   const pauseNote = document.querySelector("#pause-note");
   pauseNote.dataset.state = model.hypothetical_pause_hint ? "degraded" : "ready";
   setText(
@@ -328,7 +372,12 @@ function applySnapshot(snapshot, requestedScenario) {
   for (const selector of ["#risk-value", "#portfolio-value", "#diagnostic-value", "#advisory-value"]) {
     setState(selector, degraded ? "degraded" : "ready");
   }
-  for (const selector of ["#risk-page-value", "#risk-pause-value", "#portfolio-page-value", "#portfolio-certainty", "#risk-page-context", "#portfolio-page-context", "#risk-view-card", "#portfolio-view-card"]) {
+  for (const selector of [
+    "#risk-page-value", "#risk-pause-value", "#portfolio-page-value", "#portfolio-certainty",
+    "#risk-page-context", "#portfolio-page-context", "#risk-view-card", "#portfolio-view-card",
+    "#incident-page-banner", "#incident-page-diagnostic", "#incident-page-context", "#incident-view-card",
+    "#advisory-page-value", "#advisory-page-context", "#advisory-view-card",
+  ]) {
     setState(selector, degraded ? "degraded" : "ready");
   }
 }
@@ -369,7 +418,7 @@ async function loadSnapshot(scenario) {
   }
 }
 /**
- * Selects Overview, Risk, or Portfolio, retaining the planned placeholder for other known entries.
+ * Selects one of five implemented synthetic views, retaining planned placeholders for the others.
  * All implemented screens share the same accepted snapshot and scenario selector.
  * @param {string} viewId Requested fixed navigation key.
  * @returns {void}
@@ -380,10 +429,14 @@ function applyView(viewId) {
   const isOverview = currentView === "overview";
   const isRisk = currentView === "risk";
   const isPortfolio = currentView === "portfolio";
-  const isImplemented = isOverview || isRisk || isPortfolio;
+  const isIncidents = currentView === "incidents";
+  const isAdvisory = currentView === "advisory";
+  const isImplemented = isOverview || isRisk || isPortfolio || isIncidents || isAdvisory;
   overviewPanel.hidden = !isOverview;
   riskPanel.hidden = !isRisk;
   portfolioPanel.hidden = !isPortfolio;
+  incidentsPanel.hidden = !isIncidents;
+  advisoryPanel.hidden = !isAdvisory;
   plannedPanel.hidden = isImplemented;
   document.querySelector("#scenario-control").hidden = !isImplemented;
   snapshotStatus.hidden = !isImplemented;

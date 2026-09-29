@@ -25,8 +25,8 @@
           <a href="#portfolio" data-view="portfolio"><span class="nav-icon" aria-hidden="true">▤</span><span>Portfolio</span><span class="nav-indicator"></span></a>
           <a href="#risk" data-view="risk"><span class="nav-icon" aria-hidden="true">⛨</span><span>Risk</span><span class="nav-indicator"></span></a>
           <a href="#replay" data-view="replay"><span class="nav-icon" aria-hidden="true">↻</span><span>Replay</span><span class="planned-tag">PLANNED</span></a>
-          <a href="#incidents" data-view="incidents"><span class="nav-icon" aria-hidden="true">◎</span><span>Incidents</span><span class="planned-tag">PLANNED</span></a>
-          <a href="#advisory" data-view="advisory"><span class="nav-icon" aria-hidden="true">✳</span><span>Advisory</span><span class="planned-tag">PLANNED</span></a>
+          <a href="#incidents" data-view="incidents"><span class="nav-icon" aria-hidden="true">◎</span><span>Incidents</span><span class="nav-indicator"></span></a>
+          <a href="#advisory" data-view="advisory"><span class="nav-icon" aria-hidden="true">✳</span><span>Advisory</span><span class="nav-indicator"></span></a>
           <a href="#settings" data-view="settings"><span class="nav-icon" aria-hidden="true">⚙</span><span>Settings</span><span class="planned-tag">PLANNED</span></a>
         </nav>
         <div class="sidebar-spacer"></div>
@@ -193,6 +193,66 @@
               <div>
                 <strong>NO ACCOUNT OR MONEY DATA</strong>
                 <p>There are no balances, positions, returns, account history, or actual reconciliation in this preview.</p>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="incidents-panel" class="screen-panel" hidden aria-labelledby="incidents-title">
+          <h2 class="visually-hidden" id="incidents-title">Synthetic Incidents view</h2>
+          <div class="view-grid">
+            <article class="panel view-card" id="incident-view-card" data-state="loading">
+              <div class="panel-heading">
+                <div><div class="eyebrow">LOCAL DIAGNOSTIC ONLY</div><h2>Fictional incident snapshot</h2></div>
+                <span class="panel-icon" aria-hidden="true">◎</span>
+              </div>
+              <div class="view-result-row">
+                <span>Incident banner</span>
+                <strong id="incident-page-banner">READ_MODEL_UNAVAILABLE</strong>
+              </div>
+              <div class="view-result-row">
+                <span>Diagnostic class</span>
+                <strong id="incident-page-diagnostic">READ_MODEL_UNAVAILABLE</strong>
+              </div>
+              <p class="view-state-copy" id="incident-page-context" aria-live="polite">Loading a synthetic fixture; earlier values are cleared.</p>
+            </article>
+            <aside class="panel view-boundary incident-boundary">
+              <span class="view-boundary-icon" aria-hidden="true">!</span>
+              <div>
+                <strong class="no-authority-label">NO REAL ALERT</strong>
+                <p>NO ACK · NO MONITORING. These fixed labels do not report delivery, broker state, or an operational incident.</p>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="advisory-panel" class="screen-panel" hidden aria-labelledby="advisory-title">
+          <h2 class="visually-hidden" id="advisory-title">Synthetic Advisory view</h2>
+          <div class="view-grid">
+            <article class="panel view-card" id="advisory-view-card" data-state="loading">
+              <div class="panel-heading">
+                <div><div class="eyebrow">FIXED TEMPLATE ONLY</div><h2>Fictional advisory snapshot</h2></div>
+                <span class="panel-icon" aria-hidden="true">✳</span>
+              </div>
+              <div class="view-result-row">
+                <span>Advisory class</span>
+                <strong id="advisory-page-value">READ_MODEL_UNAVAILABLE</strong>
+              </div>
+              <div class="view-result-row">
+                <span>Model inference</span>
+                <strong id="advisory-model-state">FALSE · NO MODEL</strong>
+              </div>
+              <div class="view-result-row">
+                <span>Human review</span>
+                <strong id="advisory-human-state">FALSE · NO HUMAN APPROVAL</strong>
+              </div>
+              <p class="view-state-copy" id="advisory-page-context" aria-live="polite">Loading a synthetic fixture; earlier values are cleared.</p>
+            </article>
+            <aside class="panel view-boundary advisory-boundary">
+              <span class="view-boundary-icon" aria-hidden="true">◇</span>
+              <div>
+                <strong class="no-authority-label">FIXED FICTIONAL TEMPLATE</strong>
+                <p>NOT INVESTMENT ADVICE · NO MODEL · NO HUMAN APPROVAL. No recommendation, trade suggestion, or personalized decision is provided.</p>
               </div>
             </aside>
           </div>
