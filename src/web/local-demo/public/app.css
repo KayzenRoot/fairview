@@ -212,11 +212,40 @@ h1 { margin-bottom: 4px; font-size: 25px; font-weight: 620; letter-spacing: -.7p
   font-size: 10px;
 }
 .status-orb { width: 7px; height: 7px; border-radius: 50%; background: #a68cf4; }
+.status-scenario {
+  padding: 3px 7px;
+  border: 1px solid #354157;
+  border-radius: 4px;
+  color: #b8c6d9;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .35px;
+  white-space: nowrap;
+}
 .snapshot-status[data-state="degraded"] { border-color: #715936; background: #241e17; color: #edd19d; }
 .snapshot-status[data-state="degraded"] .status-orb { background: var(--amber); }
+.snapshot-status[data-state="denied"] { border-color: #753d49; background: #28191e; color: #efb7c1; }
+.snapshot-status[data-state="denied"] .status-orb { background: #e48a9a; }
 .snapshot-status[data-state="error"] { border-color: #753d49; background: #28191e; color: #efb7c1; }
 .snapshot-status[data-state="error"] .status-orb { background: #e48a9a; }
 .status-context { margin-left: auto; color: #738197; font-size: 8px; font-weight: 700; letter-spacing: .85px; }
+.view-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(220px, .8fr); gap: 12px; margin-top: 13px; }
+.view-card { min-height: 250px; padding: 20px 21px 17px; }
+.view-result-row { display: flex; min-height: 57px; align-items: center; justify-content: space-between; gap: 18px; border-top: 1px solid var(--line-soft); }
+.view-result-row:first-of-type { margin-top: 19px; }
+.view-result-row span { color: #8998ad; font-size: 11px; }
+.view-result-row strong { max-width: 65%; color: #e0e6f0; font-size: 12px; font-weight: 650; line-height: 1.4; text-align: right; overflow-wrap: anywhere; }
+.view-result-row strong[data-state="ready"] { color: #d3caff; }
+.view-result-row strong[data-state="degraded"] { color: #f1ca83; }
+.view-result-row strong[data-state="denied"], .view-result-row strong[data-state="error"] { color: #efb7c1; }
+.view-state-copy { margin: 9px 0 0; padding: 10px 11px; border: 1px solid #2a3648; border-radius: 5px; background: #151e2d; color: #aab6c6; font-size: 10px; }
+.view-state-copy[data-state="degraded"] { border-color: #634c2e; background: #2a2218; color: #efd19b; }
+.view-state-copy[data-state="denied"], .view-state-copy[data-state="error"] { border-color: #613743; background: #28191e; color: #efb7c1; }
+.view-boundary { display: flex; min-height: 145px; align-items: start; gap: 12px; padding: 19px; border-color: #665438; background: linear-gradient(145deg, #211d19, #151b25); }
+.view-boundary-icon { display: grid; width: 24px; height: 24px; flex: 0 0 auto; place-items: center; border: 1px solid #9a7643; border-radius: 50%; color: #e7c991; font-size: 12px; font-weight: 800; }
+.view-boundary strong { display: block; margin: 1px 0 8px; color: #efd19b; font-size: 10px; letter-spacing: .45px; }
+.view-boundary strong.no-authority-label { font-size: 12px; letter-spacing: .25px; }
+.view-boundary p { margin: 0; color: #b7aa92; font-size: 10px; }
 .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 13px; }
 .summary-card, .panel {
   border: 1px solid var(--line);
@@ -356,6 +385,8 @@ h1 { margin-bottom: 4px; font-size: 25px; font-weight: 620; letter-spacing: -.7p
   .page-heading { align-items: start; flex-direction: column; padding: 20px 0 15px; }
   .scenario-control { width: 100%; max-width: 280px; }
   .content-grid { grid-template-columns: 1fr; }
+  .view-grid { grid-template-columns: 1fr; }
+  .view-boundary { min-height: 0; }
 }
 @media (max-width: 520px) {
   .environment-label { top: 20px; font-size: 8px; }
@@ -365,8 +396,17 @@ h1 { margin-bottom: 4px; font-size: 25px; font-weight: 620; letter-spacing: -.7p
   .banner-state { display: none; }
   .topbar-right { gap: 8px; font-size: 8px; }
   .version-label { padding-left: 8px; font-size: 7px; }
+  .snapshot-status { flex-wrap: wrap; gap: 7px; padding: 7px 9px; }
+  .snapshot-status #snapshot-status-text { flex: 1 1 65%; }
+  .status-scenario { margin-left: 15px; }
+  .status-context { margin-left: 3px; }
   .summary-grid { grid-template-columns: 1fr; gap: 8px; }
   .summary-card { min-height: 135px; }
+  .view-card { min-height: 0; padding: 15px; }
+  .view-result-row { min-height: 56px; gap: 10px; }
+  .view-result-row span { font-size: 10px; }
+  .view-result-row strong { max-width: 61%; font-size: 10px; }
+  .view-boundary { padding: 14px; }
   .content-grid { gap: 8px; }
   .panel { min-height: 0; }
   .planned-strip { align-items: start; flex-direction: column; gap: 11px; }

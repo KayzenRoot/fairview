@@ -13,11 +13,11 @@ const views = Object.freeze({
   },
   portfolio: {
     title: "Portfolio",
-    description: "No account, holdings, balance, or performance data is connected.",
+    description: "Fictional portfolio class and uncertainty only; no account values are shown.",
   },
   risk: {
     title: "Risk",
-    description: "This preview has no live risk controls or trading authority.",
+    description: "Synthetic risk class and hypothetical pause hint; no trading authority.",
   },
   replay: {
     title: "Replay",
@@ -41,6 +41,16 @@ const statusValues = new Set([
   "SYNTHETIC_LOCAL_READ_MODEL_DEGRADED",
   "DENY",
 ]);
+const scenarioContracts = Object.freeze({
+  HEALTHY_FIXTURE: "SYNTHETIC_LOCAL_READ_MODEL",
+  INCOMPLETE_FIXTURE: "SYNTHETIC_LOCAL_READ_MODEL_DEGRADED",
+  DENIED_FIXTURE: "DENY",
+});
+const scenarioLabels = Object.freeze({
+  healthy: "HEALTHY_FIXTURE",
+  degraded: "INCOMPLETE_FIXTURE",
+  denied: "DENIED_FIXTURE",
+});
 const flagKeys = Object.freeze([
   "fixture_only",
   "execution_authorized",
@@ -61,6 +71,27 @@ const flagKeys = Object.freeze([
   "server_authorization_performed",
   "live_stream_connected",
   "operator_command_available",
+]);
+const modelKeys = Object.freeze([
+  "mock_view",
+  "mode_label",
+  "displayed_session_class",
+  "stream_class",
+  "risk_class",
+  "portfolio_class",
+  "diagnostic_class",
+  "advisory_class",
+  "incident_banner",
+  "redaction_class",
+  "hypothetical_pause_hint",
+]);
+const snapshotKeys = Object.freeze([
+  "schema_version",
+  "scenario",
+  "status",
+  "reason_code",
+  "read_model",
+  "flags",
 ]);
 const displayLabels = Object.freeze({
   mock_view: {FICTIONAL_OVERVIEW_ONLY: "Fictional overview"},
@@ -86,10 +117,15 @@ const displayLabels = Object.freeze({
   incident_banner: {NO_REAL_MONITORING_OR_BROKER_STATE: "No live monitoring or broker state"},
   displayed_session_class: {NOT_AUTHENTICATED_LOCAL_FIXTURE: "No authenticated session"},
 });
-const displayLabel = (field, value) => displayLabels[field]?.[value] ?? "READ_MODEL_UNAVAILABLE";const snapshotStatus = document.querySelector("#snapshot-status");
+const displayLabel = (field, value) => displayLabels[field]?.[value] ?? "READ_MODEL_UNAVAILABLE";
+const riskClasses = new Set(Object.keys(displayLabels.risk_class));
+const portfolioClasses = new Set(Object.keys(displayLabels.portfolio_class));
+const snapshotStatus = document.querySelector("#snapshot-status");
 const statusText = document.querySelector("#snapshot-status-text");
 const scenarioSelect = document.querySelector("#fixture-scenario");
 const overviewPanel = document.querySelector("#overview-panel");
+const riskPanel = document.querySelector("#risk-panel");
+const portfolioPanel = document.querySelector("#portfolio-panel");
 const plannedPanel = document.querySelector("#planned-panel");
 let currentView = "overview";
 let latestSnapshotRequestId = 0;
@@ -100,11 +136,23 @@ const setText = (selector, value) => {
   if (target) target.textContent = value;
 };
 /**
- * Clears every read-model label and marks the hypothetical pause note as degraded.
- * This prevents an earlier snapshot from remaining visible after a rejected response.
+ * Assigns a visual state to an existing value or card without using color as its only signal.
+ * @param {string} selector Selector for a page value or containing card.
+ * @param {string} state Allowlisted UI state such as loading, ready, degraded, denied, or error.
  * @returns {void}
  */
-function markReadModelUnavailable() {
+function setState(selector, state) {
+  const target = document.querySelector(selector);
+  if (target) target.dataset.state = state;
+}
+/**
+ * Clears every read-model label on Overview, Risk, and Portfolio for a non-renderable state.
+ * The scenario label is supplied only from a fixed local map, never from untrusted response text.
+ * @param {"loading"|"degraded"|"denied"|"error"} state Current safe display state.
+ * @param {string} scenarioLabel Fixed scenario display label or unavailable marker.
+ * @returns {void}
+ */
+function markReadModelUnavailable(state = "error", scenarioLabel = "SNAPSHOT_UNAVAILABLE") {
   for (const selector of [
     "#mode-value",
     "#risk-value",
@@ -114,14 +162,31 @@ function markReadModelUnavailable() {
     "#advisory-value",
     "#incident-value",
     "#session-value",
+    "#risk-page-value",
+    "#risk-pause-value",
+    "#portfolio-page-value",
+    "#portfolio-certainty",
   ]) {
     setText(selector, "READ_MODEL_UNAVAILABLE");
   }
-  for (const selector of ["#risk-value", "#portfolio-value", "#diagnostic-value", "#advisory-value"]) {
-    document.querySelector(selector).dataset.state = "degraded";
+  for (const selector of [
+    "#risk-value", "#portfolio-value", "#diagnostic-value", "#advisory-value",
+    "#risk-page-value", "#risk-pause-value", "#portfolio-page-value", "#portfolio-certainty",
+    "#risk-page-context", "#portfolio-page-context", "#risk-view-card", "#portfolio-view-card", "#pause-note",
+  ]) {
+    setState(selector, state);
   }
-  setText("#pause-note-text", "No accepted view is available. No real operation is represented.");
-  document.querySelector("#pause-note").dataset.state = "degraded";
+  const stateCopy = {
+    loading: "Loading a synthetic fixture; earlier view values are cleared.",
+    degraded: "No accepted values are available for this synthetic fixture.",
+    denied: "Denied synthetic fixture; no accepted read-model values are available.",
+    error: "Snapshot unavailable or invalid; earlier view values are cleared.",
+  }[state] ?? "No accepted synthetic view is available.";
+  setText("#risk-page-context", stateCopy);
+  setText("#portfolio-page-context", stateCopy);
+  setText("#pause-note-text", stateCopy);
+  setText("#scenario-value", scenarioLabel);
+  setText("#snapshot-scenario", scenarioLabel);
 }
 /**
  * Displays a plain-text failure message and removes accepted model labels from the page.
@@ -131,8 +196,7 @@ function markReadModelUnavailable() {
 function showUnavailable(message) {
   snapshotStatus.dataset.state = "error";
   statusText.textContent = message;
-  setText("#scenario-value", "SNAPSHOT_UNAVAILABLE");
-  markReadModelUnavailable();
+  markReadModelUnavailable("error");
 }
 /**
  * Requires the complete fixed flag set with only `fixture_only` true.
@@ -147,32 +211,68 @@ function hasSafeFlags(flags) {
   );
 }
 /**
- * Validates the bounded snapshot contract before rendering mapped synthetic labels.
- * Unknown schemas, statuses, scenarios, or flags fail closed to unavailable display values.
+ * Requires the exact accepted redacted model shape so an added raw field fails closed.
+ * @param {unknown} model Candidate read-model value.
+ * @returns {boolean} Whether the value has exactly the known model keys.
+ */
+function hasExactModel(model) {
+  return Boolean(
+    model &&
+    typeof model === "object" &&
+    !Array.isArray(model) &&
+    Object.keys(model).length === modelKeys.length &&
+    modelKeys.every((key) => Object.hasOwn(model, key)),
+  );
+}
+/**
+ * Requires the exact public envelope so unknown response fields cannot become display inputs.
+ * @param {unknown} snapshot Candidate local API response.
+ * @returns {boolean} Whether the response has exactly the known snapshot keys.
+ */
+function hasExactSnapshot(snapshot) {
+  return Boolean(
+    snapshot &&
+    typeof snapshot === "object" &&
+    !Array.isArray(snapshot) &&
+    Object.keys(snapshot).length === snapshotKeys.length &&
+    snapshotKeys.every((key) => Object.hasOwn(snapshot, key)),
+  );
+}
+/**
+ * Validates the exact envelope, model, enums, scenario/status pair, and flags before rendering.
+ * Unknown or unexpected snapshot shapes fail closed to unavailable display values.
  * @param {unknown} snapshot Value decoded from the local snapshot response.
  * @returns {void}
  */
 function applySnapshot(snapshot) {
+  const expectedStatus = scenarioContracts[snapshot?.scenario];
   if (
+    !hasExactSnapshot(snapshot) ||
     snapshot?.schema_version !== 0 ||
     !statusValues.has(snapshot.status) ||
-    !["HEALTHY_FIXTURE", "INCOMPLETE_FIXTURE", "DENIED_FIXTURE"].includes(snapshot.scenario) ||
+    !expectedStatus ||
+    expectedStatus !== snapshot.status ||
     !hasSafeFlags(snapshot.flags)
   ) {
     showUnavailable("Snapshot did not match the synthetic display contract.");
     return;
   }
   const model = snapshot.read_model;
-  if (model === null) {
-    snapshotStatus.dataset.state = "degraded";
+  if (snapshot.status === "DENY") {
+    if (model !== null) {
+      showUnavailable("Snapshot did not match the synthetic display contract.");
+      return;
+    }
+    snapshotStatus.dataset.state = "denied";
     statusText.textContent = "The accepted read model denied this fixture; no current view is available.";
-    setText("#scenario-value", snapshot.scenario);
-    markReadModelUnavailable();
+    markReadModelUnavailable("denied", snapshot.scenario);
     return;
   }
   if (
-    !model ||
+    !hasExactModel(model) ||
     model.mode_label !== "SYNTHETIC_NONAUTHORITATIVE" ||
+    !riskClasses.has(model.risk_class) ||
+    !portfolioClasses.has(model.portfolio_class) ||
     typeof model.hypothetical_pause_hint !== "boolean"
   ) {
     showUnavailable("Snapshot did not match the synthetic display contract.");
@@ -187,11 +287,34 @@ function applySnapshot(snapshot) {
   setText("#scenario-value", snapshot.scenario);
   setText("#risk-value", displayLabel("risk_class", model.risk_class));
   setText("#portfolio-value", displayLabel("portfolio_class", model.portfolio_class));
+  setText("#risk-page-value", displayLabel("risk_class", model.risk_class));
+  setText(
+    "#risk-pause-value",
+    model.hypothetical_pause_hint ? "YES — HYPOTHETICAL ONLY" : "NO HINT — HYPOTHETICAL ONLY",
+  );
+  setText("#portfolio-page-value", displayLabel("portfolio_class", model.portfolio_class));
+  setText(
+    "#portfolio-certainty",
+    degraded ? "INCOMPLETE SYNTHETIC FIXTURE" : "COMPLETE SYNTHETIC FIXTURE",
+  );
+  setText("#snapshot-scenario", snapshot.scenario);
   setText("#diagnostic-value", displayLabel("diagnostic_class", model.diagnostic_class));
   setText("#model-view", displayLabel("mock_view", model.mock_view));
   setText("#advisory-value", displayLabel("advisory_class", model.advisory_class));
   setText("#incident-value", displayLabel("incident_banner", model.incident_banner));
   setText("#session-value", displayLabel("displayed_session_class", model.displayed_session_class));
+  setText(
+    "#risk-page-context",
+    degraded
+      ? "Incomplete synthetic sources; this class and pause hint are hypothetical only."
+      : "Complete synthetic fixture; this fictional label carries no financial authority.",
+  );
+  setText(
+    "#portfolio-page-context",
+    degraded
+      ? "Incomplete fictional sources; the class is uncertain and is not a real reconciliation."
+      : "Complete fictional fixture; no account value or actual ledger is represented.",
+  );
   const pauseNote = document.querySelector("#pause-note");
   pauseNote.dataset.state = model.hypothetical_pause_hint ? "degraded" : "ready";
   setText(
@@ -201,7 +324,10 @@ function applySnapshot(snapshot) {
       : "No pause hint in this complete fixture. No real operation exists.",
   );
   for (const selector of ["#risk-value", "#portfolio-value", "#diagnostic-value", "#advisory-value"]) {
-    document.querySelector(selector).dataset.state = degraded ? "degraded" : "complete";
+    setState(selector, degraded ? "degraded" : "ready");
+  }
+  for (const selector of ["#risk-page-value", "#risk-pause-value", "#portfolio-page-value", "#portfolio-certainty", "#risk-page-context", "#portfolio-page-context", "#risk-view-card", "#portfolio-view-card"]) {
+    setState(selector, degraded ? "degraded" : "ready");
   }
 }
 /**
@@ -216,8 +342,9 @@ async function loadSnapshot(scenario) {
     showUnavailable("Unknown fixture scenario.");
     return;
   }
+  markReadModelUnavailable("loading", `${scenarioLabels[scenario]} · REQUESTED`);
   snapshotStatus.dataset.state = "loading";
-  statusText.textContent = "Loading local fixture…";
+  statusText.textContent = "Loading the selected local fixture; previous values were cleared.";
   try {
     const response = await fetch(`/api/demo-snapshot?scenario=${scenario}`, {
       method: "GET",
@@ -240,8 +367,8 @@ async function loadSnapshot(scenario) {
   }
 }
 /**
- * Selects a known page shell, falling back to Overview for unknown navigation identifiers.
- * Non-Overview entries remain explicitly planned placeholders without operational controls.
+ * Selects Overview, Risk, or Portfolio, retaining the planned placeholder for other known entries.
+ * All implemented screens share the same accepted snapshot and scenario selector.
  * @param {string} viewId Requested fixed navigation key.
  * @returns {void}
  */
@@ -249,9 +376,15 @@ function applyView(viewId) {
   const view = hasView(viewId) ? views[viewId] : views.overview;
   currentView = hasView(viewId) ? viewId : "overview";
   const isOverview = currentView === "overview";
+  const isRisk = currentView === "risk";
+  const isPortfolio = currentView === "portfolio";
+  const isImplemented = isOverview || isRisk || isPortfolio;
   overviewPanel.hidden = !isOverview;
-  plannedPanel.hidden = isOverview;
-  document.querySelector("#scenario-control").hidden = !isOverview;
+  riskPanel.hidden = !isRisk;
+  portfolioPanel.hidden = !isPortfolio;
+  plannedPanel.hidden = isImplemented;
+  document.querySelector("#scenario-control").hidden = !isImplemented;
+  snapshotStatus.hidden = !isImplemented;
   document.querySelector("#breadcrumb-current").textContent = view.title;
   document.querySelector("#page-title").textContent = view.title;
   document.querySelector("#page-description").textContent = view.description;
@@ -270,6 +403,10 @@ document.querySelectorAll("[data-view]").forEach((link) => {
     history.replaceState(null, "", `#${viewId}`);
     applyView(viewId);
   });
+});
+window.addEventListener("hashchange", () => {
+  const viewId = location.hash.slice(1);
+  applyView(hasView(viewId) ? viewId : "overview");
 });
 scenarioSelect.addEventListener("change", () => loadSnapshot(scenarioSelect.value));
 const initialView = location.hash.slice(1);

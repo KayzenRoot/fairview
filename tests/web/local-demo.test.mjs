@@ -134,9 +134,10 @@ function fakeElement(value = "") {
 /**
  * Executes the actual app script with a deterministic fake DOM and deferred same-origin fetches.
  * The harness captures the startup request so tests can resolve responses in any chosen order.
- * @returns {Promise<{elements: Map<string, object>, requests: Array<object>, startupPromise: Promise<void>, selectScenario: (scenario: string) => Promise<void>}>} UI controls and captured requests.
+ * @param {string} [initialHash="#overview"] Initial browser hash for direct-route startup coverage.
+ * @returns {Promise<{elements: Map<string, object>, requests: Array<object>, links: Array<object>, history: {lastUrl: string}, startupPromise: Promise<void>, selectScenario: (scenario: string) => Promise<void>, navigate: (viewId: string) => {prevented: boolean, url: string}, setHash: (hash: string) => void}>} UI controls and captured requests.
  */
-async function createUiHarness() {
+async function createUiHarness(initialHash = "#overview") {
   const source = await readFile(APP_PATH, "utf8");
   const startupCall = "loadSnapshot(scenarioSelect.value);";
   const instrumentedSource = source.replace(
@@ -146,12 +147,14 @@ async function createUiHarness() {
   assert.notEqual(instrumentedSource, source, "capture the real startup request promise");
 
   const selectors = [
-    "#snapshot-status", "#snapshot-status-text", "#fixture-scenario",
-    "#overview-panel", "#planned-panel", "#scenario-control", "#mode-value",
+    "#snapshot-status", "#snapshot-status-text", "#snapshot-scenario", "#fixture-scenario",
+    "#overview-panel", "#risk-panel", "#portfolio-panel", "#planned-panel", "#scenario-control", "#mode-value",
     "#risk-value", "#portfolio-value", "#diagnostic-value", "#model-view",
     "#advisory-value", "#incident-value", "#session-value", "#pause-note-text",
     "#pause-note", "#scenario-value", "#breadcrumb-current", "#page-title",
     "#page-description", "#planned-title", "#planned-description",
+    "#risk-view-card", "#risk-page-value", "#risk-pause-value", "#risk-page-context",
+    "#portfolio-view-card", "#portfolio-page-value", "#portfolio-certainty", "#portfolio-page-context",
   ];
   const elements = new Map(selectors.map((selector) => [selector, fakeElement()]));
   elements.get("#fixture-scenario").value = "healthy";
@@ -173,21 +176,43 @@ async function createUiHarness() {
     requests.push(request);
     return request.promise;
   };
+  const location = {hash: initialHash};
+  const history = {
+    lastUrl: initialHash,
+    replaceState(_state, _title, url) {
+      this.lastUrl = url;
+      location.hash = url;
+    },
+  };
+  const hashListeners = new Map();
   const context = vm.createContext({
     document,
     fetch,
-    history: {replaceState() {}},
-    location: {hash: "#overview"},
+    history,
+    location,
+    window: {addEventListener(type, listener) { hashListeners.set(type, listener); }},
   });
   vm.runInContext(instrumentedSource, context, {filename: APP_PATH});
   return {
     elements,
     requests,
+    links,
+    history,
     startupPromise: context.__startupSnapshotPromise,
     selectScenario(scenario) {
       const selector = elements.get("#fixture-scenario");
       selector.value = scenario;
       return selector.listeners.get("change")();
+    },
+    navigate(viewId) {
+      const link = links.find((candidate) => candidate.dataset.view === viewId);
+      let prevented = false;
+      link.listeners.get("click")({preventDefault() { prevented = true; }});
+      return {prevented, url: history.lastUrl};
+    },
+    setHash(hash) {
+      location.hash = hash;
+      hashListeners.get("hashchange")();
     },
   };
 }
@@ -217,18 +242,27 @@ function assertDisplayedScenario(harness, selectedScenario) {
       status: "ready",
       mode: "SYNTHETIC_NONAUTHORITATIVE",
       risk: "Mock risk · no authority",
+      portfolio: "Fictional ledger match",
+      hint: "NO HINT — HYPOTHETICAL ONLY",
+      certainty: "COMPLETE SYNTHETIC FIXTURE",
     },
     degraded: {
       scenario: "INCOMPLETE_FIXTURE",
       status: "degraded",
       mode: "SYNTHETIC_NONAUTHORITATIVE",
       risk: "Mock risk refused",
+      portfolio: "Fictional ledger match",
+      hint: "YES — HYPOTHETICAL ONLY",
+      certainty: "INCOMPLETE SYNTHETIC FIXTURE",
     },
     denied: {
       scenario: "DENIED_FIXTURE",
-      status: "degraded",
+      status: "denied",
       mode: "READ_MODEL_UNAVAILABLE",
       risk: "READ_MODEL_UNAVAILABLE",
+      portfolio: "READ_MODEL_UNAVAILABLE",
+      hint: "READ_MODEL_UNAVAILABLE",
+      certainty: "READ_MODEL_UNAVAILABLE",
     },
   }[selectedScenario];
   assert.equal(harness.elements.get("#fixture-scenario").value, selectedScenario);
@@ -236,6 +270,13 @@ function assertDisplayedScenario(harness, selectedScenario) {
   assert.equal(harness.elements.get("#snapshot-status").dataset.state, expected.status);
   assert.equal(harness.elements.get("#mode-value").textContent, expected.mode);
   assert.equal(harness.elements.get("#risk-value").textContent, expected.risk);
+  assert.equal(harness.elements.get("#snapshot-scenario").textContent, expected.scenario);
+  assert.equal(harness.elements.get("#risk-page-value").textContent, expected.risk);
+  assert.equal(harness.elements.get("#risk-pause-value").textContent, expected.hint);
+  assert.equal(harness.elements.get("#portfolio-page-value").textContent, expected.portfolio);
+  assert.equal(harness.elements.get("#portfolio-certainty").textContent, expected.certainty);
+  assert.equal(harness.elements.get("#risk-view-card").dataset.state, expected.status);
+  assert.equal(harness.elements.get("#portfolio-view-card").dataset.state, expected.status);
 }
 
 test("server import is inert and its supported starter binds only loopback", async () => {
@@ -365,6 +406,7 @@ test("local page and assets are served with a restrictive same-origin-only polic
     assert.match(css.headers["content-type"], /^text\/css/);
     assert.match(js.headers["content-type"], /^text\/javascript/);
     assert.match(page.body, /SYNTHETIC_NONAUTHORITATIVE/);
+    assert.match(page.body, /NÃO AUTORIZA NEGOCIAÇÃO/);
     assert.match(page.body, /no login, live market data, or trading/i);
     for (const name of [
       "Overview", "Markets", "Strategies", "Portfolio", "Risk",
@@ -377,7 +419,12 @@ test("local page and assets are served with a restrictive same-origin-only polic
     assert.match(js.body, /Object\.hasOwn\(views/);
     assert.doesNotMatch(js.body, /viewId in views/);
     assert.match(js.body, /\/api\/demo-snapshot\?scenario=/);
+    assert.match(js.body, /latestSnapshotRequestId/);
+    assert.match(js.body, /hasExactSnapshot/);
+    assert.match(js.body, /hasExactModel/);
+    assert.match(js.body, /hashchange/);
     assert.doesNotMatch(js.body, /innerHTML|insertAdjacentHTML|document\.write/);
+    assert.doesNotMatch(js.body, /localStorage|sessionStorage|document\.cookie/);
     assert.doesNotMatch(js.body, /https?:\/\//);
   });
 });
@@ -413,6 +460,172 @@ test("API returns only the real redacted model labels and keeps degraded state v
     assert.match(js, /accepted read model denied this fixture; no current view is available/);
     assert.match(js, /READ_MODEL_UNAVAILABLE/);
   });
+});
+
+test("Risk and Portfolio support hash and mouse navigation without fetching a second snapshot", async () => {
+  const ui = await createUiHarness("#risk");
+  assert.equal(ui.elements.get("#risk-panel").hidden, false);
+  assert.equal(ui.elements.get("#overview-panel").hidden, true);
+  assert.equal(ui.elements.get("#scenario-control").hidden, false);
+  assert.equal(ui.links.find((link) => link.dataset.view === "risk").attributes.get("aria-current"), "page");
+  ui.requests[0].resolve(apiResponse(createDemoSnapshot("healthy")));
+  await ui.startupPromise;
+
+  const clickResult = ui.navigate("portfolio");
+  assert.deepEqual(clickResult, {prevented: true, url: "#portfolio"});
+  assert.equal(ui.elements.get("#portfolio-panel").hidden, false);
+  assert.equal(ui.elements.get("#risk-panel").hidden, true);
+  assert.equal(ui.links.find((link) => link.dataset.view === "portfolio").attributes.get("aria-current"), "page");
+  assert.equal(ui.requests.length, 1);
+
+  ui.setHash("#settings");
+  assert.equal(ui.elements.get("#planned-panel").hidden, false);
+  assert.equal(ui.elements.get("#scenario-control").hidden, true);
+  assert.equal(ui.elements.get("#snapshot-status").hidden, true);
+  ui.setHash("#overview");
+  assert.equal(ui.elements.get("#overview-panel").hidden, false);
+  assert.equal(ui.elements.get("#scenario-control").hidden, false);
+  assert.equal(ui.elements.get("#snapshot-status").hidden, false);
+  ui.setHash("#risk");
+  assert.equal(ui.elements.get("#risk-panel").hidden, false);
+  assert.equal(ui.requests.length, 1);
+});
+
+test("Risk and Portfolio render all three synthetic states from the shared snapshot and clear while pending", async () => {
+  const ui = await createUiHarness();
+  ui.navigate("risk");
+  ui.requests[0].resolve(apiResponse(createDemoSnapshot("healthy")));
+  await ui.startupPromise;
+  assertDisplayedScenario(ui, "healthy");
+
+  for (const scenario of ["healthy", "degraded", "denied"]) {
+    const requestCount = ui.requests.length;
+    const pending = ui.selectScenario(scenario);
+    assert.equal(ui.requests.length, requestCount + 1);
+    assert.equal(ui.elements.get("#risk-page-value").textContent, "READ_MODEL_UNAVAILABLE");
+    assert.equal(ui.elements.get("#risk-pause-value").textContent, "READ_MODEL_UNAVAILABLE");
+    assert.equal(ui.elements.get("#portfolio-page-value").textContent, "READ_MODEL_UNAVAILABLE");
+    assert.equal(ui.elements.get("#portfolio-certainty").textContent, "READ_MODEL_UNAVAILABLE");
+    assert.equal(ui.elements.get("#risk-view-card").dataset.state, "loading");
+    assert.equal(ui.elements.get("#portfolio-view-card").dataset.state, "loading");
+
+    ui.navigate("portfolio");
+    assert.equal(ui.elements.get("#portfolio-panel").hidden, false);
+    assert.equal(ui.elements.get("#scenario-control").hidden, false);
+    assert.equal(ui.requests.length, requestCount + 1, "view navigation reuses the pending request");
+
+    ui.requests.at(-1).resolve(apiResponse(createDemoSnapshot(scenario)));
+    await pending;
+    assertDisplayedScenario(ui, scenario);
+    assert.match(ui.elements.get("#risk-page-context").textContent, /synthetic/i);
+    assert.match(ui.elements.get("#portfolio-page-context").textContent, /synthetic|fictional/i);
+    assert.equal(ui.elements.get("#snapshot-status-text").textContent.includes("denied"), scenario === "denied");
+    const accepted = createDemoSnapshot(scenario);
+    const rendered = [...ui.elements.values()].map((element) => element.textContent).join(" ");
+    assert.equal(rendered.includes(accepted.reason_code), false, "reason codes are never rendered");
+
+    ui.navigate("risk");
+    assert.equal(ui.elements.get("#risk-panel").hidden, false);
+    assertDisplayedScenario(ui, scenario);
+    assert.equal(ui.requests.length, requestCount + 1, "switching screens does not issue another request");
+  }
+});
+
+test("browser UI fails closed on malformed, missing, forged, or unexpected snapshot data", async () => {
+  const cases = [
+    {
+      name: "malformed JSON",
+      response: () => apiResponse(undefined, () => Promise.reject(new SyntaxError("invalid JSON"))),
+    },
+    {name: "missing snapshot", response: () => apiResponse(undefined)},
+    {
+      name: "missing read model",
+      response: () => {
+        const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
+        delete snapshot.read_model;
+        return apiResponse(snapshot);
+      },
+    },
+    {
+      name: "forged authority flag",
+      response: () => {
+        const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
+        snapshot.flags.execution_authorized = true;
+        snapshot.reason_code = "RAW_REASON_SENTINEL";
+        return apiResponse(snapshot);
+      },
+    },
+    {
+      name: "unlisted risk enum",
+      response: () => {
+        const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
+        snapshot.read_model.risk_class = "REAL_RISK_PASS";
+        return apiResponse(snapshot);
+      },
+    },
+    {
+      name: "unlisted portfolio enum",
+      response: () => {
+        const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
+        snapshot.read_model.portfolio_class = "REAL_BALANCE_VERIFIED";
+        return apiResponse(snapshot);
+      },
+    },
+    {
+      name: "unexpected model field",
+      response: () => {
+        const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
+        snapshot.read_model.synthetic_fixture_sentinel = "RAW_FIXTURE_SENTINEL";
+        return apiResponse(snapshot);
+      },
+    },
+    {
+      name: "unexpected envelope field",
+      response: () => {
+        const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
+        snapshot.private_fixture_sentinel = "RAW_ENVELOPE_SENTINEL";
+        return apiResponse(snapshot);
+      },
+    },
+    {
+      name: "scenario and status mismatch",
+      response: () => {
+        const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
+        snapshot.status = "SYNTHETIC_LOCAL_READ_MODEL";
+        return apiResponse(snapshot);
+      },
+    },
+    {
+      name: "non-success response",
+      response: () => ({...apiResponse(createDemoSnapshot("degraded")), ok: false}),
+    },
+    {
+      name: "non-JSON response",
+      response: () => ({
+        ...apiResponse(createDemoSnapshot("degraded")),
+        headers: {get: () => "text/html"},
+      }),
+    },
+  ];
+
+  for (const invalid of cases) {
+    const ui = await createUiHarness();
+    ui.requests[0].resolve(apiResponse(createDemoSnapshot("healthy")));
+    await ui.startupPromise;
+    const pending = ui.selectScenario("degraded");
+    ui.requests[1].resolve(invalid.response());
+    await pending;
+    assert.equal(ui.elements.get("#snapshot-status").dataset.state, "error", invalid.name);
+    assert.equal(ui.elements.get("#scenario-value").textContent, "SNAPSHOT_UNAVAILABLE", invalid.name);
+    assert.equal(ui.elements.get("#risk-page-value").textContent, "READ_MODEL_UNAVAILABLE", invalid.name);
+    assert.equal(ui.elements.get("#risk-pause-value").textContent, "READ_MODEL_UNAVAILABLE", invalid.name);
+    assert.equal(ui.elements.get("#portfolio-page-value").textContent, "READ_MODEL_UNAVAILABLE", invalid.name);
+    assert.equal(ui.elements.get("#portfolio-certainty").textContent, "READ_MODEL_UNAVAILABLE", invalid.name);
+    const rendered = [...ui.elements.values()].map((element) => element.textContent).join(" ");
+    for (const sentinel of ["RAW_REASON_SENTINEL", "RAW_FIXTURE_SENTINEL", "RAW_ENVELOPE_SENTINEL", "REAL_RISK_PASS", "REAL_BALANCE_VERIFIED"]) {
+      assert.equal(rendered.includes(sentinel), false, `${invalid.name}: ${sentinel}`);
+    }
+  }
 });
 
 test("only the latest selected fixture response controls the displayed scenario", async () => {
