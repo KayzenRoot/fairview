@@ -313,7 +313,8 @@ test("untrusted forged, cloned, JSON-deserialized or mutated Ledger state cannot
 });
 test("duplicates, gaps, conflicting IDs and overfill are rejected or discrepancy locked",()=>{
  const s=sent();
- deny(advanceSyntheticExecution(s,action(event(1,"MAY_HAVE_SENT"))),
+ deny(advanceSyntheticExecution(s,action(event(1,"MAY_HAVE_SENT",
+  {captured_at_utc:"2026-09-15T12:00:00.003Z"}))),
   "MOCK_ATTEMPT_ALREADY_RECORDED");
  deny(advanceSyntheticExecution(s,action(event(3,"ACK"))),
   "MOCK_LEDGER_EVENT_SEQUENCE_GAP");
