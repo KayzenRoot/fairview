@@ -1,0 +1,19 @@
+# FV-GOV-002 | Reconcile observational Source Pack after FV-LEDGER-001
+
+**Risk: LOW governance-only. Status: ADMITTED for factual current-main documentation reconciliation, not independently promoted financial checkpoint.**
+**OBJECTIVE:** Correct stale canonical NOW/NEXT, baseline SHA, module count and R10 proposal status after the already merged synthetic Ledger PR #25 and its source-provenance correction PR #27. Do not represent in-memory simulation as a durable financial ledger or fictional policy as real provider rights.
+
+## SOURCE CHECK / CONTEXT
+Locked protected-main base: `3bc582a259077e137e4227ef4e40cad8ff186fb6`. FV-GOV-001 PR #24 merged at `37ab859aa8e2d8fff02ab910ac7e948ce331e0ca`, 4/4 exact-main run 36558015617. FV-LEDGER-001 PR #25 merged at `6b5a8ff3bdae612722a0109d84a0249e80378cd5`, 4/4 exact-main run 36559002676. FV-LEDGER-001-CORR-001 PR #27 merged at this base, 4/4 exact-main run 36559676112. Owned Ledger suite on PR #27 exact HEAD: 27/27; bootstrap 71/71. Exactly 20 registry IDs, 5 ACTIVE bootstrap/policy/clock/market-data/ledger, 15 PLANNED. Ledger is pure frozen fictional in-memory Node22 with module-private source-state guard. No remote order, true WAL, reconciliation, native broker, database, privileged funded runtime or independent financial reviewer. FV-CP-0002-PROPOSED remains status MIGRATION_DRAFT_NOT_APPROVED, independent_approval=false. Accepted D-009 and D-007/D-008 unchanged. See exact source blobs in Context Lock.
+
+## SCOPE / ALLOWLIST / OUT OF SCOPE
+Allow strictly new WO + exact lock; `.engineering/CHECKPOINT.md`, `CHECKPOINT.json`, `BACKLOG.md`, `SCOPE.md`, `DEFINITION-OF-DONE.md`, `ARCHITECTURE.md`, `INTEGRATION-CONTRACTS.md`, `TEST-BENCHMARK-PLAN.md`; `docs/architecture/MODULE-READINESS-AND-IMPLEMENTATION-R10.md` and `ARBITRAGE-MODULE-MAP.md`, **only factual source-status lines**, not accepting proposed contract designs. No tests, source, registry, README, CI, GEF pin, preexisting adopted decision, security, financial architecture rewrite, checkpoint approval or unrelated cleanup.
+
+## REQUIREMENTS / CONSTRAINTS / ACCEPTANCE
+1. Reconcile immutable observed Git merge receipts, actual five/15 registry, exact-main run, Ledger test-only status and future graph-eligible synthetic Risk candidate across affected canonical files. Checkpoint may record observed main and merged receipts but MUST remain FV-CP-0002-PROPOSED / MIGRATION_DRAFT_NOT_APPROVED / independent_approval=false.
+2. Restore historical truth: previous R10 originally proposed branch, PR25/27 are now merged; historical older snapshots explicitly labeled as past rather than current. Proposed PostgreSQL ADR-004, independent Risk/kill, real venue/account rights, D-008 PRIVATE-before-funded production and qualified financial security remain NOT ACHIEVED.
+3. No imported dependencies, retired context runtime, paid provider, secrets, live trading, source edits or unadmitted next module. Preserve source history and D-009.
+4. Validate registry parity and absence of obsolete tracked-service references; allowlisted docs diff only; `node scripts/check-sources.mjs`, `node scripts/security-scan.mjs`, `node scripts/harness.mjs doctor`, bootstrap and all exact-head four hosted jobs SUCCESS. Document tested vs independent review distinction.
+
+## DELIVERABLES / AUDIT / STOP CONDITION
+Versioned docs-first WO/context lock, narrow Source Pack/R10/map correction PR, objective pt-BR review and exact-head hosted Evidence Bundle, no HIGH/CRITICAL or stale base, normal merge after checks. Postmerge exact-main 4/4. Owner self-audit is NOT_INDEPENDENT and is not a financial production approval. STOP/CORRECTION REQUIRED in same PR if source/ref changes, failed CI, false status, mistaken checkpoint promotion or extra path; separately admit `FV-RISK-001` only after this governance status is reconciled and approved.
