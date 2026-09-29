@@ -305,7 +305,7 @@
     },
     {
       "id": "observability",
-      "state": "planned",
+      "state": "active",
       "depends_on": [
         "market-data",
         "clock",
@@ -317,7 +317,9 @@
         "src/observability/",
         "tests/observability/"
       ],
-      "tests": []
+      "tests": [
+        "tests/observability/*.test.mjs"
+      ]
     }
   ],
   "high_impact": [
@@ -328,5 +330,5 @@
     ".engineering/DECISIONS-LEDGER.md",
     "src/contracts/"
   ],
-  "note": "FV-GOV-006 observed accepted exact source after reviewed FV-REPLAY-001 PR #35 normal merge: protected main 7ba98d9a0a81f2b85de89ce9c86e38356cd34487 and exact-main postmerge push 36569462331 4/4 SUCCESS, ALL NINE ACTIVE EXCLUSIVELY FICTIONAL owned source suites 420/420 PASS (bootstrap78/risk39/policy57/clock56/market-data79/ledger27/execution27/portfolio27/replay30). Same PR historical initial Replay run 36569112260 failed 18/30 due canonical cloned fixture not frozen; same-PR CORR-001 locally froze detached clones only, corrected exact HEAD 88439d0b3122371bbed7e9e5e8384120914a5f56 run 36569215231 4/4, Replay30/30 and bootstrap78/78. EXACT twenty module IDs/edges/states/paths/test globs UNCHANGED: 9 ACTIVE ONLY SYNTHETIC source and 11 PLANNED. Replay only deterministic SHA-pinned 1..64 self-generated one-domain local metadata test with accepted mock Clock/Market Data/Risk, NON-DURABLE Ledger and no-network Execution. NO real historical/licensed feed, trading broker/account, independently durable Ledger/kill, signed permit, authenticated venue evidence, actual financial reconciliation, p99/ROI or competitor benchmark. All Replay outputs fixture_only:true execution_authorized:false network_performed:false persisted:false authenticated_provider_evidence:false kill_durable:false financial_reconciliation_complete:false real_market_performance_established:false comparative_benchmark_supported:false. D-007 legal real provider/account/data/reviewer OPEN, D-008 PUBLIC development/verified PRIVATE before funded OPEN, proposed financial and historical ADRs unadopted and independent qualified HIGH_ASSURANCE review unperformed. This NOTE is factual documentation only, not another product activation or checkpoint promotion."
+  "note": "FV-OBSERVABILITY-001 branch CANDIDATE frozen accepted protected GOV-006 main c8bd4626beccad0c746bf51ed08a2457fbebe4d0, exact-main run 36570221252 4/4 and prior nine strictly invented source harnesses 420/420. Branch candidate tenth ACTIVE EXCLUSIVELY synthetic source module Observability / ten PLANNED only after exact PR HEAD four hosted checks, objective NOT_INDEPENDENT review and normal guarded merge. All original 20 IDs/dependencies/paths and other tests/states UNCHANGED. Local redacted fixed enum diagnostics call actual accepted MOCK Clock, Market Data, Risk, NONDURABLE Ledger and no-network Execution, single-domain invented elapsed measurement; process-private WeakSet observational 1..32 record buffer and simulated collector down/backpressure NEVER export, route real alert, engage a persistent Risk kill, authorize orders or satisfy real audit. Public outputs fixture_only:true execution_authorized:false network_performed:false persisted:false authenticated_provider_evidence:false kill_durable:false financial_reconciliation_complete:false real_latency_measured:false alert_delivered:false mandatory_audit_satisfied:false. No real tick, broker receipt, account identifiers, p99/ROI, entitlement or actual monitoring; D-007 lawful venue/data/account/reviewer OPEN, D-008 PUBLIC-dev/verified PRIVATE-before-funded OPEN, full R8 and proposed ADR-016 remain future, independent finance/security HIGH_ASSURANCE not done; checkpoint FV-CP-0002-PROPOSED unpromoted."
 }
