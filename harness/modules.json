@@ -312,5 +312,5 @@
     ".engineering/DECISIONS-LEDGER.md",
     "src/contracts/"
   ],
-  "note": "Planning-only FV-DISC-001 draft: bootstrap stays the sole active harness. All product paths reserved (no src/ or tests/ files created); activation requires admitted per-module WO with deterministic nonempty tests and FV-BOOT-001 host/independent gates. Unknown paths fail closed."
+  "note": "Planning-only FV-DISC-001 draft: bootstrap stays the sole active harness. All product paths reserved; no product src/ or tests/ files have been created. Product-source admission requires the accepted native Git/Node22/pinned GEF foundation, a separately admitted per-module Work Order, nonempty deterministic tests and exact-head CI. Financially privileged deployment also requires independent security review, verified private-repo status and authorized venue/chain/data rights."
 }
