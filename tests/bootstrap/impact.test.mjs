@@ -479,7 +479,7 @@ test("admitted synthetic policy remains testable with unimplemented downstream d
  const result=calculateImpact(candidate,["src/policy/eligibility.mjs"]);
  assert.deepEqual(result.direct_active,["policy"]);
  assert.deepEqual(result.direct_planned,[]);
- assert.deepEqual(result.active,["policy"]);
+ assert.deepEqual(result.active,["policy","ledger"]);
  assert(result.active.includes("ledger"));
  assert(result.planned.includes("risk"));
  assert(result.planned.includes("integration"));
