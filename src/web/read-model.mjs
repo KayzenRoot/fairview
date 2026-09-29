@@ -19,7 +19,8 @@ const BLOCKED=new Set(["__proto__","prototype","constructor","prompt","prompts",
  "messages","instructions","system","developer","tool","tools","tool_call",
  "tool_calls","model_output","rag_documents","external_evidence",
  "api_key","secret","session_token","authorization","csrf_token",
- "signed_approval","tenant_override","wallet","private_key"]);
+ "signed_approval","tuning_approved","self_approval","human_approval",
+ "tenant_override","wallet","private_key"]);
 const plain=x=>x!==null&&typeof x==="object"&&!Array.isArray(x)&&
  Object.getPrototypeOf(x)===Object.prototype;
 const exact=(x,fields)=>plain(x)&&Object.keys(x).length===fields.length&&
