@@ -215,7 +215,7 @@
     },
     {
       "id": "portfolio",
-      "state": "planned",
+      "state": "active",
       "depends_on": [
         "risk",
         "ledger"
@@ -224,7 +224,9 @@
         "src/portfolio/",
         "tests/portfolio/"
       ],
-      "tests": []
+      "tests": [
+        "tests/portfolio/*.test.mjs"
+      ]
     },
     {
       "id": "replay",
@@ -322,5 +324,5 @@
     ".engineering/DECISIONS-LEDGER.md",
     "src/contracts/"
   ],
-  "note": "FV-RISK-001 adds the sixth ACTIVE harness (bootstrap + invented-only policy/clock/market-data/in-memory ledger/risk), with 14 others PLANNED. Risk imports accepted mock Policy/Clock/Market Data APIs, uses only caller-injected frozen fictional portfolio/kill snapshots and NEVER supplies financial ADMIT, real provider rights, durable kill, real authenticated balance, live order or financial execution authority. Exact scoped risk-owned negative fixtures and exact-head CI required. Financial production still requires D-007 provider/legal evidence, verified PRIVATE under D-008, independently durable financial Ledger/Risk kill and qualified HIGH_ASSURANCE audit."
+  "note": "FV-PORTFOLIO-001 candidate adds the seventh ACTIVE strictly synthetic harness (bootstrap, risk, policy, clock, market-data, non-durable in-memory ledger and invented-only portfolio), 13 PLANNED. Portfolio replays actual accepted mock Ledger and probes actual mock Risk through module-private invented projection provenance, without giving real balance proof, durable storage, provider authentication, independently persistent kill, live financial admission or external order authority. Only after exact-head CI/scoped review and reviewed normal merge may this candidate count as accepted main. D-007 legal provider permissions, D-008 PRIVATE before funded deployment, proposed ADR-004/005/015 and independent HIGH_ASSURANCE financial review remain OPEN."
 }
