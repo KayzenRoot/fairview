@@ -200,7 +200,7 @@
     },
     {
       "id": "execution",
-      "state": "planned",
+      "state": "active",
       "depends_on": [
         "risk",
         "market-data",
@@ -211,7 +211,9 @@
         "src/execution/",
         "tests/execution/"
       ],
-      "tests": []
+      "tests": [
+        "tests/execution/*.test.mjs"
+      ]
     },
     {
       "id": "portfolio",
@@ -324,5 +326,5 @@
     ".engineering/DECISIONS-LEDGER.md",
     "src/contracts/"
   ],
-  "note": "FV-PORTFOLIO-001 candidate adds the seventh ACTIVE strictly synthetic harness (bootstrap, risk, policy, clock, market-data, non-durable in-memory ledger and invented-only portfolio), 13 PLANNED. Portfolio replays actual accepted mock Ledger and probes actual mock Risk through module-private invented projection provenance, without giving real balance proof, durable storage, provider authentication, independently persistent kill, live financial admission or external order authority. Only after exact-head CI/scoped review and reviewed normal merge may this candidate count as accepted main. D-007 legal provider permissions, D-008 PRIVATE before funded deployment, proposed ADR-004/005/015 and independent HIGH_ASSURANCE financial review remain OPEN."
+  "note": "FV-EXECUTION-001 scoped branch CANDIDATE adds eighth ACTIVE invented-only harness and leaves 12 PLANNED of 20 unchanged literal module IDs/edges. Accepted mock Risk rechecks fictional quote/time/policy/portfolio/kill at fake presend; module-private accepted non-durable mock Ledger lifecycle is reused. NO network, broker send, real financial authorization, durable presend marker, provider-authenticated fill, true queue, two-leg netting, hedge or independently persistent kill. Only after exact-head CI, scoped NOT_INDEPENDENT review and reviewed merge may this count as accepted main; production requires D-007 rights, verified PRIVATE-before-funded D-008, separately adopted ADR-004/005/006 and qualified HIGH_ASSURANCE review."
 }
