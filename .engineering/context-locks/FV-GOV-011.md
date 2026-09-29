@@ -1,0 +1,23 @@
+# FV-GOV-011 | Immutable paired accepted-source/context lock BEFORE existing doc edits
+Accepted protected SOURCE main `b70d5be9cd4df3e5b5a3e99a8aaa92c3dfadeb18`, exact-main [Actions36588730744](https://github.com/KayzenRoot/fairview/actions/runs/36588730744) **FOUR required SUCCESS**, full FOURTEEN actual ACTIVE ONLY SYNTHETIC owned suites **561/561 PASS**: bootstrap88/risk39/forex29/ai25/web27/policy57/clock56/market-data79/ledger27/execution27/portfolio27/replay30/research24/observability26. Exactly original 20 registered owner IDs/dependency graph/path reservations, 14 mock-active/6 planned, no open PR at freeze. Pinned GEF `866fe3af8cccc65c929aaf6a47a924401fa448b3`; D-005/006/009 Git-only (no withdrawn external context runtime). FIRST standalone GOV-011 own Work Order commit `0aa9c95de7a4822dad2756aae8397795f1085d6c`, THIS paired lock SECOND standalone commit, both BEFORE canonical existing doc edits. Own branch `docs/fv-gov-011-post-forex`.
+
+## Frozen EXACT original twelve existing informational blob fingerprints at accepted source main
+- `.engineering/CHECKPOINT.md` `42ba1c08d73dafe916b673022c34d093405540f1`.
+- `.engineering/CHECKPOINT.json` `7ffad1e0857576a4c48cfe1450c737bfafe7bfd7`.
+- `.engineering/BACKLOG.md` `b300b733b02be5931685b81a691cdf461b4c87d0`.
+- `.engineering/SCOPE.md` `19cb3ed24ddec9e29ec654561d300990a32d33a9`.
+- `.engineering/DEFINITION-OF-DONE.md` `ff57da31ecbf294cdb5c0d4ca8afc695da7499cf`.
+- `.engineering/ARCHITECTURE.md` `2daa02569e0862d89f7c792953a1088132be27fb`.
+- `.engineering/INTEGRATION-CONTRACTS.md` `21655a7f9f98fcb52c73f283e6700c6fe649ff0`.
+- `.engineering/TEST-BENCHMARK-PLAN.md` `c6b22024af5db56f59d3a4f1ec884d8cc053db51`.
+- `docs/architecture/ARBITRAGE-MODULE-MAP.md` `577b2f4036adb0e96f019288d23dd27b65ba2ea6`.
+- `docs/architecture/MODULE-READINESS-AND-IMPLEMENTATION-R10.md` `e8c07633f66e9393678db058a8c328212f28fdff`.
+- `docs/architecture/modules/forex.md` `536cf7b14b283ae417cc681e4056bbf015d18a64`.
+- `harness/modules.json` `f89da66b05bacf93c2bc0abddef54ef48127ff1b` NOTE field existing only.
+- Other sensitive unedited canonical proofs: `.engineering/DECISIONS-LEDGER.md` `116b962fbec0b54bdd9d698d15671aba4ab96664`; `.engineering/SECURITY.md` `1c924baeb56882250e7a03519cb26fd2a01816e4`; `.engineering/SOURCE-HIERARCHY.md` `7b2cb9989d8d3de3ec3396a41fb9fc1675662103`; product `src/forex/diagnostic.mjs` from merged PR #45 HEAD `2a4a88cf06e4e974ffa324fc6cc9786250f92761` stays UNEDITED.
+
+## Exact DOCS-ONLY allowlist / no source state changes
+TWO new own docs first then precisely TWELVE existing above. Only existing registry `note` string may be edited, zero original 20 IDs/edges/states/paths/test owners or GEF pin changes. Pure accurate post-source observation: `CHECKPOINT.json.latest_observed_main.sha=b70d5be9cd4df3e5b5a3e99a8aaa92c3dfadeb18`, run36588730744, 4/4 hosted, full 561/561, `registry.active` actual 14 incl Forex, planned6, proposed checkpoint and `independent_approval=false` unchanged; record current GOV-011 branch candidate separately and any own eventual merge/run in factual PR comment, not recursive checkpoint rewrite. R10 existing table Forex ACTIVE already branch source accepted, change stale branch-only caveat and top historical snapshot to accepted latest, preserve historical paragraphs explicitly labelled; Forex charter branch candidate→MERGED SOURCE ONLY. No false real adapter, live strategy, provider/data rights, confidential repo, durable financial engine, broker reconciliation or external security review.
+
+## Risk, evidence and STOP
+Prior accepted source PR #45 exact head `2a4a88cf06e4e974ffa324fc6cc9786250f92761` run36588409485 4/4, Forex29/29, bootstrap88/88; two same-PR Correction Deltas (CORR-001 R10 vs registry; CORR-002 stale invented reference) all retained; normal merge `b70d5be9cd4df3e5b5a3e99a8aaa92c3dfadeb18` exact-main36588730744 4/4/full561. Own GOV-011 EXACT HEAD must pass 4/4 and full 561, redacted Evidence Bundle, 14-file diff exact, pt-BR objective own review NOT_INDEPENDENT and no known HIGH/CRITICAL/substantive unresolved review; normal expected-head merge, then exact-new-main 4/4/full561. FV-CP-0002 remains `MIGRATION_DRAFT_NOT_APPROVED`, `independent_approval:false`; D-007 actual venue/strategy/account/data rights and qualified reviewer OPEN; D-008 current PUBLIC invented-only and independently VERIFIED PRIVATE-before-funded OPEN, independently real durable Ledger/Risk/kill, full authorized provider history reconciliation, qualified external financial-security HIGH_ASSURANCE OPEN. No live trade. STOP on changed accepted base/decision/Scope/DoD/Architecture, missing proof, unexpected diff, false graph/checkpoint, any failed suite; same-WO Correction Delta only.
