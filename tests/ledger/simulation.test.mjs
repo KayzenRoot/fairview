@@ -1,0 +1,14 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {createSyntheticLedger,appendSyntheticLedgerEvent} from "../../src/ledger/simulation.mjs";
+const scope=()=>({venue_id:"MOCK_V",legal_entity:"MOCK_E",jurisdiction:"TEST_R",account_ref:"MOCK_A",account_kind:"DEMO",instrument_contract_id:"MOCK_FX",strategy_family:"MOCK_ONE",api_protocol:"MOCK"});
+const grant=type=>({type,ref:"REF_"+type,proof_sha256:"a".repeat(64),reviewer_ref:"TEST_REVIEWER",scope:scope(),revoked:false,verified_at_utc:"2026-09-01T00:00:00.000Z",expires_at_utc:"2026-10-01T00:00:00.000Z",...(type==="DATA_USE"?{data_scopes:["INTERNAL"],delivery:"SAMPLED"}:{})});
+const policy=()=>({schema_version:0,source_class:"SYNTHETIC_FIXTURE",scope:scope(),mode:"DEMO",data_use:"INTERNAL",now_utc:"2026-09-29T00:00:00.000Z",grants:["ACCOUNT_API","STRATEGY_PERMISSION","DATA_USE","OPERATOR_APPROVAL"].map(grant)});
+const intent=(patch={})=>({schema_version:0,source_class:"SYNTHETIC_FIXTURE",tenant_id:"MOCK_T",account_id:"MOCK_A",venue_id:"MOCK_V",instrument_contract_id:"MOCK_FX",intent_key:"INT_1",side:"BUY",quantity_units:"10",created_at_utc:"2026-09-29T00:00:00.000Z",policy_request:policy(),...patch});
+const ev=(sequence,type,patch={})=>({schema_version:0,source_class:"SYNTHETIC_FIXTURE",intent_key:"INT_1",event_id:"EV_"+sequence,sequence:String(sequence),captured_at_utc:"2026-09-29T00:00:00.000Z",type,attempt_id:"ATT_1",quantity_units:null,execution_id:null,receipt:null,...patch});
+const newLog=()=>{const r=createSyntheticLedger(intent());assert.equal(r.status,"CREATED",JSON.stringify(r));return r.ledger;};
+const apply=(s,e)=>{const r=appendSyntheticLedgerEvent(s,e);assert.equal(r.status,"APPLIED",JSON.stringify(r));return r.ledger;};
+const sent=()=>apply(newLog(),ev(1,"MAY_HAVE_SENT"));
+const receipt=(p={})=>({source_class:"SYNTHETIC_FIXTURE",complete:true,account_id:"MOCK_A",venue_id:"MOCK_V",instrument_contract_id:"MOCK_FX",cursor:"MOCK_CURSOR",reported_filled_units:"0",order_status:"OPEN",...p});
+const noAuthority=r=>{assert.equal(r.fixture_only,true);assert.equal(r.persisted,false);assert.equal(r.execution_authorized,false);};
+test("synthetic local-intent fixture cannot authorize execution or claim durability",()=>{const r=createSyntheticLedger(intent());assert.equal(r.status,"CREATED");assert.equal(r.ledger.phase,"INTENT_DURABLE");assert.equal(r.ledger.filled_units,"0");noAuthority(r);noAuthority(r.ledger);});
