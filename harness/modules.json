@@ -146,13 +146,15 @@
     },
     {
       "id": "policy",
-      "state": "planned",
+      "state": "active",
       "depends_on": [],
       "paths": [
         "src/policy/",
         "tests/policy/"
       ],
-      "tests": []
+      "tests": [
+        "tests/policy/*.test.mjs"
+      ]
     },
     {
       "id": "clock",
@@ -312,5 +314,5 @@
     ".engineering/DECISIONS-LEDGER.md",
     "src/contracts/"
   ],
-  "note": "Planning-only FV-DISC-001 draft: bootstrap stays the sole active harness. All product paths reserved; no product src/ or tests/ files have been created. Product-source admission requires the accepted native Git/Node22/pinned GEF foundation, a separately admitted per-module Work Order, nonempty deterministic tests and exact-head CI. Financially privileged deployment also requires independent security review, verified private-repo status and authorized venue/chain/data rights."
+  "note": "FV-POLICY-001 activates dependency-free SYNTHETIC_FIXTURE-only policy evaluator with real isolated policy tests. The bootstrap and synthetic policy modules are ACTIVE; the other 18 product modules remain PLANNED. A synthetic eligibility classification never proves broker/venue permissions or grants execution authority. Each later module still requires its own scoped WO, actual tests, valid active dependencies and exact-head CI; financially privileged operation additionally needs independent security, signed legal/data rights, risk and managed secrets."
 }

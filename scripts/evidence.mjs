@@ -8,11 +8,13 @@ const root=process.cwd(),head=git(["rev-parse","HEAD"]).trim(),base=process.env.
 if(!base|| !/^[0-9a-f]{40}$/i.test(base))throw Error("EVIDENCE_BASE_SHA_REQUIRED");
 const changed=parseGitDiffNameStatusZ(git(["diff","--name-status","-z","--find-renames","--diff-filter=ACDMRTUXB",base+"..."+head,"--"]));
 const registry=JSON.parse(fs.readFileSync("harness/modules.json","utf8")),impact=calculateImpact(registry,changed);
-if(impact.unknown.length||impact.planned.length)throw Error("UNVERIFIED_IMPACT");
+if(impact.unknown.length||impact.direct_planned.length)throw Error("UNVERIFIED_IMPACT");
 const src=fs.readFileSync(".engineering/CHECKPOINT.json");
 const cp=JSON.parse(src);
 const output={schema_version:1,project:"Fairview",work_order:cp.work_order,base_sha:base,head_sha:head,
 source_checkpoint_status:cp.status,changed_files:changed,impacted_modules:impact.active,
+// Active impacted modules were executed by the preceding CI harness; planned reverse dependents have no test suite yet.
+planned_reverse_dependents_not_executed:impact.planned,directly_modified_active_modules:impact.direct_active,
 tests_verified:process.env.EVIDENCE_TESTS_VERIFIED==="1"?["check-sources","security-scan","harness-doctor","affected-module-unit-tests"]:[],
 upstream_validation:"separate_geF_job",windows_development_setup:"CHECKED_BY_WINDOWS_CI_NO_EXTERNAL_SERVICES",
 source_checkpoint_sha256:crypto.createHash("sha256").update(src).digest("hex"),
