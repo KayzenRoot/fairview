@@ -448,3 +448,53 @@ test("Round 10 WO and proposed ADRs do not admit source, and future changes prop
   assert(ai.planned.includes("ai")&&ai.planned.includes("web")&&ai.planned.includes("integration"));
   assert.deepEqual(ai.unknown,[]);
 });
+
+
+test("directly changed planned source is denied, including when many dependents are planned",()=>{
+ const result=calculateImpact(r,["src/policy/eligibility.mjs"]);
+ assert.deepEqual(result.direct_active,[]);
+ assert.deepEqual(result.direct_planned,["policy"]);
+ assert(result.planned.includes("ledger"));
+ assert(result.planned.includes("risk"));
+ assert(result.planned.includes("integration"));
+ assert.deepEqual(result.unknown,[]);
+});
+test("a future admitted active policy may be tested without prematurely activating dependents",()=>{
+ const candidate=structuredClone(r);
+ const policy=candidate.modules.find(m=>m.id==="policy");
+ policy.state="active";
+ policy.tests=["tests/policy/*.test.mjs"];
+ assert.equal(validateRegistry(candidate),candidate);
+ const result=calculateImpact(candidate,["src/policy/eligibility.mjs"]);
+ assert.deepEqual(result.direct_active,["policy"]);
+ assert.deepEqual(result.direct_planned,[]);
+ assert.deepEqual(result.active,["policy"]);
+ assert(result.planned.includes("ledger"));
+ assert(result.planned.includes("risk"));
+ assert(result.planned.includes("integration"));
+ assert.deepEqual(result.unknown,[]);
+});
+test("every active product must have admitted active direct upstream dependencies",()=>{
+ const candidate=structuredClone(r);
+ const risk=candidate.modules.find(m=>m.id==="risk");
+ risk.state="active";
+ risk.tests=["tests/risk/*.test.mjs"];
+ assert.throws(()=>validateRegistry(candidate),/ACTIVE_DEPENDENCY_NOT_ACTIVE/);
+});
+test("mixed active and unadmitted direct owners do not conceal the planned edit",()=>{
+ const candidate=structuredClone(r);
+ const policy=candidate.modules.find(m=>m.id==="policy");
+ policy.state="active";
+ policy.tests=["tests/policy/*.test.mjs"];
+ const result=calculateImpact(candidate,["src/policy/eligibility.mjs","src/clock/time.mjs"]);
+ assert.deepEqual(result.direct_active,["policy"]);
+ assert.deepEqual(result.direct_planned,["clock"]);
+ assert(result.planned.includes("market-data"));
+ assert(result.planned.includes("integration"));
+});
+test("harness enforces direct-planned denial and exposes truthful inactive closure",()=>{
+ const harness=fs.readFileSync(new URL("../../scripts/harness.mjs",import.meta.url),"utf8");
+ assert(harness.includes("DIRECT_PLANNED_MODULE_TOUCHED_WITHOUT_ADMISSION"));
+ assert(harness.includes("inactive reverse dependents remain UNTESTED"));
+ assert(!harness.includes('if(result.planned.length) fail('));
+});
