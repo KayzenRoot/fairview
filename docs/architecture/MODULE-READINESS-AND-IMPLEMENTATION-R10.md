@@ -9,7 +9,7 @@ All `depends_on` values and owned paths below are **literal from the registered 
 | Canonical ID | Current registry state | Earliest graph wave | Exact registered dependencies | Reserved source / harness ownership | Governing design round |
 |---|---|---:|---|---|---|
 | `bootstrap` | ACTIVE | 0 | none | `bootstrap-owned existing paths` / `tests/bootstrap/` | Accepted native Git/Node22/GEF foundation and bootstrap charter |
-| `risk` | PLANNED | 3 | `market-data`, `clock`, `policy` | `src/risk/` / `tests/risk/` | R3 Ledger/Risk/Execution; ADR-005 |
+| `risk` | ACTIVE | 3 | `market-data`, `clock`, `policy` | `src/risk/` / `tests/risk/` | R3 Ledger/Risk/Execution; ADR-005 |
 | `forex` | PLANNED | 5 | `risk`, `market-data`, `clock`, `execution` | `src/forex/` / `tests/forex/` | R1 provider contract; ADR-001 |
 | `cex` | PLANNED | 5 | `risk`, `market-data`, `clock`, `execution` | `src/cex/` / `tests/cex/` | R6 CEX connectors; ADR-011 |
 | `defi` | PLANNED | 5 | `risk`, `market-data`, `execution`, `policy` | `src/defi/` / `tests/defi/` | R7 DEX/Uniswap; ADR-013 |
@@ -121,3 +121,7 @@ This separate module admission adds one **strictly fictional** pure `src/market-
 ### FV-LEDGER-001 already merged fictional-only source admission
 
 Merged PR #25, corrected by PR #27, admits the fifth ACTIVE **synthetic harness**: `src/ledger/simulation.mjs` and `tests/ledger/simulation.test.mjs`, depending on the already ACTIVE fictional policy evaluator. Its output is explicitly `fixture_only=true`, `persisted=false`, `execution_authorized=false`. The test-only pre-send marker, lost-ACK unknown state, cancellation/fill race and complete invented reconciliation do not demonstrate a transactional PostgreSQL ledger, real durability, authenticated broker fills, physical crash recovery, independent risk control or live trading authorization. All 15 other product modules stay PLANNED; proposed ADR-004, real venue rights and financial-security gates remain open. The governance FV-CP-0002 remains `MIGRATION_DRAFT_NOT_APPROVED` with `independent_approval=false` after merged FV-GOV-001; a documentary GOV-002 source-status reconciliation cannot promote it.
+
+### FV-RISK-001 candidate (branch status only, not yet merged)
+
+The separate FV-RISK-001 docs-first Work Order on exact post-GOV-002 main `8014023baed3277915ce698588120e85b7d121d1` proposes a sixth ACTIVE **purely invented** harness: `src/risk/evaluate.mjs` and owned `tests/risk/evaluate.test.mjs`. Its direct graph dependencies remain only policy, clock and market-data; frozen injected portfolio-view and kill snapshots are *fictional*, not persisted or broker-authenticated. The model returns `SYNTHETIC_MODEL_PASS` only with `execution_authorized:false`, `persisted:false` and `kill_durable:false`; no financial authority, real account, ADR-005 adoption, independent review or checkpoint promotion. Proposed branch graph would become 6 ACTIVE / 14 PLANNED after separately passing exact-head 4/4 CI, scoped audit and normal merge. Earlier five-ACTIVE paragraphs accurately describe historical merged main BEFORE this candidate.
