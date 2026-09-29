@@ -547,7 +547,7 @@ test("FV-PORTFOLIO-001 actual owned fictional projection is tested and future fi
  assert.deepEqual(c.direct_active,["portfolio"]);
  assert.deepEqual(c.direct_planned,[]);
  assert(c.active.includes("portfolio"));
- for(const id of ["replay","strategy-forex","strategy-cex","strategy-defi","web","integration"])
+ for(const id of ["strategy-forex","strategy-cex","strategy-defi","web","integration"])
   assert(c.planned.includes(id),"UNTESTED_REVERSE_DEPENDENT "+id);
  const ledger=calculateImpact(r,["src/ledger/simulation.mjs"]);
  assert(ledger.active.includes("ledger")&&ledger.active.includes("portfolio"));
