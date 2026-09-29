@@ -71,3 +71,71 @@ test("two events may not reuse the same execution ID or overfill the intent",()=
  assert.equal(over.status,"LOCKED");assert.equal(over.reason_code,"OVERFILL_DISCREPANCY");
  assert.equal(over.ledger.filled_units,"4");
 });
+
+test("lost ACK and late ACK never establish a complete remote result",()=>{
+ const unknown=apply(sent(),ev(2,"LOST_ACK"));
+ assert.equal(unknown.phase,"UNKNOWN_NEEDS_RECONCILIATION");
+ assert.equal(unknown.unknown_external_effect,true);
+ const late=apply(unknown,ev(3,"ACK"));
+ assert.equal(late.phase,"UNKNOWN_NEEDS_RECONCILIATION");
+ const attempted=appendSyntheticLedgerEvent(late,ev(4,"MAY_HAVE_SENT",{attempt_id:"ATT_2"}));
+ assert.equal(attempted.status,"DENY");
+});
+test("a complete matching invented receipt can resolve a synthetic unknown",()=>{
+ const unknown=apply(sent(),ev(2,"LOST_ACK"));
+ const resolved=apply(unknown,ev(3,"RECONCILE",{receipt:receipt()}));
+ assert.equal(resolved.phase,"ACKNOWLEDGED");
+ assert.equal(resolved.unknown_external_effect,false);
+ assert.equal(resolved.filled_units,"0");noAuthority(resolved);
+});
+test("incomplete history locks unknown external effects conservatively",()=>{
+ const unknown=apply(sent(),ev(2,"CRASH_RESTART"));
+ const attempted=appendSyntheticLedgerEvent(unknown,ev(3,"RECONCILE",{receipt:receipt({complete:false})}));
+ assert.equal(attempted.status,"LOCKED");assert.equal(attempted.reason_code,"INCOMPLETE_SYNTHETIC_HISTORY");
+ assert.equal(attempted.ledger.phase,"DISCREPANCY_LOCKED");
+ assert.equal(attempted.ledger.unknown_external_effect,true);
+});
+test("an invented receipt with mismatched scope or contradictory amounts is denied or locked",()=>{
+ const unknown=apply(sent(),ev(2,"LOST_ACK"));
+ const mismatch=appendSyntheticLedgerEvent(unknown,ev(3,"RECONCILE",{receipt:receipt({account_id:"OTHER"})}));
+ assert.equal(mismatch.status,"DENY");assert.equal(mismatch.reason_code,"INVALID_RECONCILIATION_RECEIPT");
+ const conflict=appendSyntheticLedgerEvent(unknown,ev(3,"RECONCILE",{receipt:receipt({order_status:"FILLED"})}));
+ assert.equal(conflict.status,"LOCKED");
+ assert.equal(conflict.ledger.phase,"DISCREPANCY_LOCKED");
+});
+test("cancel request does not claim cancel; late partial fill remains recorded",()=>{
+ const p=apply(apply(sent(),ev(2,"ACK")),ev(3,"FILL",{quantity_units:"4",execution_id:"EXEC_1"}));
+ const cancel=apply(p,ev(4,"CANCEL_REQUESTED"));
+ assert.equal(cancel.phase,"CANCEL_REQUESTED");
+ const late=apply(cancel,ev(5,"FILL",{quantity_units:"2",execution_id:"EXEC_2"}));
+ assert.equal(late.phase,"CANCEL_REQUESTED");
+ assert.equal(late.filled_units,"6");
+ const confirmed=apply(late,ev(6,"CANCEL_CONFIRMED"));
+ assert.equal(confirmed.phase,"CANCELED_CONFIRMED");
+ assert.equal(confirmed.filled_units,"6");
+});
+test("a cancellation message cannot clear unknown effects",()=>{
+ const unknown=apply(sent(),ev(2,"LOST_ACK"));
+ const r=apply(unknown,ev(3,"CANCEL_CONFIRMED"));
+ assert.equal(r.phase,"UNKNOWN_NEEDS_RECONCILIATION");
+ assert.equal(r.unknown_external_effect,true);
+});
+test("invented real-vendor events are denied even in an invented prior ledger",()=>{
+ const s=sent();
+ const r=appendSyntheticLedgerEvent(s,ev(2,"ACK",{source_class:"REAL_VENDOR"}));
+ assert.equal(r.status,"DENY");assert.equal(r.reason_code,"REAL_VENUE_NOT_SUPPORTED");
+ assert.equal(r.ledger,s);
+});
+test("pure replay and inputs are deterministic and immutable",()=>{
+ function run(){let s=sent();s=apply(s,ev(2,"ACK"));return apply(s,ev(3,"FILL",{quantity_units:"4",execution_id:"EXEC_1"}));}
+ const a=run(),b=run();assert.deepEqual(a,b);
+ assert(Object.isFrozen(a));assert(Object.isFrozen(a.events));assert(Object.isFrozen(a.events[1]));
+ assert(Object.isFrozen(a.intent));assert.equal(a.persisted,false);
+});
+test("untrusted malformed event quantities and attempts are denied without state mutation",()=>{
+ const s=sent();
+ for(const patch of [{quantity_units:"1.5"},{quantity_units:"-1"},{attempt_id:"OTHER"},{event_id:"*"},{sequence:"4"},{captured_at_utc:"invalid"}]){
+  const r=appendSyntheticLedgerEvent(s,ev(2,"FILL",{quantity_units:"1",execution_id:"EXEC_2",...patch}));
+  assert.equal(r.status,"DENY",JSON.stringify(patch));assert.equal(r.ledger,s);
+ }
+});
