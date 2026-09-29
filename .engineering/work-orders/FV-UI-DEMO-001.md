@@ -52,6 +52,12 @@ No changes to `package.json`, `harness/modules.json`, accepted owner sources/tes
 8. Push the named branch and create a DRAFT PR against `main` only after local proof and evidence are reviewable. Verify all four required Actions jobs on the exact PR HEAD complete SUCCESS, including hosted Windows PowerShell 5.1, pinned GEF, public security and full harness/evidence. Correct failures only on this branch/PR and rerun against the new exact HEAD. The author’s objective audit must state `NOT_INDEPENDENT`; no self-review or CI result is independent approval.
 9. Do not merge as part of this delivery. Normal guarded merge, exact post-merge main validation and any separate factual checkpoint/Governance reconciliation remain later gates. No checkpoint promotion is authorized.
 
+## Same-WO correction delta | stale asynchronous fixture responses
+
+Date: 2026-09-29. Authorized by the user's follow-up after the technical review on PR #48 (review comment `4136089526`, reviewed HEAD `53728d6132d6e1a17405111da835ce28e1e96daa`). The review identified that an earlier fixture request, including a delayed fetch error, could finish after a newer selection and replace the newer view.
+
+Correction remains within the existing allowlist and this Work Order: `app.js` assigns a monotonic request ID and checks it after fetch, JSON body resolution, and in the error path before rendering. `tests/web/local-demo.test.mjs` executes the actual browser script with a deterministic fake DOM and deferred responses; it covers stale healthy/degraded/denied responses, a response body that resolves late, a stale fetch error, and a current fetch error that must still fail closed. No dependency, endpoint, module, owner, financial behavior, or gate changed. The original Context Lock is preserved as the pre-code lock; its recorded Work Order commit/blob identify the admitted baseline, and this note records the same-WO correction.
+
 ## Stop conditions, risk and rollback
 
 Risk: LOW-to-MODERATE local HTTP surface with explicit loopback restriction; review route/path/host handling and public data redaction adversarially. STOP before extending scope if synthetic separation, output redaction, loopback-only binding, CSP/security, or clean lifecycle cannot be proved; if the accepted read model or a dependency fingerprint changes; if exact main/base or required CI changes; or if any request would need actual accounts, provider access, financial actions, login/auth, external data, new dependency, source-owner changes or promotion.
