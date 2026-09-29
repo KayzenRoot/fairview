@@ -239,18 +239,20 @@ function hasExactSnapshot(snapshot) {
   );
 }
 /**
- * Validates the exact envelope, model, enums, scenario/status pair, and flags before rendering.
+ * Validates the exact envelope, model, requested scenario, scenario/status pair, and flags before rendering.
  * Unknown or unexpected snapshot shapes fail closed to unavailable display values.
  * @param {unknown} snapshot Value decoded from the local snapshot response.
+ * @param {"healthy"|"degraded"|"denied"} requestedScenario Scenario requested by the current UI selection.
  * @returns {void}
  */
-function applySnapshot(snapshot) {
+function applySnapshot(snapshot, requestedScenario) {
   const expectedStatus = scenarioContracts[snapshot?.scenario];
   if (
     !hasExactSnapshot(snapshot) ||
     snapshot?.schema_version !== 0 ||
     !statusValues.has(snapshot.status) ||
     !expectedStatus ||
+    snapshot.scenario !== scenarioLabels[requestedScenario] ||
     expectedStatus !== snapshot.status ||
     !hasSafeFlags(snapshot.flags)
   ) {
@@ -360,7 +362,7 @@ async function loadSnapshot(scenario) {
     }
     const snapshot = await response.json();
     if (requestId !== latestSnapshotRequestId) return;
-    applySnapshot(snapshot);
+    applySnapshot(snapshot, scenario);
   } catch {
     if (requestId !== latestSnapshotRequestId) return;
     showUnavailable("Local snapshot is unavailable.");

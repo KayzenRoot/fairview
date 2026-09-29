@@ -279,6 +279,45 @@ function assertDisplayedScenario(harness, selectedScenario) {
   assert.equal(harness.elements.get("#portfolio-view-card").dataset.state, expected.status);
 }
 
+/**
+ * Asserts a valid response for a different requested fixture remains unavailable on every implemented view.
+ * @param {{elements: Map<string, {textContent: string, value: string, dataset: Record<string, string>}>}} harness Fake UI returned by `createUiHarness`.
+ * @param {"healthy"|"degraded"|"denied"} requestedScenario Scenario requested by the current selection.
+ * @param {object} receivedSnapshot Valid synthetic snapshot whose scenario does not match the request.
+ * @returns {void}
+ */
+function assertScenarioMismatchFailsClosed(harness, requestedScenario, receivedSnapshot) {
+  assert.equal(harness.elements.get("#fixture-scenario").value, requestedScenario);
+  assert.equal(harness.elements.get("#snapshot-status").dataset.state, "error");
+  assert.equal(harness.elements.get("#snapshot-status-text").textContent, "Snapshot did not match the synthetic display contract.");
+
+  const unavailableSelectors = [
+    "#scenario-value", "#snapshot-scenario", "#mode-value", "#risk-value", "#portfolio-value",
+    "#diagnostic-value", "#model-view", "#advisory-value", "#incident-value", "#session-value",
+    "#risk-page-value", "#risk-pause-value", "#portfolio-page-value", "#portfolio-certainty",
+  ];
+  for (const selector of unavailableSelectors) {
+    const expected = ["#scenario-value", "#snapshot-scenario"].includes(selector)
+      ? "SNAPSHOT_UNAVAILABLE"
+      : "READ_MODEL_UNAVAILABLE";
+    assert.equal(harness.elements.get(selector).textContent, expected, selector);
+  }
+  for (const selector of ["#risk-page-context", "#portfolio-page-context", "#pause-note-text"]) {
+    assert.equal(
+      harness.elements.get(selector).textContent,
+      "Snapshot unavailable or invalid; earlier view values are cleared.",
+      selector,
+    );
+  }
+
+  const rendered = [...harness.elements.values()].map((element) => element.textContent).join(" ");
+  const receivedLabels = [receivedSnapshot.scenario, receivedSnapshot.status, ...Object.values(receivedSnapshot.read_model ?? {})]
+    .filter((value) => typeof value === "string");
+  for (const label of receivedLabels) {
+    assert.equal(rendered.includes(label), false, `wrong-scenario fixture label must not render: ${label}`);
+  }
+}
+
 test("server import is inert and its supported starter binds only loopback", async () => {
   const moduleUrl = pathToFileURL(SERVER_PATH).href;
   const child = spawnSync(
@@ -626,6 +665,50 @@ test("browser UI fails closed on malformed, missing, forged, or unexpected snaps
       assert.equal(rendered.includes(sentinel), false, `${invalid.name}: ${sentinel}`);
     }
   }
+});
+
+test("a current denied request rejects a fully valid healthy snapshot", async () => {
+  const ui = await createUiHarness();
+  ui.requests[0].resolve(apiResponse(createDemoSnapshot("healthy")));
+  await ui.startupPromise;
+
+  const pending = ui.selectScenario("denied");
+  const request = ui.requests[1];
+  const healthySnapshot = createDemoSnapshot("healthy");
+  assert.equal(request.url, "/api/demo-snapshot?scenario=denied");
+  assert.equal(healthySnapshot.scenario, "HEALTHY_FIXTURE");
+  assert.equal(healthySnapshot.status, "SYNTHETIC_LOCAL_READ_MODEL");
+  request.resolve(apiResponse(healthySnapshot));
+  await pending;
+
+  assertScenarioMismatchFailsClosed(ui, "denied", healthySnapshot);
+  assert.equal(ui.requests.length, 2, "the mismatch is handled on the current request without another fetch");
+});
+
+test("a current healthy request rejects a valid denied snapshot across view navigation", async () => {
+  const ui = await createUiHarness();
+  ui.requests[0].resolve(apiResponse(createDemoSnapshot("healthy")));
+  await ui.startupPromise;
+
+  const pending = ui.selectScenario("healthy");
+  const request = ui.requests[1];
+  const deniedSnapshot = createDemoSnapshot("denied");
+  assert.equal(request.url, "/api/demo-snapshot?scenario=healthy");
+  assert.equal(deniedSnapshot.scenario, "DENIED_FIXTURE");
+  assert.equal(deniedSnapshot.status, "DENY");
+
+  ui.navigate("risk");
+  ui.navigate("portfolio");
+  ui.setHash("#overview");
+  assert.equal(ui.requests.length, 2, "navigation preserves the current request without fetching again");
+  request.resolve(apiResponse(deniedSnapshot));
+  await pending;
+
+  for (const view of ["overview", "risk", "portfolio"]) {
+    ui.navigate(view);
+    assertScenarioMismatchFailsClosed(ui, "healthy", deniedSnapshot);
+  }
+  assert.equal(ui.requests.length, 2, "navigating after the mismatch still reuses the cleared shared state");
 });
 
 test("only the latest selected fixture response controls the displayed scenario", async () => {
