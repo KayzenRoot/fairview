@@ -3,7 +3,7 @@
 Browser-operated multi-market research and future governed trading platform. **No live-trading runtime has been implemented or authorized.** Development uses GitHub as the source of truth, a local Git checkout, the pinned GEF source-workspace submodule, and the native Node.js harness. There is no external memory service or Docker requirement for the FairView development foundation.
 
 ## Source of truth
-Read .engineering/SOURCE-HIERARCHY.md, .engineering/CHECKPOINT.md, the accepted decisions, active Work Order and context lock before editing. The no-external-context migration is governed by FV-REMOVE-HIVE-001. Earlier historical commits and issue discussions are evidence of past work, not active software prerequisites.
+Read .engineering/SOURCE-HIERARCHY.md, .engineering/CHECKPOINT.md, the accepted decisions, active Work Order and context lock before editing. The no-external-context migration is governed by FV-FOUNDATION-002. Earlier historical commits and issue discussions are evidence of past work, not active software prerequisites.
 
 ## Requirements and local Windows setup
 - Git, Node.js 22 or later and npm.
