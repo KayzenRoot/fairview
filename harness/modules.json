@@ -170,7 +170,7 @@
     },
     {
       "id": "market-data",
-      "state": "planned",
+      "state": "active",
       "depends_on": [
         "clock"
       ],
@@ -178,7 +178,9 @@
         "src/market-data/",
         "tests/market-data/"
       ],
-      "tests": []
+      "tests": [
+        "tests/market-data/*.test.mjs"
+      ]
     },
     {
       "id": "ledger",
@@ -316,5 +318,5 @@
     ".engineering/DECISIONS-LEDGER.md",
     "src/contracts/"
   ],
-  "note": "FV-POLICY-001 and FV-CLOCK-001 activate two dependency-free fictional-only source modules with real owned deterministic tests. The bootstrap, synthetic policy and synthetic clock are ACTIVE; 17 other product modules remain PLANNED. Fictional policy or clock evaluations never grant broker/venue permission, prove external timestamp accuracy or authorize real trading. Further source WOs need own nonempty tests and admitted active dependencies; financially privileged use additionally requires separate real clock calibration, rights, independent security and operator release."
+  "note": "FV-POLICY-001, FV-CLOCK-001 and FV-MARKET-DATA-001 are dependency-governed SYNTHETIC_FIXTURE-only Node22 kernels with real isolated owned tests. Bootstrap plus these three fictional modules are ACTIVE; the other 16 product modules remain PLANNED. No actual provider/feed licence, venue order-book source, fill, financial execution permission, clock calibration, data export permission or profitability is established by invented inputs. Each later source owner still requires a separate scoped WO, direct dependencies ACTIVE, real negative tests and exact-head CI. Funded/privileged runtime additionally requires provider entitlements, independent risk/security and separately authorized release."
 }

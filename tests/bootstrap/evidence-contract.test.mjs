@@ -12,9 +12,9 @@ test("exact Git HEAD and explicit base bind only a CI-verified evidence receipt"
 test("a directly edited still-planned module or unknown path fails Evidence Bundle",()=>{
  assert(code.includes("impact.unknown.length||impact.direct_planned.length"));
  assert(!code.includes("impact.unknown.length||impact.planned.length"));
- const changed=calculateImpact(registry,["src/market-data/normalizer.mjs"]);
- assert.deepEqual(changed.direct_planned,["market-data"]);
- assert(changed.planned.includes("risk"));
+ const changed=calculateImpact(registry,["src/ledger/durable.mjs"]);
+ assert.deepEqual(changed.direct_planned,["ledger"]);
+ assert(changed.planned.includes("portfolio"));
  assert.equal(changed.unknown.length,0);
 });
 test("an active policy owner can provide proof with explicit untested planned downstream",()=>{
@@ -44,8 +44,16 @@ test("an admitted synthetic clock owner is tested while its future consumers rem
  assert.deepEqual(impact.direct_active,["clock"]);
  assert.deepEqual(impact.direct_planned,[]);
  assert(impact.active.includes("clock"));
- assert(impact.planned.includes("market-data"));
+ assert(impact.active.includes("market-data"));
  assert(impact.planned.includes("risk"));
  assert(impact.planned.includes("integration"));
+ assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
+});
+
+test("fictional market-data direct owner is tested while still-planned strategy consumers remain unexecuted",()=>{
+ const impact=calculateImpact(registry,["src/market-data/quote.mjs"]);
+ assert.deepEqual(impact.direct_active,["market-data"]);
+ assert.deepEqual(impact.direct_planned,[]);
+ for(const id of ["risk","forex","cex","defi","replay","integration"])assert(impact.planned.includes(id));
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
