@@ -12,9 +12,9 @@ test("exact Git HEAD and explicit base bind only a CI-verified evidence receipt"
 test("a directly edited still-planned module or unknown path fails Evidence Bundle",()=>{
  assert(code.includes("impact.unknown.length||impact.direct_planned.length"));
  assert(!code.includes("impact.unknown.length||impact.planned.length"));
- const changed=calculateImpact(registry,["src/clock/timer.mjs"]);
- assert.deepEqual(changed.direct_planned,["clock"]);
- assert(changed.planned.includes("market-data"));
+ const changed=calculateImpact(registry,["src/market-data/normalizer.mjs"]);
+ assert.deepEqual(changed.direct_planned,["market-data"]);
+ assert(changed.planned.includes("risk"));
  assert.equal(changed.unknown.length,0);
 });
 test("an active policy owner can provide proof with explicit untested planned downstream",()=>{
@@ -37,4 +37,15 @@ test("CI evidence never claims real Windows-host or financial trading qualificat
  assert(code.includes("CHECKED_BY_WINDOWS_CI_NO_EXTERNAL_SERVICES"));
  assert(!code.includes("LIVE_APPROVED"));
  assert(!code.includes("HIVE_LOCAL_FULLY_FUNCTIONAL"));
+});
+
+test("an admitted synthetic clock owner is tested while its future consumers remain unexecuted",()=>{
+ const impact=calculateImpact(registry,["src/clock/time.mjs"]);
+ assert.deepEqual(impact.direct_active,["clock"]);
+ assert.deepEqual(impact.direct_planned,[]);
+ assert(impact.active.includes("clock"));
+ assert(impact.planned.includes("market-data"));
+ assert(impact.planned.includes("risk"));
+ assert(impact.planned.includes("integration"));
+ assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
