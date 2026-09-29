@@ -7,6 +7,8 @@ import {execFileSync} from "node:child_process";
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../..");
 const withdrawn=String.fromCharCode(72,73,86,69);
 const word=new RegExp("\\b"+withdrawn+"\\b","i");
+const retiredGate=["FV","BOOT","001"].join("-");
+const retired=new RegExp(retiredGate,"i");
 test("withdrawn service is absent from every tracked active path and content",()=>{
  const names=execFileSync("git",["ls-files","-z"],{cwd:root}).toString("utf8").split("\0").filter(Boolean);
  const matches=[];
@@ -14,7 +16,7 @@ test("withdrawn service is absent from every tracked active path and content",()
   const full=path.join(root,name);
   if(!fs.existsSync(full)||fs.statSync(full).isDirectory())continue;
   const content=fs.readFileSync(full,"utf8");
-  if(word.test(name)||word.test(content))matches.push(name);
+  if(word.test(name)||word.test(content)||retired.test(name)||retired.test(content))matches.push(name);
  }
  assert.deepEqual(matches,[],"Obsolete external-service reference returned");
 });
