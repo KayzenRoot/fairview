@@ -8,7 +8,7 @@ Reserved source ownership: `src/policy/`. Harness ownership: `tests/policy/`. De
 The policy module is the **eligibility decision boundary**, not a runtime substitute for the independent Risk Kernel. A provider API's public availability is not permission for a specific user, region, strategy, instrument, reference-data use or commercial redistribution. The module must preserve document provenance, explicit human authorization and expiry. No AI, web UI, active strategy or replay result may override permission gates.
 
 ## First technology research round
-Use typed, versioned evidence manifests with an independent legal/venue approval receipt, and a pure fail-closed evaluator. Do not adopt a complex general-purpose rule engine until policies and change rate warrant it. Candidate implementation later: a small Rust policy library with exhaustive negative fixtures and well-defined FFI/service boundaries (architecture ADR required). Storage/review later: PostgreSQL evidence metadata and externally secured signed approval receipts, with originals restricted to approved private storage, never public Git, CI artifacts or HIVE.
+Use typed, versioned evidence manifests with an independent legal/venue approval receipt, and a pure fail-closed evaluator. Do not adopt a complex general-purpose rule engine until policies and change rate warrant it. Candidate implementation later: a small Rust policy library with exhaustive negative fixtures and well-defined FFI/service boundaries (architecture ADR required). Storage/review later: PostgreSQL evidence metadata and externally secured signed approval receipts, with originals restricted to approved private storage, never public Git, CI artifacts or withdrawn developer context tooling.
 
 Official eligibility reference review: Spotware https://help.ctrader.com/open-api/terms-of-use/ ; OANDA https://developer.oanda.com/rest-live-v20/introduction/ ; LMAX https://www.lmax.com/exchange/market-data-access ; TrueFX https://www.truefx.com/truefx-terms-and-conditions/ . Vendor docs are not customer-specific contracts.
 
@@ -25,4 +25,4 @@ Official eligibility reference review: Spotware https://help.ctrader.com/open-ap
 7. Production risk-kernel admission and private-repo/independent-audit gates remain separately authoritative.
 
 ## Design-only completion and STOP
-Cross-check `docs/architecture/FOREX-VENUE-POLICY-R1.md` and proposed `docs/architecture/adrs/FV-ADR-001-PROPOSED-FOREX-VENUE-SELECTION.md`. Draw the typed evidence schema and 100% of named negative fixtures **before** admitting source. No default account, secret, HIVE runtime dependency or actual venue connection.
+Cross-check `docs/architecture/FOREX-VENUE-POLICY-R1.md` and proposed `docs/architecture/adrs/FV-ADR-001-PROPOSED-FOREX-VENUE-SELECTION.md`. Draw the typed evidence schema and 100% of named negative fixtures **before** admitting source. No default account, secret, unapproved runtime dependency or actual venue connection.

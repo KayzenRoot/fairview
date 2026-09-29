@@ -1,6 +1,5 @@
 # FV-DISC-001 | Round 6: CEX spot adapter pair and strategy architecture
 
-**PLANNING ONLY.** The `cex` and `strategy-cex` modules remain PLANNED; no two production CEXs are selected, no exchange account is accessed, and no strategy is implemented. FV-BOOT-001 R8 FULL and independent audit remain OPEN. No HIVE pin or canonical checkpoint change.
 
 ## Research pair and protocol constraints
 
@@ -76,3 +75,5 @@ Hummingbot's public XEMM strategy describes placing maker quotes and hedging fil
 R4 replay requires fixed data/engine/fee/strategy/risk/seed hashes, identical entitled venue and instrument conditions, full test population including losses, separated simulated and observed execution. Measure p50/p95/p99 valid same-clock local stages, depth-integrity resync time, full and partial fill distribution, rejected and UNKNOWN rates, realized/modelled fees/slippage and peak/unhedged exposure. A marketed Westernpips number, a CCXT example or Hummingbot tutorial is not a matched benchmark.
 
 **Future independently gated work orders:** CEX pure synthetic per-venue L2 and CRC32/snapshot tests; separate pure synthetic `strategy-cex` cross-venue and triangular depth/fee/asset-edge tests; XEMM cancel/fill/risk-bound hedge failures; only then customer-entitled read-only/demo adapter integration. Do not activate `src/`, public real tick data, real accounts, API keys, transfers, production deployment, stable pin or checkpoint under this proposal. R8 FULL and independent high-assurance gate remain external blockers.
+
+**Current foundation boundary (owner D-009):** Git/Source Pack/Node 22 and the pinned GEF submodule are the only development foundation dependencies. Foundation migration PR #18 was merged at `694fe60c759ab5a5f91ffaa32b599899bc614f83`; its exact-main CI completed 4/4 successfully. There is no separate host retrieval/indexing prerequisite for a narrowly admitted pure synthetic module Work Order. All product modules in this planning PR remain PLANNED; real provider permissions, financial security review and actual runtime tests are still distinct gates. **STOP:** no product code activation or financial operation is authorized by these design documents.

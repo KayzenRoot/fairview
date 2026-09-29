@@ -1,6 +1,5 @@
 # FV-DISC-001 | Round 7: DEX/Uniswap read-only pool observation and arbitrage feasibility
 
-**PLANNING ONLY, NOT IMPLEMENTED.** No chain, deployment, pool, RPC service, CEX account, data rights or signing authority has been selected or granted. No live/paper swap, call to a real blockchain, deployed hook, smart-contract approval or wallet connection is performed by this documentation. Existing `defi` and `strategy-defi` modules remain PLANNED; `harness/modules.json` still has 20 modules with bootstrap the sole ACTIVE one. FV-BOOT-001 #1 remains OPEN; latest owner-provided HIVE FULL evidence was FAILED and independent security review remains outstanding.
 
 ## 1. Research targets and intentionally narrow chain scope
 
@@ -83,4 +82,5 @@ All are **planned** acceptance fixtures for separately admitted `tests/defi/` an
 
 Future independently gated WO A: select ONE supported chain/deployment/pool plus exact RPC and token licence, then implement a pure synthetic block-anchored v3 OR v4 observation model with all R7 negative fixtures, no wallet or network I/O. WO B: read-only reference adapter using specific approved RPC, exact contract state and reorg invalidation with no signer. WO C: DEX pool-route and CEX/DEX *simulated* feasibility through R4 replay with independent R3 risk/ledger and full gas/exposure model. Only later consider audited signing/router architecture as a new security design and owner decision; no guarantee of atomic CEX/DEX hedging, low gas or profitability.
 
-**STOP:** This PR remains a documentation-only DRAFT. No source implementation, real RPC read, keys, transaction simulation on real networks, hook deployment, signing, actual CEX hedge, official pin or canonical checkpoint change. FV-BOOT-001 R8 FULL and independent high-assurance review are still external blockers.
+
+**Current foundation boundary (owner D-009):** Git/Source Pack/Node 22 and the pinned GEF submodule are the only development foundation dependencies. Foundation migration PR #18 was merged at `694fe60c759ab5a5f91ffaa32b599899bc614f83`; its exact-main CI completed 4/4 successfully. There is no separate host retrieval/indexing prerequisite for a narrowly admitted pure synthetic module Work Order. All product modules in this planning PR remain PLANNED; real provider permissions, financial security review and actual runtime tests are still distinct gates. **STOP:** no product code activation or financial operation is authorized by these design documents.

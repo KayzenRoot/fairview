@@ -1,6 +1,5 @@
 # FV-DISC-001 | Round 3: Ledger, Risk and Execution architecture
 
-**PLANNING ONLY**. No implementation, broker API access, product database, orders, HIVE FULL promotion or accepted ADR. FV-BOOT-001 issue #1 remains open. The Fairview product registry stays 20 modules, with bootstrap alone ACTIVE.
 
 ## Central safety invariant
 A locally unique and durable intent is not an exactly-once external execution. If an order might have crossed the broker boundary and its result is unknown, mark it `UNKNOWN_NEEDS_RECONCILIATION`, stop new risk-increasing orders for the affected scope, query authoritative broker order/fill/position state, and NEVER blindly resend. Cancellation requested is not cancellation confirmed. PostgreSQL and Tokio cannot close this nontransactional broker boundary.
@@ -22,7 +21,7 @@ A locally unique and durable intent is not an exactly-once external execution. I
 | `ReconciliationReceiptV0` | authenticated venue query scope, account and instrument, complete order/fill/position cursor or watermark, discrepancies and independent reviewer evidence |
 | `HedgePlanV0` | independent recovery intent, confirmed and worst-case unknown exposure, executable depth and fee bounds, authorized account/venue, independent risk receipt and expiration |
 
-Use lossless timestamp transfer from Round 2 and fixed-precision decimal units, never floating-point-only financial events. Store operational evidence privately, not in public Git, CI artifacts, PDFs or HIVE.
+Store operational evidence in properly scoped, non-public financial audit storage, never in public Git, CI or PDF artifacts.
 
 ## Durable order lifecycle
 `PROPOSED` -> `RISK_ADMITTED` -> `INTENT_DURABLE` -> `MAY_HAVE_SENT` -> `ACKNOWLEDGED` -> `PARTIALLY_FILLED` or `FILLED`, with separate `REJECTED`, `CANCEL_REQUESTED`, `CANCELED_CONFIRMED`, `EXPIRED_CONFIRMED`, `UNKNOWN_NEEDS_RECONCILIATION` and `DISCREPANCY_LOCKED`.
@@ -67,4 +66,5 @@ No default Kafka/Aeron/Redis source of truth. If deterministic benchmarks later 
 | UNLICENSED_RECOVERY | Venue does not permit proposed hedge | Do not dispatch; continue incident management |
 
 ## Activation plan and STOP
-Future separate, admitted WOs: (1) pure ledger event reducer and synthetic DB concurrency/crash proof, (2) deterministic fixed-decimal Risk Kernel and persistent kill-negative tests, (3) mock-broker order lifecycle and two-leg fault injection, then approved demo venue. This Round 3 adds documentation and bootstrap planning invariants only. Do not implement product `src/`, create funded accounts or claim equivalent/superior profit or latency without matched independent evidence. No checkpoint promotion while FV-BOOT-001 FULL and independent review remain unresolved.
+
+**Current foundation boundary (owner D-009):** Git/Source Pack/Node 22 and the pinned GEF submodule are the only development foundation dependencies. Foundation migration PR #18 was merged at `694fe60c759ab5a5f91ffaa32b599899bc614f83`; its exact-main CI completed 4/4 successfully. There is no separate host retrieval/indexing prerequisite for a narrowly admitted pure synthetic module Work Order. All product modules in this planning PR remain PLANNED; real provider permissions, financial security review and actual runtime tests are still distinct gates. **STOP:** no product code activation or financial operation is authorized by these design documents.

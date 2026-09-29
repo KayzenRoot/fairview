@@ -1,6 +1,6 @@
 # FV-DISC-001 | Round 10: canonical 20-module readiness and proposed admission order
 
-**Status: PROPOSED / PLANNING ONLY.** Snapshot of the exact `harness/modules.json` at Round-9 reviewed PR head `d4db94106f1a7cdde75d3aa2ba8beb192b1c749e`, main `9eb01876adf2e1f2408b451e8cc08abb123173a5`. FV-BOOT-001 #1 and FV-DISC-001 #16 remain OPEN, draft PR #17 is NOT accepted product code. The 20 module IDs, reserved ownership, dependency edges, currently active tests and source state are taken from the repo registry, **not** proposed new IDs. The existing bootstrap module is ACTIVE for development-harness selection but its external isolated-host R8 HIVE FULL gate and independent approval were FAILED/PENDING in the latest supplied evidence. All **19 product modules are PLANNED with no source or owning product tests**. No live, demo or paper trading components have been implemented.
+**Status: PROPOSED / PLANNING ONLY.** This exact 20-module draft registry remains independent from the now accepted Git/Node22/GEF source foundation on protected main `694fe60c759ab5a5f91ffaa32b599899bc614f83` (PR #18, exact-main 4/4 CI run `36507914601`). Draft PR #17 and planning issue #16 stay OPEN/DRAFT. Its bootstrap harness is ACTIVE and 19 product modules PLANNED with no product source or owned product tests. No external host acceptance is required to propose a narrow pure synthetic source WO, but no implementation or real order has been admitted by this planning document.
 
 ## 1. Exact graph-derived module inventory
 
@@ -8,7 +8,7 @@ All `depends_on` values and owned paths below are **literal from the registered 
 
 | Canonical ID | Current registry state | Earliest graph wave | Exact registered dependencies | Reserved source / harness ownership | Governing design round |
 |---|---|---:|---|---|---|
-| `bootstrap` | ACTIVE | 0 | none | `bootstrap-owned existing paths` / `tests/bootstrap/` | FV-BOOT-001 / bootstrap charter |
+| `bootstrap` | ACTIVE | 0 | none | `bootstrap-owned existing paths` / `tests/bootstrap/` | Accepted native Git/Node22/GEF foundation and bootstrap charter |
 | `risk` | PLANNED | 3 | `market-data`, `clock`, `policy` | `src/risk/` / `tests/risk/` | R3 Ledger/Risk/Execution; ADR-005 |
 | `forex` | PLANNED | 5 | `risk`, `market-data`, `clock`, `execution` | `src/forex/` / `tests/forex/` | R1 provider contract; ADR-001 |
 | `cex` | PLANNED | 5 | `risk`, `market-data`, `clock`, `execution` | `src/cex/` / `tests/cex/` | R6 CEX connectors; ADR-011 |
@@ -29,13 +29,13 @@ All `depends_on` values and owned paths below are **literal from the registered 
 | `strategy-defi` | PLANNED | 6 | `defi`, `replay`, `portfolio` | `src/strategy-defi/` / `tests/strategy-defi/` | R7 DEX feasibility; ADR-014 |
 | `observability` | PLANNED | 5 | `market-data`, `clock`, `execution`, `ledger`, `risk` | `src/observability/` / `tests/observability/` | R8 Portfolio/Observability; ADR-016 |
 
-The `integration` module's literal 18 dependencies are not simplified away. `bootstrap` is not listed as a dependency of each product module in the registry, but **FV-BOOT-001 FULL and independent review are a GLOBAL governance gate**, not a graph edge. Per-module `paths` in the registry remain reserved and untouched. No `src/` or planned `tests/<module>/` directory is created by this planning PR.
+The `integration` module's literal 18 dependencies remain unchanged. `bootstrap` is an existing, independently checked native source-tooling foundation in protected main; it is not a registered graph dependency of each product module. Every future active module still needs its own admitted Work Order, real nonempty owned tests, dependency impact evidence and current exact-head CI. No source or planned module test directory is created by this draft.
 
 ## 2. Proposed implementation waves extracted from the existing DAG
 
 | Wave | Dependency-eligible modules | Candidate future milestone, NEVER automatic admission |
 |---:|---|---|
-| 0 | `bootstrap` | External FV-BOOT-001 independent FULL, no product admission |
+| 0 | `bootstrap` | Native Git/Node22/GEF source foundation already merged on main with exact-main 4/4 CI; not product admission |
 | 1 | `policy`, `clock` | Two independent pure cores and negative harnesses |
 | 2 | `market-data`, `ledger` | Proof-based normalized data plus local durable events |
 | 3 | `risk` | Independent risk admissions and persistent kill under uncertainty |
@@ -87,14 +87,14 @@ The **first candidate implementation work orders after external P0 approval** ar
 
 | Gate | Verified source status at this planning snapshot | Required evidence to unlock NEXT activity |
 |---|---|---|
-| G0: existing FV-BOOT-001 host FULL | **OPEN / latest owner report FAILED** despite FairView precheck PASS | Isolated HIVE semantic provider configured, fresh index, nonempty authorized corpus, MCP/context delivery and restart/durability results on the user's machine. Maintain official published HIVE v1.0.3 pin unless a separately reviewed stable release is explicitly adopted. |
-| G1: independent exact-head source and host audit | **NOT SUPPLIED**. Owner self-audit and 4/4 docs CI are not independent acceptance | Named independent auditor, verified exact SHA/base/status evidence, HIGH/CRITICAL defects closed, signed opinion scoped to FV-BOOT-001 FULL; canonical checkpoint promotion ONLY through existing source hierarchy. |
+| G0: native Git-only foundation exact-main | **ACCEPTED ON PROTECTED MAIN** PR #18 merge `694fe60c759ab5a5f91ffaa32b599899bc614f83`, 4/4 exact-main push CI `36507914601` | Git, current accepted Source Pack, Node22, pinned GEF and real narrow WO/test harness. No local machine-indexing prerequisite. |
+| G1: risk-appropriate review | **PURE-SYNTHETIC:** per-WO exact-head source review and tests; **PRIVILEGED FINANCIAL:** independent qualified security review still required | Real nonempty module tests, objective reviewer evidence and approved contract; high-assurance live capability additionally needs qualified independent audit. |
 | G2: per-module WO and harness admission | **19 PLANNED, zero active product test owners** | One independently admitted scope/branch/allowlist, dependencies active, actual nonempty deterministic negative tests under that module, typed contracts, failure-state and kill/recovery proof, exact-head CI plus human sign-off. |
 | G3: venue/chain and legal data/account rights | **D-007 OPEN** | One qualified Forex broker and separately licensed reference feed, TWO authorized CEX spot venue accounts and a compatible instrument/fee schedule, ONE permitted chain and exact Uniswap deployment/pool/RPC licence; operator region, strategy and redistribution rights per source. Do not assume Binance/Kraken or cTrader/OANDA are selected. |
 | G4: safety limits / runtime secrecy / deployment | **NOT ADMITTED** | Independent financial risk limits, external managed secret-store and incident/rotation/rollback plan, venue-specific account permission and observed mock/demo fail-closed evidence. Public-dev repo MUST have authoritatively verified PRIVATE visibility before any financial production deployment; past public history is still public. Never commit any FairView `.env` (including `.env.example`) or raw real financial data. |
 | G5: production acceptance / matched benchmark | **NOT IMPLEMENTED OR MEASURED** | Whole-pipeline authenticated fill and reconciliation proof, independent Risk Kernel/kill, one-leg failure and restart drills, licensed matched historical + controlled demo, observed p50/p95/p99 with valid sample/clock domains and all costs/losses, HIGH_ASSURANCE independent audit, runbooks and signed conditional limited-live rollout. No profit/outperformance guarantee. |
 
-**G0/G1 block all new PRODUCT SOURCE admission under the present decision hierarchy**, despite the HIVE architecture being strictly engineering context and **not** a live trading runtime dependency. This is a project-governance gate, not a technical claim that a future risk service needs HIVE to stay online. Documentation-only research may proceed safely in the currently authorized PR under its explicit scope.
+**G0 is satisfied by the merged Git-only foundation.** G1 is tailored to actual work risk: separately admitted pure synthetic WOs may start after reviewed scope, literal dependency gates and executable module-owned tests; financial read-only/demo/live provider operations require their own specific account/data/chain permissions and high-assurance independent review before privileged release. The existing draft planning CI is still not runtime test evidence.
 
 ## 5. Module acceptance gates inherited from R1–R9
 
@@ -108,8 +108,8 @@ An independently approved module WO must spell out: exactly ONE primary owner an
 
 ### No premature acceptance shortcuts
 
-A 4/4 hosted bootstrap CI or owner-only PR comment is not FULL host pass, independent audit, production DoD or an execution license. An apparently favorable modelled spread isn't a risk-admitted executable net opportunity. A local DB exactly-once key isn't broker exactly-once effect. The Web and AI cannot bypass Risk/Policy. Future integration must preserve these properties in negative tests, not merely display green dashboards.
+A 4/4 native source-foundation CI proves repository tooling only, not module runtime tests, independent financial security, production DoD or an execution licence. A favorable modeled spread isn't an executable profit; a local DB idempotency key isn't broker exactly-once. Web and AI cannot bypass Risk/Policy.
 
 ## 7. Round 10 STOP CONDITION
 
-This document is a DRAFT **readiness plan** at a verified repo baseline, with **zero product source or module-status changes**. Keep PR #17 OPEN/DRAFT; hold accepted pins, main, canonical CHECKPOINT and the 20-module registry unchanged. FV-BOOT-001 #1 stays OPEN until independently evidenced G0/G1. No credential, signed wallet action, data-rights assumption, production or even demo order, host HIVE mutation, live benchmark, source-activation or claimed competitor superiority is authorized.
+This document remains DRAFT product architecture, with zero financial source or module-status changes. Keep PR #17 OPEN/DRAFT; preserve accepted Git/GEF foundation, protected main and unpromoted planning checkpoint. Real provider permissions, exact-head source tests, qualified independent financial-security review for privileged activation and PRIVATE repository receipt before funded production remain distinct. No secrets, signing, orders or outperformance claim are authorized.

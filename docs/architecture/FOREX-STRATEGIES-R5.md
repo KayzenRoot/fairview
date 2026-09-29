@@ -1,6 +1,5 @@
 # FV-DISC-001 | Round 5: permissioned Forex strategy families
 
-**Status: PLANNING ONLY, NOT IMPLEMENTED.** All candidate venues and feeds remain RESEARCH_ONLY, `strategy-forex` remains PLANNED, official HIVE v1.0.3 remains pinned, the canonical checkpoint is unchanged and FV-BOOT-001 issue #1 is still OPEN (latest owner-supplied isolated HIVE FULL FAILED). This round does not open demo accounts, connect market data, install a trading SDK, implement strategies or approve actual orders.
 
 ## 1. Source-derived competitor capabilities versus FairView hypotheses
 
@@ -103,4 +102,5 @@ Phase B: first select one *actual* legally entitled demo Forex venue and separat
 Phase C: expand approved Multi Feed source independence, then Two Leg only if second actual venue and hedge rights are verified. Compare expected vs observed fill/reject/slippage and one-leg exposure; keep all losses/adverse runs and tail sample limitations.
 Phase D: financial production would require separate high-assurance work order, PRIVATE repository receipt, secrets manager, independent review, risk incident and rollback/drill proof and explicit user authorization. None are granted by this planning document.
 
-**STOP CONDITION:** keep PR #17 DRAFT, 20 modules and bootstrap only ACTIVE. Do not activate source, connect broker, create real/demo funded accounts, store paid ticks publicly, change HIVE pin/host, promote canonical checkpoint or advertise superiority until independently measured against a lawfully accessed, matched alternative.
+
+**Current foundation boundary (owner D-009):** Git/Source Pack/Node 22 and the pinned GEF submodule are the only development foundation dependencies. Foundation migration PR #18 was merged at `694fe60c759ab5a5f91ffaa32b599899bc614f83`; its exact-main CI completed 4/4 successfully. There is no separate host retrieval/indexing prerequisite for a narrowly admitted pure synthetic module Work Order. All product modules in this planning PR remain PLANNED; real provider permissions, financial security review and actual runtime tests are still distinct gates. **STOP:** no product code activation or financial operation is authorized by these design documents.

@@ -1,6 +1,5 @@
 # FV-DISC-001 | Round 4: Replay + Benchmark laboratory
 
-**PLANNING ONLY, NOT IMPLEMENTED.** The accepted public development scope remains documentation plus bootstrap planning checks. The official HIVE v1.0.3 pin, GEF gitlink, canonical checkpoint and 20-module registry remain untouched. The `FV-BOOT-001` local host FULL gate and independent product review remain OPEN. No feed entitlements, profit performance, paper-mode broker connector or production trades are established.
 
 ## Purpose and evidence boundary
 
@@ -60,7 +59,7 @@ Publish per-run opportunity observability, hypothetical executable opportunity c
 | NautilusTrader | Event-oriented historical market-data replay and shared strategy architecture for backtest/live comparison | **LGPL-3.0** source: https://github.com/nautechsystems/nautilus_trader ; official docs: https://nautilustrader.io/docs/latest/ . Commercial redistribution/in-process integration needs legal ADR; reference comparator first. Its outputs are not FairView-equivalent without identical model/data. |
 | QuantConnect LEAN | Open source research/backtest engine with configurable fees/slippage and reported fill-model limitations | Upstream **Apache-2.0**: https://github.com/QuantConnect/Lean . CLI local backtest docs note paid-organization-tier eligibility and Docker requirements: https://www.quantconnect.com/docs/v2/lean-cli/api-reference/lean-backtest . Official documentation warns default/live models diverge and market impact must be modeled: https://www.quantconnect.com/docs/v1/live-trading/live-reconciliation . Separate reference, NOT copy of their fill assumptions. |
 | Hummingbot Strategy V2 | Controllers and Executors for modular strategy workflows; open reference for CEX/DEX scenarios | Upstream Apache-2.0 https://github.com/hummingbot/hummingbot and docs https://hummingbot.org/strategies/ ; connector capabilities, paper-model fidelity and commercial data rights require separate audit. Not a generic Forex engine. |
-| Apache Arrow + Parquet | Typed columnar analytical batches and interoperable offline storage | Official specs https://arrow.apache.org/docs/format/Columnar.html and https://arrow.apache.org/docs/python/parquet.html ; ensure source-data contract allows retention/replay. Avoid synchronous hot-path conversion, keep raw licensed ticks off public Git/CI/HIVE. |
+| Apache Arrow + Parquet | Typed columnar analytical batches and interoperable offline storage | Official specs https://arrow.apache.org/docs/format/Columnar.html and https://arrow.apache.org/docs/python/parquet.html ; ensure source-data contract allows retention/replay. Avoid synchronous hot-path conversion, keep raw licensed ticks off public Git/CI/public artifacts. |
 | OpenTelemetry | Explicitly specified histograms and trace-linked exemplars for statistical distributions | Official https://opentelemetry.io/docs/specs/otel/metrics/data-model/ . Redacted async telemetry is a comparison diagnostic only, not an authoritative fill/reconciliation event. |
 
 No one vendor framework becomes an automatically adopted dependency. A future ADR must pin source tag/SHA and transitive licences, test supported platform, quantify integration/maintenance overhead and decide whether using a reference executable comparator adds value over a small deterministic FairView-native synthetic event engine.
@@ -90,8 +89,8 @@ No one vendor framework becomes an automatically adopted dependency. A future AD
 
 ## 6. Planned activation WOs and STOP
 
-1. First Replay WO: pure `ReplayEventV0` reducer plus synthetic virtual clock, exact-decimal input, canonical run manifest and future-tick poison fixture. Only after FV-BOOT-001 FULL and separately admitted module WO.
 2. Then Research WO: reproducible deterministic metrics, matched-run protocol and adversarial negative fixture selection; no vendor comparison claims without actual matched access.
 3. Future Paper/Demo WO: selected lawful provider/rights, realistic venue-specific queue/fee/slippage behavior, independent risk and ledger/execution fault-injection. Still not live production.
 
-**STOP:** remain a DRAFT research/checkpoint. No `src/`, activation, external secrets, licensed tick dump, product runtime, real orders, claimed faster/profitable performance, official pin change or host HIVE FULL promotion.
+
+**Current foundation boundary (owner D-009):** Git/Source Pack/Node 22 and the pinned GEF submodule are the only development foundation dependencies. Foundation migration PR #18 was merged at `694fe60c759ab5a5f91ffaa32b599899bc614f83`; its exact-main CI completed 4/4 successfully. There is no separate host retrieval/indexing prerequisite for a narrowly admitted pure synthetic module Work Order. All product modules in this planning PR remain PLANNED; real provider permissions, financial security review and actual runtime tests are still distinct gates. **STOP:** no product code activation or financial operation is authorized by these design documents.

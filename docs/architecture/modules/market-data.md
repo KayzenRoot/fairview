@@ -18,4 +18,4 @@ Official provider WebSocket/FIX/ITCH where selected venue licenses them; CCXT Pr
 ## Activated harness design, not current tests
 Synthetic `SEQUENCE_GAP`, `OUT_OF_ORDER_DUPLICATE`, `THROTTLED_FEED`, `LICENCE_UNKNOWN`, `BOOK_UNAVAILABLE`, `VENUE_QUOTE_INDICATIVE`, `INSTRUMENT_MISMATCH` and `CAPTURE_OVERFLOW`, with per-provider deterministic sequence fixtures, no third-party prices in Git or hosted CI. Verify quoted `size` vs depth, stale/unknown UTC and channel overflow behavior before activation.
 
-**STOP:** absent licence, clock proof, authoritative book snapshot or explicit executable venue identity, the quote is research/non-actionable only. Actual connector implementation requires FV-BOOT-001 FULL/independent gates and a separate admitted activation WO.
+**STOP:** absent licence, clock proof, authoritative book snapshot or explicit executable venue identity, the quote is research/non-actionable only. Actual connector implementation requires FV-FOUNDATION-002 FULL/independent gates and a separate admitted activation WO.

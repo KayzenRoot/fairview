@@ -111,75 +111,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Parse PowerShell scripts without installing any service
+      - name: Parse independent Windows PowerShell scripts
         shell: pwsh
         run: |
-          $files = @('scripts/local/setup-windows.ps1', 'scripts/local/check-hive.ps1', 'scripts/local/verify-checkpoint.ps1', 'scripts/local/check-hive-isolated.ps1', 'scripts/local/invoke-hive-smoke.ps1', 'scripts/local/hive-project-list.ps1', 'scripts/local/hive-smoke-assertions.ps1', 'scripts/local/hive-window-assertions.ps1', 'tests/bootstrap/hive-window-assertions-ps51.ps1', 'tests/bootstrap/fixtures/smoke-switch-child.ps1', 'tests/bootstrap/project-list-ps51.ps1', 'tests/bootstrap/smoke-assertions-ps51.ps1')
+          $files = @('scripts/local/setup-windows.ps1','scripts/local/verify-checkpoint.ps1')
           foreach ($file in $files) {
-            $tokens = $null; $errors = $null
-            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$tokens, [ref]$errors) | Out-Null
-            if ($errors.Count) { $errors | Out-String | Write-Error; exit 1 }
+            $tokens=$null; $errors=$null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file),[ref]$tokens,[ref]$errors) | Out-Null
+            if($errors.Count) {$errors | Out-String | Write-Error; exit 1}
           }
-      - name: Actual Windows PowerShell 5.1 project-list flatten regression
+      - name: Actual Windows PowerShell 5.1 source-only doctor
         shell: pwsh
         run: |
-          $helper = (Resolve-Path 'scripts/local/hive-project-list.ps1').Path
-          & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File 'tests/bootstrap/project-list-ps51.ps1' -HelperPath $helper
-          if ($LASTEXITCODE -ne 0) { throw 'PS51_PROJECT_LIST_REGRESSION' }
-      - name: Actual Windows PowerShell 5.1 fail-closed retrieval assertions
-        shell: pwsh
-        run: |
-          $helper = (Resolve-Path 'scripts/local/hive-smoke-assertions.ps1').Path
-          & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File 'tests/bootstrap/smoke-assertions-ps51.ps1' -HelperPath $helper
-          if ($LASTEXITCODE -ne 0) { throw 'PS51_RETRIEVAL_ASSERTIONS_REGRESSION' }
-      - name: Actual Windows PowerShell 5.1 isolated writer-window guard regression
-        shell: pwsh
-        run: |
-          $helper = (Resolve-Path 'scripts/local/hive-window-assertions.ps1').Path
-          & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File 'tests/bootstrap/hive-window-assertions-ps51.ps1' -HelperPath $helper
-          if ($LASTEXITCODE -ne 0) { throw 'PS51_ISOLATED_WRITER_WINDOW_REGRESSION' }
-      - name: Actual Windows PowerShell 5.1 child-switch and exit propagation regression
-        shell: pwsh
-        run: |
-          $runner = (Resolve-Path 'scripts/local/invoke-hive-smoke.ps1').Path
-          $fixture = (Resolve-Path 'tests/bootstrap/fixtures/smoke-switch-child.ps1').Path
-          $off = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview
-          if ($LASTEXITCODE -ne 0 -or ($off -join "`n") -notmatch 'SEMANTIC_ABSENT') { throw 'PS51_ABSENT_SWITCH_REGRESSION' }
-          $on = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview -RequireSemantic
-          if ($LASTEXITCODE -ne 0 -or ($on -join "`n") -notmatch 'SEMANTIC_PRESENT') { throw 'PS51_PRESENT_SWITCH_REGRESSION' }
-          $prior = 'a' * 40
-          $target = 'b' * 40
-          $advance = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview -AllowHeadAdvanceIndex -AuthorizedPriorIndexHead $prior -AuthorizedTargetHead $target
-          if ($LASTEXITCODE -ne 0 -or ($advance -join [Environment]::NewLine) -notmatch ('ADVANCE_PRESENT:'+$prior+':'+$target)) { throw 'PS51_HEAD_ADVANCE_SWITCH_REGRESSION' }
-          $noAdvance = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview
-          if ($LASTEXITCODE -ne 0 -or ($noAdvance -join "`n") -notmatch 'ADVANCE_ABSENT') { throw 'PS51_HEAD_ADVANCE_ABSENT_REGRESSION' }
-          $oldPreference = $ErrorActionPreference
-          try {
-            $ErrorActionPreference = 'Continue'
-            $missingPrior = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview -AllowHeadAdvanceIndex -AuthorizedTargetHead $target 2>&1
-            $missingPriorExit = $LASTEXITCODE
-            $invalidPrior = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview -AllowHeadAdvanceIndex -AuthorizedPriorIndexHead invalid -AuthorizedTargetHead $target 2>&1
-            $invalidPriorExit = $LASTEXITCODE
-            $missingTarget = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview -AllowHeadAdvanceIndex -AuthorizedPriorIndexHead $prior 2>&1
-            $missingTargetExit = $LASTEXITCODE
-            $invalidTarget = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18000 -ProjectRelativePath Fairview -AllowHeadAdvanceIndex -AuthorizedPriorIndexHead $prior -AuthorizedTargetHead invalid 2>&1
-            $invalidTargetExit = $LASTEXITCODE
-          } finally { $ErrorActionPreference = $oldPreference }
-          if($missingPriorExit -eq 0 -or ($missingPrior -join [Environment]::NewLine) -notmatch 'INDEX_PRIOR_HEAD_REQUIRED') { throw 'PS51_MISSING_PRIOR_HEAD_NOT_BLOCKED' }
-          if($invalidPriorExit -eq 0 -or ($invalidPrior -join [Environment]::NewLine) -notmatch 'INDEX_PRIOR_HEAD_REQUIRED') { throw 'PS51_INVALID_PRIOR_HEAD_NOT_BLOCKED' }
-          if($missingTargetExit -eq 0 -or ($missingTarget -join [Environment]::NewLine) -notmatch 'INDEX_TARGET_HEAD_REQUIRED') { throw 'PS51_MISSING_TARGET_HEAD_NOT_BLOCKED' }
-          if($invalidTargetExit -eq 0 -or ($invalidTarget -join [Environment]::NewLine) -notmatch 'INDEX_TARGET_HEAD_REQUIRED') { throw 'PS51_INVALID_TARGET_HEAD_NOT_BLOCKED' }
-          $oldPreference = $ErrorActionPreference
-          try {
-            $ErrorActionPreference = 'Continue'
-            $failure = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runner -SmokeScriptPath $fixture -BaseUrl http://127.0.0.1:18999 -ProjectRelativePath Fairview 2>&1
-            $failedExit = $LASTEXITCODE
-          } finally { $ErrorActionPreference = $oldPreference }
-          if ($failedExit -eq 0) { throw 'PS51_CHILD_FAILURE_NOT_PROPAGATED' }
-          # This nonzero exit was EXPECTED and asserted. Do not let pwsh's runner epilogue
-          # reinterpret the expected negative-case fixture as a failed job.
-          $global:LASTEXITCODE = 0
-      - name: Run source and deterministic tests
+          & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/local/setup-windows.ps1 -Mode Doctor -ProjectRoot (Resolve-Path '.').Path
+          if($LASTEXITCODE -ne 0) { throw 'PS51_LOCAL_SOURCE_DOCTOR_FAILED' }
+      - name: Canonical source and deterministic bootstrap suite
         run: |
           node scripts/check-sources.mjs
-          node --test tests/bootstrap/impact.test.mjs tests/bootstrap/windows-contract.test.mjs tests/bootstrap/evidence-contract.test.mjs tests/bootstrap/source-fingerprint.test.mjs tests/bootstrap/git-diff.test.mjs tests/bootstrap/checkpoint-preflight.test.mjs tests/bootstrap/isolated-hive-contract.test.mjs tests/bootstrap/hive-compose-guard.test.mjs
+          node --test tests/bootstrap/*.test.mjs

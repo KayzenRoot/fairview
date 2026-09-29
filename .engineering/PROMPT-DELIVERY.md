@@ -1,4 +1,5 @@
-# PDF-only chat prompt policy (approved owner instruction)
-All chat-issued executor prompts, audit prompts, correction deltas and continuation Work Orders must be polished downloadable PDFs. Chat responses may summarize decisions/status and link the PDF but must not supply the complete executor prompt in a copyable code box.
-Version-controlled .engineering/work-orders/*.md remains the canonical searchable machine-readable mirror. Every PDF carries project, WO ID, branch/base/head, source hierarchy, HIVE preflight state, exact scope/exclusions, acceptance/tests, Evidence Bundle and STOP CONDITION. Rendering and visual QA are required. If PDF generation is unavailable, disclose the blocker rather than silently replacing it.
-Do not publish secrets or live account identifiers inside prompt PDFs. A PDF handoff does not imply approval and cannot bypass a blocked gate.
+# FairView human/agent handoff policy
+
+Complete chat-issued Codex executor, audit, correction and continuation prompts are delivered as polished downloadable PDFs. Canonical machine-readable Work Orders and their context locks remain in the repository in Markdown. Every prompt/PDF identifies project, WO ID, exact branch/base/head, source hierarchy, active checkpoint status, scope/exclusions, test commands and actual evidence, STOP condition, permitted dependency/adoption decisions and rollback.
+
+Use a compact Git/source-driven Context Pack: current Source Pack, applicable accepted ADRs, scoped WO/lock, exact code or fixtures, diff/test/CI receipts. Read directly from Git or approved current attachments; no local indexing service is required. Historical issue comments and prior commits document old choices but cannot grant current authorizations. No secrets, financial customer data or licensed raw feed dumps in public prompts or PDF artifacts.

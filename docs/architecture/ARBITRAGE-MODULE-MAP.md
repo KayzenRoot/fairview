@@ -1,6 +1,5 @@
 # Fairview arbitrage platform | Modular map (proposal)
 
-**Planning-only** under `FV-DISC-001`; does NOT activate product source. Base main `9eb01876adf2e1f2408b451e8cc08abb123173a5`. Current accepted official HIVE v1.0.3 pin and FV-BOOT-001 issue #1 remain unchanged. Fairview isolated HIVE FULL was reported FAILED on 2026-09-28.
 
 ## Aim and competitive reference
 Research a multi-market arbitrage platform drawing on publicly described Westernpips Private 7 behavior, not its code, private protocols, performance figures or concealed execution mechanisms. Vendor marketing lists One Leg, Two Leg Lock, Multi Feed, hidden variants, Trade Copier, backtesting, tick and gap analyzers, FAST/SLOW feeds, FIX/API/ITCH/EA/cTrader, spread/news/drawdown control and visual dashboards. Source: https://westernpips.com/ (checked 2026-09-28). Vendor speed/profit examples are UNVERIFIED for our hardware/venues. Implement only venue-permitted observable behaviors; deliberately EXCLUDE hidden/disguised order origin, circumvention of terms, stale-quote abuse prohibited by the venue and manipulative MEV.
@@ -40,11 +39,9 @@ Authorized reference and venue feeds -> provenance/clock/sequence normalization 
 1. Every module gets a charter, typed input/output contracts, owning test harness, adversarial failure matrix and measurable STOP condition before activation.
 2. Risk Kernel is isolated and authoritative for all trade intents. No LLM-driven direct trading, unrestricted signing, credential publication, profit guarantees or default-live mode.
 3. Closed safety surface: stale/unproven data, unconfigured venue, absent balance, conflicting state or new unexplained sequence gap means STOP.
-4. HIVE is optional engineering context only, **not** on any live order path. Existing GEF harness and pinned release survive unchanged.
 5. Public development under D-008; repo PRIVATE with independently approved high-assurance gates before any live deployment.
 
 ## Planning sequence (one module and one technology ADR per checkpoint)
-P0. Finish FV-BOOT-001 R8 FULL semantic/indices/corpus/MCP/durability and independent review, without upgrading official stable pin.
 P1. Policy and venue eligibility discovery; settle one Forex authorized feed/venue, two CEX spot pairs and one chain/pool. Resolve license, commercial data redistribution, secrets and test access.
 P2. Clock + market-data + canonical contracts; replay fixture collection with provenance and no live credentials.
 P3. Ledger + risk + execution, negative fault-injection and reproducible no-order paper mode.
@@ -54,3 +51,5 @@ P6. DEX read-only data + strategy-defi gas/reorg simulations, independent signin
 P7. Portfolio, telemetry, research, bounded AI and operator web; integration, independent audit and phased authorized paper then limited-live admission.
 
 **STOP CONDITION:** This proposal is only documentation and a planned graph. Do not convert planning to admitted source work while R8 FULL/independent gates remain open. Each module gets a separate admitted WO, deterministic harness and exact-head CI before source implementation.
+
+**Current foundation boundary (owner D-009):** Git/Source Pack/Node 22 and the pinned GEF submodule are the only development foundation dependencies. Foundation migration PR #18 was merged at `694fe60c759ab5a5f91ffaa32b599899bc614f83`; its exact-main CI completed 4/4 successfully. There is no separate host retrieval/indexing prerequisite for a narrowly admitted pure synthetic module Work Order. All product modules in this planning PR remain PLANNED; real provider permissions, financial security review and actual runtime tests are still distinct gates. **STOP:** no product code activation or financial operation is authorized by these design documents.

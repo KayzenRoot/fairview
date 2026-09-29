@@ -1,13 +1,12 @@
 # FV-DISC-001 | Round 8: Portfolio reconciliation and trading observability
 
-**PROPOSED / PLANNING ONLY / NO PRODUCT IMPLEMENTATION.** Existing `portfolio` and `observability` stay PLANNED. The ledger is proposed but not implemented. No bank, broker, exchange or wallet credentials or real trade histories are introduced. FV-BOOT-001 #1 remains OPEN; latest owner-provided R8 isolated host evidence reports HIVE FULL FAILED, and there is no independent security review. The official HIVE v1.0.3 pin, GEF and canonical CHECKPOINT are unchanged.
 
 ## 1. Trust boundaries: money truth, derived state and diagnostics
 
 The future Portfolio module needs three DISTINCT truths: (A) local immutable Ledger intent/attempt/fill/reconciliation facts, whose database durability does not guarantee what the external broker actually did; (B) authenticated, scoped and *complete* external venue order/fill/balance/position history or a chain-specific canonical block/receipt with appropriate finality; and (C) explicitly versioned derived portfolio projections. An asynchronous dashboard projection is NOT the primary pre-trade authority. Missing external evidence, mismatched watermarks or possible fills due to lost ACK are genuine exposure uncertainty, not zero balances or proof no trade occurred.
 
 Proposed source-of-truth split:
-- **Ledger** owns committed local immutable `OrderIntentV0`, `OrderAttemptV0` (`MAY_HAVE_SENT`) and externally corroborated fill/unknown events. Product database later MUST be separate from HIVE engineering context.
+- **Ledger** owns committed local immutable OrderIntentV0, OrderAttemptV0 (MAY_HAVE_SENT) and authenticated externally corroborated fill/unknown events. Future product financial databases must remain distinct from developer tooling.
 - **Execution/venue adapter** owns the protocol-correct, authenticated remote order/fill/position queries and verification that pages/cursors cover the required intervals. No provider-agnostic assumption that one stream alone contains full history.
 - **Portfolio** owns immutable, evidence-linked `PortfolioSnapshotV0` projections, venue-local spendable vs reserved balances, contract-specific positions, pending transfers, margin and known/worst-case unknown exposure; it never fabricates external fills or clears an incident on timeout.
 - **Risk Kernel** independently validates the specific current, versioned `PortfolioRiskViewV0` and kill/config generation at admission/dispatch. Portfolio depends on existing `risk` and `ledger` registry paths for the planned architecture; do NOT add a backward `risk -> portfolio` registry dependency creating a cycle. The authority and read interface will be a separately audited immutable snapshot/integration contract when modules are admitted.
@@ -91,8 +90,9 @@ These **24** row IDs are acceptance obligations for future `tests/portfolio/` an
 
 ## 5. Future narrow implementation sequence and STOP
 
-1. Independent admitted Portfolio WO AFTER FV-BOOT-001 FULL/security review: pure synthetic immutable reconciliation reducer, locally durable snapshots/reservation math and venue-source completeness/UNKNOWN fixtures, with R3 ledger/risk interfaces independently versioned.
 2. Separate Observability WO: mock/redacted traces, bounded metrics histograms and sensitive-field rejection, synthetic delayed/failed collector and notification escalation, plus actual module harness; no real account logs/keys in hosted public CI.
 3. Later integration WO with exact named permitted broker/exchange/RPC sources and legal/commercial data rights: authenticated read-only history and canonical-chain reconciliation, combined risk-kill/restart/incident drills and matched R4 benchmark. Any financially funded deployment needs PRIVATE repo proof, external secret store, signed owner risk limits, independent review and a separate high-assurance operational release.
 
 **STOP CONDITION:** this PR remains DRAFT PLANNING ONLY. No financial runtime, product DB, account enrollment, wallet or broker keys, sync telemetry collector, monitoring credentials, live order, pinned-source mutation, independent-review claim or canonical checkpoint promotion.
+
+**Current foundation boundary (owner D-009):** Git/Source Pack/Node 22 and the pinned GEF submodule are the only development foundation dependencies. Foundation migration PR #18 was merged at `694fe60c759ab5a5f91ffaa32b599899bc614f83`; its exact-main CI completed 4/4 successfully. There is no separate host retrieval/indexing prerequisite for a narrowly admitted pure synthetic module Work Order. All product modules in this planning PR remain PLANNED; real provider permissions, financial security review and actual runtime tests are still distinct gates. **STOP:** no product code activation or financial operation is authorized by these design documents.

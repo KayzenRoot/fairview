@@ -3,7 +3,7 @@ import{calculateImpact,validateRegistry}from"../../scripts/lib/impact.mjs";
 const r=JSON.parse(fs.readFileSync(new URL("../../harness/modules.json",import.meta.url)));
 test("valid canonical graph",()=>assert.equal(validateRegistry(r),r));
 test("scoped script bug runs only bootstrap harness",()=>{const x=calculateImpact(r,["scripts/harness.mjs"]);assert.deepEqual(x.active,["bootstrap"]);assert.deepEqual(x.planned,[]);assert.equal(x.full,false)});
-test("ordinary document change runs bootstrap",()=>{const x=calculateImpact(r,["docs/runbooks/WINDOWS-HIVE.md"]);assert.deepEqual(x.active,["bootstrap"]);assert.equal(x.full,false)});
+test("ordinary document change runs bootstrap",()=>{const x=calculateImpact(r,["docs/runbooks/WINDOWS-DEVELOPMENT.md"]);assert.deepEqual(x.active,["bootstrap"]);assert.equal(x.full,false)});
 test("critical security source triggers full active proof",()=>{const x=calculateImpact(r,[".engineering/SECURITY.md"]);assert.equal(x.full,true);assert.deepEqual(x.active,["bootstrap"])});
 test("risk module change invokes all dependent planned modules and fails activation",()=>{const x=calculateImpact(r,["src/risk/kill_switch.rs"]);assert(x.planned.includes("risk"));assert(x.planned.includes("forex"));assert(x.planned.includes("integration"))});
 test("unknown file fails closed not invisible",()=>{const x=calculateImpact(r,["random/future-code.rs"]);assert.deepEqual(x.unknown,["random/future-code.rs"]);assert.equal(x.full,true)});
@@ -416,13 +416,13 @@ test("Round 10 readiness inventory exactly mirrors the canonical 20-module DAG a
       assert.deepEqual(mod.tests,[],"R10_FALSE_ACTIVE_TEST_OWNER "+mod.id);
     }
   }
-  assert(design.includes("FV-BOOT-001")&&design.includes("FAILED")&&design.includes("independent"),"R10_MISSING_EXTERNAL_GATE");
+  assert(design.includes("G0: native Git-only foundation exact-main")&&design.includes("ACCEPTED ON PROTECTED MAIN")&&design.includes("independent"),"R10_MISSING_NATIVE_FOUNDATION_GATE");
   assert(design.includes("risk -> portfolio")&&design.includes("web")&&design.includes("ai"),"R10_UNDOCUMENTED_GRAPH_CONSTRAINT");
 });
 test("Round 10 WO and proposed ADRs do not admit source, and future changes propagate through planned owners",()=>{
   const docs=["docs/architecture/MODULE-READINESS-AND-IMPLEMENTATION-R10.md","docs/architecture/FUTURE-WORK-ORDER-TEMPLATE-R10.md","docs/architecture/adrs/FV-ADR-019-PROPOSED-MODULE-ADMISSION-ORDER.md","docs/architecture/adrs/FV-ADR-020-PROPOSED-CROSS-MODULE-SNAPSHOT-CONTRACT.md"];
   const workOrder=fs.readFileSync(new URL("../../docs/architecture/FUTURE-WORK-ORDER-TEMPLATE-R10.md",import.meta.url),"utf8");
-  assert(workOrder.includes("NOT ADMITTED")&&workOrder.includes("FV-BOOT-001")&&workOrder.includes("independent"));
+  assert(workOrder.includes("NOT ADMITTED")&&workOrder.includes("native foundation")&&workOrder.includes("independent"));
   for(const name of docs.filter(path=>path.includes("/adrs/"))){
     const adr=fs.readFileSync(new URL("../../"+name,import.meta.url),"utf8");
     assert(adr.includes("PROPOSED_NOT_ADOPTED"),"R10_PREMATURE_ADR "+name);

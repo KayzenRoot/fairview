@@ -9,7 +9,7 @@
 - Changed files and module impact:
 - Deterministic/targeted tests:
 - Typecheck/build/lint/security:
-- Windows/HIVE real-host evidence (if required):
+- Windows native setup evidence (if applicable):
 - Known failure/risks, corrected regressions:
 - Proposed checkpoint delta:
 

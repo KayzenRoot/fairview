@@ -1,6 +1,5 @@
 # Fairview | Forex venue eligibility and reference-feed research | Round 1
 
-**Status: RESEARCH_ONLY / no venue selected / no trading or API access granted.** Proposal under FV-DISC-001 PR #17; this is not executable code, a commercial agreement, legal advice, a settled ADR, or admission of the blocked FV-BOOT-001 host gates.
 
 Checked official primary-provider descriptions on 2026-09-28. The purpose of this decision inventory is to document the facts that are known, classify the unknowns that can invalidate a latency-arbitrage deployment, and define safe evaluation. The broker/account, residency, selected instruments and funding permissions are deliberately not assumed.
 
@@ -68,7 +67,7 @@ A policy record expires on a changed vendor ToS, revoked app, venue symbol/instr
 - Cross-venue quote mismatch (spot FX vs CFD, contract notional, trading hours, currency conversion or different bid/ask source) MUST invalidate a signal.
 - Missing depth, uncertain clock, sequence gap, stale feed, unmodeled fees/slippage or unknown order acknowledgement MUST deny an actionable opportunity.
 - Revoked or stale permission/replay source MUST fail closed even when previous fixture permitted it.
-- UI or LLM advice, a marketing speed claim, passed hosted CI or running HIVE MUST NOT promote any venue policy state.
+- UI or LLM advice, a marketing speed claim, passed hosted CI or green development CI MUST NOT promote any venue policy state.
 
 ## 6. Open decision form for the owner and eventual legal/venue confirmation
 
@@ -84,4 +83,6 @@ A policy record expires on a changed vendor ToS, revoked app, venue symbol/instr
 | Authorized loss/notional limits and independent auditor | OPEN | Separate signed operator scope, high-assurance gate and negative tests |
 
 ### Round 1 STOP / handoff
-This document and ADR do not choose a production venue. Await operator-specific eligibility and written permissions, formalize each data-rights contract, then admit separately reviewed read-only/demo WOs. FV-BOOT-001 R8 FULL and independent review remain mandatory prerequisites for product implementation. There are no real orders, account creation, API calls or price capture in this research.
+
+
+**Current foundation boundary (owner D-009):** Git/Source Pack/Node 22 and the pinned GEF submodule are the only development foundation dependencies. Foundation migration PR #18 was merged at `694fe60c759ab5a5f91ffaa32b599899bc614f83`; its exact-main CI completed 4/4 successfully. There is no separate host retrieval/indexing prerequisite for a narrowly admitted pure synthetic module Work Order. All product modules in this planning PR remain PLANNED; real provider permissions, financial security review and actual runtime tests are still distinct gates. **STOP:** no product code activation or financial operation is authorized by these design documents.

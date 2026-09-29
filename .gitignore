@@ -12,8 +12,6 @@ tmp/
 *.sqlite
 *.sqlite3
 *.log
-.hive-data/
-hive-data/
 __pycache__/
 .pytest_cache/
 .DS_Store

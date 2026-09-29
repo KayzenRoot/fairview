@@ -17,4 +17,4 @@ Rust `Instant`/`SystemTime` for future native app capture, optional chrony track
 ## Activated harness design, not current tests
 Simulated `UNKNOWN_CLOCK`, `CROSS_DOMAIN`, `BACKWARD_WALL`, `STALE_FEED`, restarted process epoch and changed `sync_state`. Must fail closed without relying on the real CI runner clock. Record clock health provenance and thresholds in instrument-specific Risk Kernel policy.
 
-**STOP:** without source-specific clock and applicable error budget, no one-way cross-provider latency or actionable low-latency signal may be claimed. Remain PLANNED until separate admitted activation WO, FV-BOOT-001 independent FULL gate and exact-head tests.
+**STOP:** without source-specific clock and applicable error budget, no one-way cross-provider latency or actionable low-latency signal may be claimed. Remain PLANNED until separate admitted activation WO, FV-FOUNDATION-002 independent FULL gate and exact-head tests.

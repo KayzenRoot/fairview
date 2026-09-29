@@ -22,4 +22,6 @@ For licensed offline replay, evaluate async bounded Arrow in-memory batches and 
 Per provider: exact entity/account and commercial data rights, quote kind and delivery semantics, timestamp meaning, source accuracy evidence if any, snapshot/sequence behavior, throttling, API limits, fees, rights for private replay and derived output. Per adapter: synthetic negative fixtures for `SEQUENCE_GAP`, `OUT_OF_ORDER_DUPLICATE`, `BOOK_UNAVAILABLE`, `LICENCE_UNKNOWN`, `VENUE_QUOTE_INDICATIVE`, `INSTRUMENT_MISMATCH`, `THROTTLED_FEED`, `CAPTURE_OVERFLOW`; independent risk gate on every order.
 
 ## Not adopted
-No default archiver, provider, venue, hot-path Arrow, broker adapter or trading API is selected by this ADR. Product activation remains blocked under FV-BOOT-001 FULL/independent review and separately admitted module WOs.
+No default archiver, provider, venue, hot-path Arrow, broker adapter or trading API is selected by this ADR. Product activation remains blocked under FV-FOUNDATION-002 source acceptance/independent review and separately admitted module WOs.
+
+**Foundation amendment D-009:** the accepted Git/Node22/pinned GEF foundation in protected main replaces previous host-service prerequisites. A future pure synthetic source Work Order requires its own admitted scope and actual nonempty deterministic tests; order-capable financial deployment still requires independent security review and exact provider legal rights.

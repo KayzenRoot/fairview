@@ -1,6 +1,6 @@
 # Durable order-event ledger | module `ledger`
 
-**PLANNED, NOT IMPLEMENTED.** FV-DISC-001 Round 3. Reserved `src/ledger/`, `tests/ledger/`; dependency `policy`. Separate DB from HIVE.
+**PLANNED, NOT IMPLEMENTED.** FV-DISC-001 Round 3. Reserved `src/ledger/`, `tests/ledger/`; dependency `policy`. Future product ledger storage is separate from developer tooling.
 
 **Responsibility:** append-only scoped intent, admission, MAY_HAVE_SENT attempt, acknowledgment, execution, cancellation and reconciliation receipts. Local at-most-once intent under scoped PostgreSQL uniqueness is not broker exactly-once. On unknown external outcome, block auto resend and demand authenticated order/fill/position proof.
 

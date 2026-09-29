@@ -1,6 +1,6 @@
 # Forex venue and feed adapters | module `forex`
 
-State: **PLANNED, NOT IMPLEMENTED**. Authority: FV-DISC-001 Round 1 research; original module identity and harness ownership unchanged. Separate admitted implementation Work Order required; FV-BOOT-001 full/independent gates remain open.
+State: **PLANNED, NOT IMPLEMENTED**. Authority: FV-DISC-001 Round 1 research; original module identity and harness ownership unchanged. Separate admitted implementation Work Order required; FV-FOUNDATION-002 full/independent gates remain open.
 
 Reserved source ownership: `src/forex/`. Harness ownership: `tests/forex/`. Dependency graph: `risk`, `market-data`, `clock`, `execution`. Policy is a cross-cutting eligibility prerequisite through the independent Risk Kernel and strategy admission, not a direct privilege granted by this charter.
 
@@ -19,4 +19,4 @@ Detailed sources, explicit negative fixtures and decision evidence: `docs/archit
 The first chosen demo adapter must demonstrate identical instrument/CFD/spot settlement and contract semantics when comparing feeds, event and local receive timestamps, bid/ask sizes, fees, rejects/last-look, out-of-order quotes and explicit clock uncertainty. Replay One Leg, Two Leg and Multi Feed with deterministic fault injection before a live route is eligible. Measure at minimum tick-to-risk, risk-to-send, send-to-ack, ack-to-fill p50/p95/p99, observed gap vs realized fee/slippage-adjusted edge, and one-leg loss containment. Keep hosted CI synthetic and public-data-rights clean.
 
 ## STOP and external prerequisites
-Do not select broker or external reference feed, register application, install runtime SDK or connect an account in this planning PR. Await specific legal entity/jurisdiction, selected broker app/account approval, exact strategy/API and feed licensing, independent risk and security review, and verified FV-BOOT-001 host FULL. A permitted One Leg strategy never implies Two Leg/Multi Feed/copying permission.
+Do not select broker or external reference feed, register application, install runtime SDK or connect an account in this planning PR. Await specific legal entity/jurisdiction, selected broker app/account approval, exact strategy/API and feed licensing, independent risk and security review, and verified FV-FOUNDATION-002 host FULL. A permitted One Leg strategy never implies Two Leg/Multi Feed/copying permission.

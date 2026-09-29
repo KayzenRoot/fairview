@@ -20,4 +20,7 @@ Embedding an opaque Westernpips binary or reverse engineering its concealed exec
 ## Consequences and validation
 First produce a synthetic contract schema, negative policy fixtures, a repeatable source-license inventory, and a vendor RFI with specific arbitrage permission and non-display-data questions. Compare end-to-end p50/p95/p99 on *matched, lawfully sourced input traces* and test stale feed, gap, throttling, rejects, partial fills and kill switches. No actual account, live traffic or order authorization follows from this ADR.
 
-**Acceptance prerequisites:** owner-selected jurisdiction, legal review of account and commercial data agreements, independent security approval, FV-BOOT-001 R8 FULL verified and a separate admitted activation WO. Keep this ADR PROPOSED_NOT_ADOPTED until formal evidence-bound decision.
+**Acceptance prerequisites:** owner-selected jurisdiction, legal review of account and commercial data agreements, independent security approval, FV-FOUNDATION-002 R8 FULL verified and a separate admitted activation WO. Keep this ADR PROPOSED_NOT_ADOPTED until formal evidence-bound decision.
+
+
+**Foundation amendment D-009:** the accepted Git/Node22/pinned GEF foundation in protected main replaces previous host-service prerequisites. A future pure synthetic source Work Order requires its own admitted scope and actual nonempty deterministic tests; order-capable financial deployment still requires independent security review and exact provider legal rights.

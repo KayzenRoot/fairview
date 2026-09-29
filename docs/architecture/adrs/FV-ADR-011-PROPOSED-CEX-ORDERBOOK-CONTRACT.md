@@ -13,4 +13,6 @@ Both candidate providers require individually evidenced legal region, exact spot
 - https://docs.kraken.com/exchange/api-reference/spot-websocket-v2/executions
 - https://docs.ccxt.com/docs/pro-manual
 
-**Not adopted:** no venue selected, no native SDK installed, no REST/WS call executed or order key granted. Activation requires distinct synthetic Binance-gap and Kraken-CRC/same-price fixtures, per-venue permission evidence, separately admitted WOs, FV-BOOT-001 FULL and independent security approval.
+**Not adopted:** no venue selected, no native SDK installed, no REST/WS call executed or order key granted. Activation requires distinct synthetic Binance-gap and Kraken-CRC/same-price fixtures, per-venue permission evidence, separately admitted WOs, FV-FOUNDATION-002 FULL and independent security approval.
+
+**Accepted foundation D-009:** pure synthetic module admission depends on current Git-only source governance, exact-head CI and real module-owned tests. Financially privileged operation additionally requires independent security and actual provider/data-use rights. No separate background host acceptance is required.

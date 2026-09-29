@@ -1,16 +1,16 @@
 # FV-DISC-001 | Round 10: future narrowly scoped module Work Order template
 
-**Status: PROPOSAL ONLY, NOT ADMITTED.** This document is a repeatable *review checklist* to prepare separately admitted implementation WOs once FV-BOOT-001 FULL and independent audit are verified. It is NOT a Codex executor prompt, active module WO, GitHub issue assignment, checkpoint promotion, trading authorization, production deployment approval, or an exception to the chat-origin executor PDF rule D-003. Never paste live secrets or customer data into its fields.
+**Status: PROPOSAL ONLY, NOT ADMITTED.** A reusable review checklist for separate product module WOs after the accepted native foundation. A template is not a Codex executor prompt, issue assignment, checkpoint promotion, trading authorization, production deployment or exemption from the polished-PDF handoff rule D-003. No secrets or client data in these fields.
 
 ## Before writing ANY product-source WO
 
-Verify against authoritative GitHub and source hierarchy, rather than relying on old chat, HIVE retrieval or green planning CI:
+Verify fresh exact GitHub refs, approved source hierarchy, accepted main foundation checkpoint and real CI rather than earlier chat or green design-only tests:
 
-- [ ] **G0 / G1 FULL:** inspect exact isolated-host FV-BOOT-001 HIVE R8 FULL evidence (semantic provider enabled, correct indexed head, nonempty allowed corpus, MCP retrieval and restart/durability) and an **actual named independent** source/host approval. If FAILED, INCOMPLETE or reviewer missing, STOP and continue documentation or separate FV-BOOT-001 remediation only.
+- [ ] **G0 / G1 SOURCE:** confirm the native foundation PR #18 exact-main 4/4 CI and new current Work Order/context lock; run true module-owned nonempty deterministic tests at the exact proposed source head. Pure synthetic WOs require no local indexing/semantic service. For privileged financial functionality, an additional qualified independent security reviewer is mandatory.
 - [ ] **Repo and governance:** read current canonical promoted checkpoint, decisions ledger, scope, DoD, security, impact registry and Git branch/head. Record signed base and exact relevant SHA; ensure planned product work doesn't alter accepted pins/main by side effect.
 - [ ] **Owner and dependency:** choose **exactly one** primary registered module and its owning reserved `src/<module>/` + `tests/<module>/` (or `src/contracts/`, `tests/integration/` for the very LAST integration module). Check every literal `depends_on` is already ACTIVE and accepted; no fabricated active status. Review R10 graph waves and any still PROPOSED_NOT_ADOPTED ADRs; get a separately accepted decision before code depends on them.
 - [ ] **Scope and legal:** for pure synthetic WOs, forbid all real brokerage/RPC/network and use invented dummy accounts/feeds. For any read-only/demo connection obtain and store approved exact legal entity, jurisdiction, instrument, account/app entitlement, fee tier, market-data usage and data retention grants in PRIVATE managed evidence outside public Git. Separately independently review external runtime capability and threat model.
-- [ ] **Security boundary:** public dev repo allows only unprivileged synthetic CI. Never commit ANY Fairview `.env`, including `.env.example`; never place API keys, signing material, customer records or real trade logs in repository, CI, PDFs, screenshots, issue comments or HIVE. PRIVATE visibility is mandatory **before financially funded production**, as are external managed runtime secrets and documented rotation.
+- [ ] **Security boundary:** PUBLIC development accepts only unprivileged synthetic CI. Never commit any FairView `.env`, including `.env.example`, API keys, signing material, customer records or real trade logs in Git, CI, PDFs, screenshots or issue comments. PRIVATE visibility and externally managed credentials are mandatory before funded production.
 
 ## Proposed WO header fields (to complete in future independently admitted artifact)
 
@@ -19,7 +19,7 @@ Verify against authoritative GitHub and source hierarchy, rather than relying on
 | Proposed WO identifier | `FV-<MODULE>-NNN` (reserve only when owner actually approves; R10 candidate IDs are not issued WOs) |
 | Principal module + charter | EXACT registry ID, `docs/architecture/modules/<id>.md`, governing R1-R9 document and accepted scoped ADR |
 | Current main, target branch and exact starting SHA | Fetched at future WO start; fail if changed or stale |
-| Required active direct dependencies | Literal `depends_on` IDs verified as ACTIVE with exact evidence; global FV-BOOT-001 independent gate separate |
+| Required active direct dependencies | Literal `depends_on` IDs and real executable tests verified as ACTIVE; the native Git/Node22/GEF foundation already accepted and independent of machine-level services |
 | Allowed paths | Exact limited source + module-owned nonempty `tests/<id>/` + explicitly named doc/fixtures, nothing else |
 | Excluded paths and privileges | No unrelated modules, accepted pin, main, canonical CHECKPOINT, secret file, real order/wallet/API by default |
 | Operation mode | `SYNTHETIC_ONLY`, or independently approved `READ_ONLY`/`DEMO`; `LIVE` is an entirely different HIGH_ASSURANCE release decision |
@@ -33,7 +33,7 @@ Verify against authoritative GitHub and source hierarchy, rather than relying on
 
 ## Standard admitted-WO execution checkpoints (FUTURE only)
 
-**CP0: exact source admission.** A reviewer verifies FULL host and independent approval, opens a narrow accepted WO and immutable context lock, pins SHA and approves the precise module owner and path allowlist. A planned document or suggested WO number is not admission.
+**CP0: exact source admission.** Verify current protected-main foundation, exact Git SHA, owning module/dependencies and accepted ADRs; adopt one narrow WO/context lock with source/test allowlist. Any read-only/demo account or financially privileged action needs additional specific rights; independent high-assurance review is mandatory before financial deployment.
 
 **CP1: contract and fixtures first.** Write module-owned deterministic unit/negative fixtures and versioned synthetic evidence manifest before adding the smallest product source slice. Keep all other registry states unchanged. Do not create or consume a live secret in a CI environment.
 
@@ -47,8 +47,8 @@ Verify against authoritative GitHub and source hierarchy, rather than relying on
 
 **CP6: mode-specific operational release (if separately requested).** Real provider connections and demo accounts require specific external evidence and separate approval. A funded production route is NOT inherited from research/demo and needs independent HIGH_ASSURANCE acceptance, PRIVATE repository proof, runtime secret store, loss/kill/reconciliation drills and an explicitly bounded owner's go/no-go record. Do not assume a profitable or low-latency outcome from an offline replay.
 
-## Planned first candidates after FV-BOOT-001 external PASS
+## Planned first candidates after the accepted Git-only foundation
 
 As R10 graph wave 1, propose two separate narrow, source-free planning handoffs for **`policy`** and **`clock`**. Once each is admitted and can activate with real, nonempty deterministic fixtures, wave 2 can consider `market-data` and `ledger`, and only then wave 3 independent `risk`. Do not issue these as existing approved WOs in Round 10. If the product owner later requests a complete executable Codex or reviewer handoff, produce a polished downloadable PDF following accepted D-003 and point it at the reviewed repo Markdown WO.
 
-**STOP:** This template only organizes future independent decisions. It does not change module state or execute product code, and cannot override a FAILED FV-BOOT-001 FULL gate.
+**STOP:** This template only organizes future WOs. It does not alter module state or execute source code. No external machine service is a source admission requirement; missing real tests, source review, approved ADRs, legal provider permissions or financial safety evidence still STOP the relevant work.

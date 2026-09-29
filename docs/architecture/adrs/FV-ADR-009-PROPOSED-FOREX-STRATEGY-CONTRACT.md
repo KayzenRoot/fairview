@@ -17,4 +17,6 @@ NautilusTrader official FX tick backtest https://nautilustrader.io/docs/latest/g
 - Treating positive synthetic profit as superiority over marketed vendor speed or live profitability: rejected.
 - Assuming an unknown second leg is absent or can be blindly resubmitted: rejected.
 
-**Activation requires** selected permitted venue/feed contracts, R8 HIVE FULL and independent review, separate admitted source WO with deterministic strategy fixtures, and no external order capability in initial pure evaluator tests.
+**Activation requires** selected permitted venue/feed contracts, accepted current exact-main Git-only foundation and independent financial-security review before privileged activation, separate admitted source WO with deterministic strategy fixtures, and no external order capability in initial pure evaluator tests.
+
+**Foundation amendment D-009:** the accepted Git/Node22/pinned GEF foundation in protected main replaces previous host-service prerequisites. A future pure synthetic source Work Order requires its own admitted scope and actual nonempty deterministic tests; order-capable financial deployment still requires independent security review and exact provider legal rights.

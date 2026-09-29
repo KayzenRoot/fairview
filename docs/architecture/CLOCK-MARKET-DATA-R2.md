@@ -1,6 +1,5 @@
 # FV-DISC-001 | Round 2: clock integrity and authorized market-data contracts
 
-**Status: PLANNING ONLY.** Neither clock nor market-data is implemented. The product remains under the FV-BOOT-001 isolated HIVE FULL blocker, canonical checkpoint is unchanged, official HIVE v1.0.3 stays pinned, and no Forex venue/feed permissions were granted by Round 1. This proposal is **not** a latency benchmark, real account connection, data-vendor agreement or executable trading design admission.
 
 **Design goal:** compare permitted fast/reference and executable quotes without inventing time precision, source entitlement, available liquidity or actual order profitability. This contract is upstream of every planned Forex, CEX, DeFi, risk, replay and execution module. Every signal and replay frame must preserve the distinction between data observation and legally executable prices.
 
@@ -73,7 +72,6 @@ No global numeric staleness, clock-error, p95 or min-book-size threshold is appr
 
 `source_event_utc_ns` (what venue claims) and `local_receive_wall_utc_ns` with `local_receive_monotonic_ns` (what our capture witnessed) must both survive replay, including an explicit missing-source-time case. Preserve source/connection ID and sequence epoch to distinguish duplicates from expected sequence reset. Deterministic capture must record loss gaps as separate events, not silently stitch a perfect-looking series.
 
-**Hot path:** typed bounded in-process messages with captured monotonic reception; no synchronous archive write, Python bridge, Arrow conversion or hosted dashboard call in the critical quote-to-risk path until actual bounded benchmarks justify that choice. **Offline research:** Apache Arrow in-memory columnar batches and Parquet archive candidates for efficiently replaying lawfully retained ticks; separate asynchronous bounded capture with explicit overflow event and hashes; if backlog overflows, record `CAPTURE_OVERFLOW` and prevent incomplete traces from being called full-tick recordings. Do not dump raw paid-feed ticks in GitHub Actions, HIVE, chat, a public dashboard or a PDF. Storage retention, encryption and derived-data rights are provider- and account-specific, still OPEN.
 
 Official format docs: https://github.com/apache/arrow/blob/main/docs/source/format/Columnar.rst ; https://arrow.apache.org/docs/python/parquet.html .
 
@@ -98,6 +96,6 @@ The expected fixture outcomes are *design obligations*, NOT existing runtime tes
 
 ## 6. Acceptance and handoff to Round 3
 
-Clock activation requires a separate admitted WO with a pure simulated clock (wall jump, drift, clock-domain mismatch), explicit error-bound source, no host time mutation in CI and a no-cross-domain elapsed test. Market-data activation requires separately entitled demo/fixture sources, normalized fixed-decimal envelope, snapshot/sequence recovery, throttled/duplicate/out-of-order fixtures, lossless timestamp transfer and no public price artefacts. Test impact should propagate clock => market-data => risk => execution/integration, while *this planning PR* leaves 20 registered modules with only bootstrap ACTIVE. Advance to real Forex adapter only after the named broker and reference-feed policy decisions, FV-BOOT-001 FULL and independent reviews.
 
-**STOP CONDITION:** this round ends at documentation and planning-harness validation. No source runtime, broker connection, daemon installation, HIVE FULL claim, funded order or checkpoint promotion.
+
+**Current foundation boundary (owner D-009):** Git/Source Pack/Node 22 and the pinned GEF submodule are the only development foundation dependencies. Foundation migration PR #18 was merged at `694fe60c759ab5a5f91ffaa32b599899bc614f83`; its exact-main CI completed 4/4 successfully. There is no separate host retrieval/indexing prerequisite for a narrowly admitted pure synthetic module Work Order. All product modules in this planning PR remain PLANNED; real provider permissions, financial security review and actual runtime tests are still distinct gates. **STOP:** no product code activation or financial operation is authorized by these design documents.
