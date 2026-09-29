@@ -151,7 +151,11 @@ export function summarizeSyntheticLegs(legs){
   if(!Array.isArray(legs)||legs.length!==2||!legs.every(validState)||
    legs[0]===legs[1]||legs[0].leg_id===legs[1].leg_id||
    legs[0].scope.tenant_id!==legs[1].scope.tenant_id||
-   legs[0].scope.strategy_family!==legs[1].scope.strategy_family)
+   legs[0].scope.strategy_family!==legs[1].scope.strategy_family||
+   (legs[0].ledger.intent.intent_key===legs[1].ledger.intent.intent_key&&
+    legs[0].scope.account_id===legs[1].scope.account_id&&
+    legs[0].scope.venue_id===legs[1].scope.venue_id&&
+    legs[0].scope.instrument_contract_id===legs[1].scope.instrument_contract_id))
    return deny("INVALID_TWO_LEG_FIXTURE");
   const per=Object.freeze(legs.map(summary));
   if(per.some(x=>x.possible_unknown_fill_units===null))return deny("INVALID_TWO_LEG_UNITS");
