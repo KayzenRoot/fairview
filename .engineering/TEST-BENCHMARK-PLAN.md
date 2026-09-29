@@ -1,6 +1,7 @@
-# Test and benchmark plan
-Risk: FV-BOOT-001 STANDARD for docs/CI; all live-trading and privileged wallet work HIGH_ASSURANCE.
-Boot checks: verify source pack required files and nonempty content; GEF gitlink at pinned release SHA; HIVE tag pin; impact-map integrity; Windows bootstrap script is non-destructive by inspection; CI gates operate without live secrets.
-Harness selection: explicit module registry; changed path -> owning module -> reverse dependency closure; shared contracts and unknown paths -> full test set. Deterministic first: format/static -> module unit -> adapter integration with mock fixtures -> replay -> cross-domain regression at integration milestones. Never require full suite for trivial isolated bug unless impact propagation demands it.
-Proof for live trading later: order-by-order receipts, exact adapter configs, rejecting/slippage/fill statistics, P50/P95/P99 end-to-end latency, disconnect and crash recovery, replay during extreme events and negative tests. Performance comparisons only under matched feeds, servers, venues and measurement windows.
-Evidence Bundle records base/head, changed files, impacted module set, run commands, test exit codes, skipped tests with reasons, security checks, known risks and proposed checkpoint delta. Reuse only exact dependency-valid evidence; stale baseline invalidates its proof.
+# FairView testing and benchmark plan
+
+Current migration: Git/Node22 Source Pack file integrity, pinned GEF gitlink and pinned upstream validation, unknown-path/reverse-impact selector fail-closed tests, privacy/secret scanner, bootstrap test suite and Windows PowerShell 5.1 parser plus independent no-service Doctor contract. Four exact-head hosted jobs remain mandatory. No Docker/semantic-index/embedding/live feed smoke test is required for development.
+
+Future source WOs: real nonempty module-specific positive/negative and failure-injection suites, impacted dependent contracts, exact-decimal units, local clock-domain validity, persistent risk/ledger unknown-effects recovery, external venue/data entitlement checks, deterministic licensed replay and complete losing-trial preservation. Unselected providers should use invented deterministic fixtures, not fake real account authorization. No historical simulation equals broker fill or realized profitability.
+
+Live/privileged financial changes are HIGH_ASSURANCE and need authenticated account/chain receipts, independently verified fail-closed risk and reconciliation, reproducible tests/rollback, security/privacy/legal review, PRIVATE repo proof and separately authorized release. Tail latency p99 requires meaningful sample counts/clock comparability and all failed/adverse cases.

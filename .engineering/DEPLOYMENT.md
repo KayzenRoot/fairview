@@ -1,9 +1,7 @@
-# Deployment and local setup
-This Work Order installs no live runtime. Windows target project checkout: D:\Projects\Fairview. HIVE source/tool checkout: D:\Tools\HIVE. HIVE durable database/CAS: D:\HIVE. HIVE_PROJECTS_ROOT=D:/Projects; HIVE_DATA_ROOT=D:/HIVE (must remain distinct). HIVE v1.0.3 published tag resolves to commit 52bd3dab54dd4f16264072e198ed1fc23168f7fa.
-GEF stable source release v1.0.0 resolves to 866fe3af8cccc65c929aaf6a47a924401fa448b3; included through vendor/gef-bootstrap immutable gitlink, not a fake global npm CLI.
-The committed PowerShell setup script is operator-executed on the Windows machine and must verify Docker Desktop Linux containers, Git, Node >=22, npm, Python, tag-to-commit identity, npm validation, Docker health, HIVE project status READY and search smoke tests before a local success claim. Never report remote repository checks as proof of Windows installation.
-CI/GitHub deployment for product runtime is future scope and requires independent safety/recovery acceptance.
+# FairView development and future deployment
 
-## Development/public-to-production/private transition (D-008)
-During development, `KayzenRoot/fairview` remains public and uses credential-free GitHub CI. No Fairview `.env` template or file is published. The separate HIVE installer may preserve/create a machine-local `.env` in its independent `D:\\Tools\\HIVE` checkout; never copy, sync, publish, log or upload it into Fairview or CI.
-Before enabling **any** production financial runtime, obtain authoritative evidence the repository is PRIVATE, main PR protection and security checks are enforced, vetted source has no disclosed proprietary secrets, and production API/wallet credentials are supplied solely through a reviewed external secret manager/operational signing service. Private visibility never substitutes security testing, access controls or an independent HIGH_ASSURANCE risk review. Do not automatically change GitHub visibility during FV-BOOT-001.
+The development foundation requires only a local Git checkout, Git/Node 22+/npm and pinned GEF submodule. On Windows use scripts/local/setup-windows.ps1 in Doctor mode (read-only) or Install mode (initialize pinned submodule and npm ci for GEF only). No Docker, Python, local database, embedding model or additional service must be installed for source development. Never uninstall or change tools belonging to other projects.
+
+Keep the repository PUBLIC only for non-secret development; the source scanner and protected main are mandatory. No .env, .env.example, secrets, wallet keys, real client records or raw protected paid ticks belong in the repository or hosted CI. Actual financial production is a separate PRIVATE, externally managed-secrets and independently audited release.
+
+Future permitted runtime topology will be selected under separate ADR and per-module WOs after actual venue/account/chain/legal entitlements. Do not mistake a credential-free hosted CI job, local Doctor or synthetic replay for real financial hosting approval.
