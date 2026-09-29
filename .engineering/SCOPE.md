@@ -1,5 +1,8 @@
 # FairView current scope | historical baselines and latest observed main
 
+**LATEST ACCEPTED SOURCE OBSERVATION, 2026-09-29 (prior GOV-011):** main `b70d5be9cd4df3e5b5a3e99a8aaa92c3dfadeb18`, exact-main [CI36588730744](https://github.com/KayzenRoot/fairview/actions/runs/36588730744) **4/4 PASS; 561/561 full 14 owned suites**: native bootstrap plus thirteen strictly local simulated product sources, including new Forex PR #45 local invented reference-vs-venue diagnostic (29 own adverse cases). 20 original module IDs, 14 ACTIVE only fake-memory/6 PLANNED; source SCOPE excludes broker/real feed/executable actual quote/trade, network, LLM, real Web auth, external funded use and genuine market claims. Next scope FV-GOV-011 is DOCS-ONLY reconciliation, not a new module or permission. D-007/D-008 and HIGH_ASSURANCE OPEN, proposed checkpoint unpromoted.
+
+
 **Observed merged main `3bc582a259077e137e4227ef4e40cad8ff186fb6`:** native Git/Node>=22/pinned GEF, actual 20-module graph with bootstrap, policy, clock, market-data and ledger ACTIVE solely for fictional-only harness scope, remaining 15 PLANNED. Policy mock grants, invented clock and quote data, and module-private frozen Ledger event states have real owned tests; no real broker, wallet, network, PostgreSQL/WAL, money, external provider grant or runtime trading is installed. GOV-001 PR #24 and Ledger PR #25/correction PR #27 merged; exact-main four jobs SUCCESS run 36559676112. Checkpoint FV-CP-0002 remains proposed/unpromoted.
 
 **HISTORICALLY ADMITTED (now merged PR #28):** FV-GOV-002 only factual docs/status reconciliation of Git and CI. No new module ownership, source/test, dependency, production workflow or proposed ADR adoption in scope.
