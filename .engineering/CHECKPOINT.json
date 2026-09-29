@@ -5,7 +5,7 @@
   "project": "Fairview",
   "brand": "Next Labs",
   "github_repo": "KayzenRoot/fairview",
-  "work_order": "FV-GOV-001",
+  "work_order": "FV-GOV-002",
   "authority": "GIT_SOURCEPACK_GEF_NODE22",
   "source_main_before_migration": "9eb01876adf2e1f2408b451e8cc08abb123173a5",
   "migration_pr": 18,
@@ -14,12 +14,16 @@
   "independent_approval": false,
   "approval_receipt": "NOT_INDEPENDENTLY_PROMOTED",
   "latest_observed_main": {
-    "sha": "8da9fc71e35d25cef8849db5d7c218f69875faad",
+    "sha": "3bc582a259077e137e4227ef4e40cad8ff186fb6",
     "observed_on": "2026-09-29",
-    "latest_merged_product_pr": 23,
-    "exact_main_push_workflow_run": 36518003115,
+    "latest_merged_module_pr": 25,
+    "latest_merged_correction_pr": 27,
+    "baseline_governance_pr": 24,
+    "exact_main_push_workflow_run": 36559676112,
     "hosted_required_jobs_passed": 4,
     "hosted_required_jobs_total": 4,
+    "owned_ledger_tests_on_correction_pr_head": "27/27",
+    "bootstrap_tests_on_correction_pr_head": "71/71",
     "owner_audit": "NOT_INDEPENDENT"
   },
   "registry": {
@@ -28,10 +32,13 @@
       "bootstrap",
       "policy",
       "clock",
-      "market-data"
+      "market-data",
+      "ledger"
     ],
-    "planned": 16,
-    "active_product_scope": "SYNTHETIC_FIXTURE_ONLY"
+    "planned": 15,
+    "active_product_scope": "SYNTHETIC_FIXTURE_ONLY",
+    "ledger_storage": "IN_MEMORY_NON_DURABLE",
+    "ledger_external_authority": false
   },
   "gef": {
     "tag": "v1.0.0",
@@ -51,5 +58,6 @@
     "actual_provider_rights": "OPEN",
     "real_financial_runtime": "NOT_IMPLEMENTED"
   },
-  "historical_evidence": "Immutable Git history and original issues; superseded installation requirements are not active source prerequisites"
+  "historical_evidence": "Immutable Git history and original issues; superseded installation requirements are not active source prerequisites",
+  "observed_source_only": true
 }
