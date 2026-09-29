@@ -1,4 +1,40 @@
-import test from"node:test";import assert from"node:assert/strict";import fs from"node:fs";
+import test from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import {calculateImpact} from "../../scripts/lib/impact.mjs";
 const code=fs.readFileSync(new URL("../../scripts/evidence.mjs",import.meta.url),"utf8");
-test("CI evidence ties exact Git head to explicit base and verifies run receipt",()=>{for(const s of ["EVIDENCE_BASE_SHA","rev-parse","EVIDENCE_TESTS_VERIFIED","UNVERIFIED_IMPACT"])assert(code.includes(s))});
-test("bootstrap receipt never asserts Windows runtime verified",()=>assert.match(code,/CHECKED_BY_WINDOWS_CI_NO_EXTERNAL_SERVICES/));
+const registry=JSON.parse(fs.readFileSync(new URL("../../harness/modules.json",import.meta.url),"utf8"));
+
+test("exact Git HEAD and explicit base bind only a CI-verified evidence receipt",()=>{
+ for(const marker of ["EVIDENCE_BASE_SHA","rev-parse","EVIDENCE_TESTS_VERIFIED","NO_VERIFIED_TEST_PROOF","source_checkpoint_sha256"])
+  assert(code.includes(marker),marker);
+});
+test("a directly edited still-planned module or unknown path fails Evidence Bundle",()=>{
+ assert(code.includes("impact.unknown.length||impact.direct_planned.length"));
+ assert(!code.includes("impact.unknown.length||impact.planned.length"));
+ const changed=calculateImpact(registry,["src/clock/timer.mjs"]);
+ assert.deepEqual(changed.direct_planned,["clock"]);
+ assert(changed.planned.includes("market-data"));
+ assert.equal(changed.unknown.length,0);
+});
+test("an active policy owner can provide proof with explicit untested planned downstream",()=>{
+ const changed=calculateImpact(registry,["src/policy/eligibility.mjs"]);
+ assert.deepEqual(changed.direct_active,["policy"]);
+ assert.deepEqual(changed.direct_planned,[]);
+ assert(changed.active.includes("policy"));
+ assert(changed.planned.includes("risk"));
+ assert(changed.planned.includes("ledger"));
+ assert(changed.planned.includes("integration"));
+ assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
+ assert(code.includes("directly_modified_active_modules:impact.direct_active"));
+});
+test("unknown path stays blocked even when its changed project docs select bootstrap",()=>{
+ const changed=calculateImpact(registry,["docs/architecture/modules/policy.md","unowned/private-policy.mjs"]);
+ assert.deepEqual(changed.unknown,["unowned/private-policy.mjs"]);
+ assert.equal(changed.full,true);
+});
+test("CI evidence never claims real Windows-host or financial trading qualification",()=>{
+ assert(code.includes("CHECKED_BY_WINDOWS_CI_NO_EXTERNAL_SERVICES"));
+ assert(!code.includes("LIVE_APPROVED"));
+ assert(!code.includes("HIVE_LOCAL_FULLY_FUNCTIONAL"));
+});
