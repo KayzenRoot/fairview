@@ -94,7 +94,7 @@ test("FV-PORTFOLIO-001 real test ownership proves invented Portfolio seam but no
  assert.deepEqual(x.direct_active,["portfolio"]);
  assert.deepEqual(x.direct_planned,[]);
  assert(x.active.includes("portfolio"));
- for(const id of ["strategy-forex","strategy-cex","strategy-defi","web","integration"])
+ for(const id of ["strategy-forex","strategy-cex","strategy-defi","integration"])
   assert(x.planned.includes(id),"FUTURE_NOT_TESTED "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
@@ -118,7 +118,7 @@ test("FV-REPLAY-001 direct invented source owner is actually tested while resear
  assert.deepEqual(impacted.direct_active,["replay"]);
  assert.deepEqual(impacted.direct_planned,[]);
  assert(impacted.active.includes("research"));
- for(const id of ["strategy-forex","strategy-cex","strategy-defi","web","integration"])
+ for(const id of ["strategy-forex","strategy-cex","strategy-defi","integration"])
   assert(impacted.planned.includes(id),"PLANNED_DEPENDENT_NOT_TESTED "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
@@ -128,7 +128,7 @@ test("FV-OBSERVABILITY-001 real direct owned diagnostics still leave Web/Integra
  const x=calculateImpact(registry,["src/observability/diagnostics.mjs"]);
  assert.deepEqual(x.direct_active,["observability"]);
  assert.deepEqual(x.direct_planned,[]);
- for(const id of ["web","integration"])
+ for(const id of ["integration"])
   assert(x.planned.includes(id),"UNTESTED_OBSERVABILITY_DEPENDENT "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
@@ -139,7 +139,7 @@ test("FV-RESEARCH-001 real directly owned synthetic A/A source has proof without
  assert.deepEqual(x.direct_active,["research"]);
  assert.deepEqual(x.direct_planned,[]);
  assert(x.active.includes("research"));
- for(const id of ["web","integration"])
+ for(const id of ["integration"])
   assert(x.planned.includes(id),"UNTESTED_RESEARCH_REVERSE "+id);
  const replay=calculateImpact(registry,["src/replay/deterministic.mjs"]);
  const data=calculateImpact(registry,["src/market-data/quote.mjs"]);
@@ -153,9 +153,22 @@ test("FV-AI-001 actual owned no-LLM fixture explanation is included in evidence 
  assert.deepEqual(x.direct_active,["ai"]);
  assert.deepEqual(x.direct_planned,[]);
  assert(x.active.includes("ai"));
- for(const id of ["web","integration"])
+ for(const id of ["integration"])
   assert(x.planned.includes(id),"UNTESTED_AI_DOWNSTREAM "+id);
  for(const source of ["src/risk/evaluate.mjs","src/research/integrity.mjs"])
   assert(calculateImpact(registry,[source]).active.includes("ai"),"MISSING_MOCK_AI_SOURCE "+source);
+ assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
+});
+
+
+test("FV-WEB-001 actual bounded mock read-model is evidence-owned with four direct fixture prerequisites and still-planned Integration",()=>{
+ const x=calculateImpact(registry,["src/web/read-model.mjs"]);
+ assert.deepEqual(x.direct_active,["web"]);
+ assert.deepEqual(x.direct_planned,[]);
+ assert(x.active.includes("web"));
+ assert(x.planned.includes("integration"));
+ for(const src of ["src/risk/evaluate.mjs","src/portfolio/projection.mjs",
+  "src/observability/diagnostics.mjs","src/ai/explanation.mjs"])
+  assert(calculateImpact(registry,[src]).active.includes("web"),"MISSING_WEB_UPSTREAM "+src);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
