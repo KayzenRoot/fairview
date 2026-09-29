@@ -76,6 +76,7 @@ export function appendSyntheticLedgerEvent(state,event){
   const last=state.events.at(-1);
   if(units(event.sequence)!==(last?units(last.sequence)+1n:1n))return deny("EVENT_SEQUENCE_GAP",state);
   if(event.type==="RECONCILE"){
+   if(state.attempt_id===null)return deny("PRE_SEND_MARKER_REQUIRED",state);
    if(event.quantity_units!==null||event.execution_id!==null||event.attempt_id!==state.attempt_id||
       !receiptValid(event.receipt,state))return deny("INVALID_RECONCILIATION_RECEIPT",state);
    const rec=event.receipt,known=units(state.filled_units),reported=units(rec.reported_filled_units);
@@ -84,7 +85,7 @@ export function appendSyntheticLedgerEvent(state,event){
       rec.order_status==="FILLED"&&reported!==units(state.intent.quantity_units)||
       rec.order_status==="REJECTED"&&reported!==0n)
     return lock(state,"CONFLICTING_SYNTHETIC_RECONCILIATION",event);
-   const phase={OPEN:"ACKNOWLEDGED",FILLED:"FILLED",CANCELED:"CANCELED_CONFIRMED",REJECTED:"REJECTED"}[rec.order_status];
+   const phase={OPEN:reported>0n?"PARTIALLY_FILLED":"ACKNOWLEDGED",FILLED:"FILLED",CANCELED:"CANCELED_CONFIRMED",REJECTED:"REJECTED"}[rec.order_status];
    return outcome("APPLIED","SYNTHETIC_RECONCILED_NOT_VENUE_PROOF",
     next(state,event,{phase,filled_units:rec.reported_filled_units,unknown_external_effect:false}));
   }
