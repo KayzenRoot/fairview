@@ -22,8 +22,8 @@
           </a>
           <a href="#markets" data-view="markets"><span class="nav-icon" aria-hidden="true">⌁</span><span>Markets</span><span class="planned-tag">PLANNED</span></a>
           <a href="#strategies" data-view="strategies"><span class="nav-icon" aria-hidden="true">⌘</span><span>Strategies</span><span class="planned-tag">PLANNED</span></a>
-          <a href="#portfolio" data-view="portfolio"><span class="nav-icon" aria-hidden="true">▤</span><span>Portfolio</span><span class="planned-tag">PLANNED</span></a>
-          <a href="#risk" data-view="risk"><span class="nav-icon" aria-hidden="true">⛨</span><span>Risk</span><span class="planned-tag">PLANNED</span></a>
+          <a href="#portfolio" data-view="portfolio"><span class="nav-icon" aria-hidden="true">▤</span><span>Portfolio</span><span class="nav-indicator"></span></a>
+          <a href="#risk" data-view="risk"><span class="nav-icon" aria-hidden="true">⛨</span><span>Risk</span><span class="nav-indicator"></span></a>
           <a href="#replay" data-view="replay"><span class="nav-icon" aria-hidden="true">↻</span><span>Replay</span><span class="planned-tag">PLANNED</span></a>
           <a href="#incidents" data-view="incidents"><span class="nav-icon" aria-hidden="true">◎</span><span>Incidents</span><span class="planned-tag">PLANNED</span></a>
           <a href="#advisory" data-view="advisory"><span class="nav-icon" aria-hidden="true">✳</span><span>Advisory</span><span class="planned-tag">PLANNED</span></a>
@@ -67,14 +67,15 @@
           </div>
         </section>
 
+        <div class="snapshot-status" id="snapshot-status" role="status" aria-live="polite">
+          <span class="status-orb" aria-hidden="true"></span>
+          <span id="snapshot-status-text">Loading local fixture…</span>
+          <span class="status-scenario" id="snapshot-scenario">HEALTHY_FIXTURE · REQUESTED</span>
+          <span class="status-context">READ-ONLY SNAPSHOT</span>
+        </div>
+
         <section id="overview-panel" aria-labelledby="overview-title">
           <h2 class="visually-hidden" id="overview-title">Synthetic overview</h2>
-          <div class="snapshot-status" id="snapshot-status" role="status" aria-live="polite">
-            <span class="status-orb" aria-hidden="true"></span>
-            <span id="snapshot-status-text">Loading local fixture…</span>
-            <span class="status-context">READ-ONLY SNAPSHOT</span>
-          </div>
-
           <div class="summary-grid">
             <article class="summary-card summary-feature">
               <div class="card-heading"><span class="card-kicker">SCENARIO MODE</span><span class="card-mark" aria-hidden="true">◈</span></div>
@@ -139,6 +140,62 @@
             <div><span class="planned-overline">NEXT VIEWS</span><strong>More workspace areas</strong><small>Navigation previews only; integrations are not implemented.</small></div>
             <div class="planned-pills"><span>Markets <b>PLANNED</b></span><span>Strategies <b>PLANNED</b></span><span>Replay <b>PLANNED</b></span></div>
           </section>
+        </section>
+
+        <section id="risk-panel" class="screen-panel" hidden aria-labelledby="risk-title">
+          <h2 class="visually-hidden" id="risk-title">Synthetic Risk view</h2>
+          <div class="view-grid">
+            <article class="panel view-card" id="risk-view-card" data-state="loading">
+              <div class="panel-heading">
+                <div><div class="eyebrow">FIXTURE ONLY</div><h2>Mock risk classification</h2></div>
+                <span class="panel-icon" aria-hidden="true">⌁</span>
+              </div>
+              <div class="view-result-row">
+                <span>Fictional risk class</span>
+                <strong id="risk-page-value">READ_MODEL_UNAVAILABLE</strong>
+              </div>
+              <div class="view-result-row">
+                <span>Hypothetical pause hint</span>
+                <strong id="risk-pause-value">READ_MODEL_UNAVAILABLE</strong>
+              </div>
+              <p class="view-state-copy" id="risk-page-context" aria-live="polite">Loading a synthetic fixture; earlier values are cleared.</p>
+            </article>
+            <aside class="panel view-boundary">
+              <span class="view-boundary-icon" aria-hidden="true">!</span>
+              <div>
+                <strong class="no-authority-label">NÃO AUTORIZA NEGOCIAÇÃO</strong>
+                <p>This fictional label is not a risk control, approval, recommendation, or real operating state.</p>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="portfolio-panel" class="screen-panel" hidden aria-labelledby="portfolio-title">
+          <h2 class="visually-hidden" id="portfolio-title">Synthetic Portfolio view</h2>
+          <div class="view-grid">
+            <article class="panel view-card" id="portfolio-view-card" data-state="loading">
+              <div class="panel-heading">
+                <div><div class="eyebrow">FIXTURE ONLY</div><h2>Fictional portfolio class</h2></div>
+                <span class="panel-icon" aria-hidden="true">▤</span>
+              </div>
+              <div class="view-result-row">
+                <span>Fictional class</span>
+                <strong id="portfolio-page-value">READ_MODEL_UNAVAILABLE</strong>
+              </div>
+              <div class="view-result-row">
+                <span>Fixture certainty</span>
+                <strong id="portfolio-certainty">READ_MODEL_UNAVAILABLE</strong>
+              </div>
+              <p class="view-state-copy" id="portfolio-page-context" aria-live="polite">Loading a synthetic fixture; earlier values are cleared.</p>
+            </article>
+            <aside class="panel view-boundary">
+              <span class="view-boundary-icon" aria-hidden="true">◇</span>
+              <div>
+                <strong>NO ACCOUNT OR MONEY DATA</strong>
+                <p>There are no balances, positions, returns, account history, or actual reconciliation in this preview.</p>
+              </div>
+            </aside>
+          </div>
         </section>
 
         <section id="planned-panel" class="planned-panel" hidden aria-live="polite">
