@@ -5,7 +5,7 @@
   "project": "Fairview",
   "brand": "Next Labs",
   "github_repo": "KayzenRoot/fairview",
-  "work_order": "FV-GOV-011",
+  "work_order": "FV-GOV-012",
   "authority": "GIT_SOURCEPACK_GEF_NODE22",
   "source_main_before_migration": "9eb01876adf2e1f2408b451e8cc08abb123173a5",
   "migration_pr": 18,
@@ -14,12 +14,12 @@
   "independent_approval": false,
   "approval_receipt": "NOT_INDEPENDENTLY_PROMOTED",
   "latest_observed_main": {
-    "sha": "b70d5be9cd4df3e5b5a3e99a8aaa92c3dfadeb18",
+    "sha": "be4b979d2e2469e42940e5861e753667c500323c",
     "observed_on": "2026-09-29",
     "latest_merged_module_pr": 45,
     "latest_merged_correction_pr": 27,
     "baseline_governance_pr": 44,
-    "exact_main_push_workflow_run": 36588730744,
+    "exact_main_push_workflow_run": 36609358910,
     "hosted_required_jobs_passed": 4,
     "hosted_required_jobs_total": 4,
     "owned_ledger_tests_on_correction_pr_head": "27/27",
@@ -27,7 +27,7 @@
     "owner_audit": "NOT_INDEPENDENT",
     "owned_risk_tests_on_risk_pr_head": "39/39",
     "bootstrap_tests_on_risk_pr_head": "72/72",
-    "full_active_tests_on_main": "561/561",
+    "full_active_tests_on_main": "569/569",
     "portfolio_source_pr_head": "3debe648ea8f7f7484fa889cf999c70aa1a15e26",
     "portfolio_source_pr_exact_head_run": 36563548889,
     "owned_portfolio_tests_on_portfolio_pr_head": "27/27",
@@ -102,7 +102,19 @@
     "owned_forex_tests_on_forex_pr_head": "29/29",
     "bootstrap_tests_on_forex_pr_head": "88/88",
     "forex_source_merge_sha": "b70d5be9cd4df3e5b5a3e99a8aaa92c3dfadeb18",
-    "forex_owner_audit": "NOT_INDEPENDENT"
+    "forex_owner_audit": "NOT_INDEPENDENT",
+    "latest_merged_local_preview_pr": 48,
+    "local_preview_source_pr_final_head": "aa6dd6595a063fd7e26f590ecaacc6c0b7e0a5fb",
+    "local_preview_source_pr_exact_head_run": 36607900639,
+    "local_preview_source_merge_sha": "be4b979d2e2469e42940e5861e753667c500323c",
+    "local_preview_owned_web_tests_on_pr_head": "35/35",
+    "local_preview_bootstrap_tests_on_pr_head": "88/88",
+    "local_preview_same_pr_correction_deltas": [
+      "FV-UI-DEMO-001-CORR-001",
+      "FV-UI-DEMO-001-CORR-002"
+    ],
+    "local_preview_coderabbit_review": "NO_ACTIONABLE_COMMENTS_100_PERCENT_DOCSTRINGS_19_SUPPORTED",
+    "local_preview_owner_audit": "NOT_INDEPENDENT"
   },
   "registry": {
     "total": 20,
@@ -180,7 +192,7 @@
     "ai_model_service_connected": false,
     "ai_human_review_complete": false,
     "ai_tuning_approved": false,
-    "web_scope": "LOCAL_IN_MEMORY_SYNTHETIC_FOUR_OWNER_READ_MODEL_ONLY",
+    "web_scope": "SYNTHETIC_FOUR_OWNER_READ_MODEL_WITH_LOOPBACK_FIXTURE_UI_ONLY",
     "web_execution_authorized": false,
     "web_network_performed": false,
     "web_persisted": false,
@@ -214,13 +226,17 @@
     "forex_real_alert_delivered": false,
     "forex_model_inference_performed": false,
     "forex_session_authenticated": false,
-    "forex_operator_command_available": false
+    "forex_operator_command_available": false,
+    "web_local_preview_loopback_http": true,
+    "web_external_provider_network_performed": false,
+    "web_real_session_authenticated": false
   },
   "gef": {
     "tag": "v1.0.0",
     "commit": "866fe3af8cccc65c929aaf6a47a924401fa448b3",
     "gitlink_unchanged": true,
-    "local_windows_verification": "NOT_OBSERVED_BY_THIS_RECONCILIATION"
+    "local_windows_verification": "NOT_OBSERVED_BY_THIS_RECONCILIATION",
+    "hosted_windows_ps51_on_exact_main": true
   },
   "sourcepack": {
     "native_development": "Git Node22 pinned GEF only",
