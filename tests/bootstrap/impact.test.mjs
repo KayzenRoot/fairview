@@ -425,7 +425,7 @@ test("Round 10 readiness inventory exactly mirrors the canonical 20-module DAG a
       const dependencyWave=waves.findIndex(w=>w.includes(dep));
       assert(dependencyWave>=0&&dependencyWave<wave,"R10_DEPENDENCY_WAVE_INVALID "+mod.id+" -> "+dep);
     }
-    if(["risk","ai","web","policy","clock","market-data","ledger","execution","portfolio","replay","research","observability"].includes(mod.id)){
+    if(["risk","forex","ai","web","policy","clock","market-data","ledger","execution","portfolio","replay","research","observability"].includes(mod.id)){
       assert.equal(mod.state,"active","R10_SYNTHETIC_MODULE_NOT_ADMITTED "+mod.id);
       assert.deepEqual(mod.tests,["tests/"+mod.id+"/*.test.mjs"],"R10_SYNTHETIC_TEST_OWNER_MISSING "+mod.id);
     }else if(mod.id!=="bootstrap"){
