@@ -484,11 +484,15 @@ test("admitted synthetic policy remains testable with unimplemented downstream d
  assert(result.planned.includes("integration"));
  assert.deepEqual(result.unknown,[]);
 });
-test("every active product must have admitted active direct upstream dependencies",()=>{
+test("active risk with its admitted upstream may validate, while execution with planned ledger is still blocked",()=>{
  const candidate=structuredClone(r);
  const risk=candidate.modules.find(m=>m.id==="risk");
  risk.state="active";
  risk.tests=["tests/risk/*.test.mjs"];
+ assert.equal(validateRegistry(candidate),candidate);
+ const execution=candidate.modules.find(m=>m.id==="execution");
+ execution.state="active";
+ execution.tests=["tests/execution/*.test.mjs"];
  assert.throws(()=>validateRegistry(candidate),/ACTIVE_DEPENDENCY_NOT_ACTIVE/);
 });
 test("mixed admitted upstream source and directly edited planned ledger remain fail-closed",()=>{
