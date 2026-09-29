@@ -118,7 +118,7 @@ test("FV-REPLAY-001 direct invented source owner is actually tested while resear
  assert.deepEqual(impacted.direct_active,["replay"]);
  assert.deepEqual(impacted.direct_planned,[]);
  assert(impacted.active.includes("research"));
- for(const id of ["strategy-forex","strategy-cex","strategy-defi","ai","web","integration"])
+ for(const id of ["strategy-forex","strategy-cex","strategy-defi","web","integration"])
   assert(impacted.planned.includes(id),"PLANNED_DEPENDENT_NOT_TESTED "+id);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
@@ -139,10 +139,23 @@ test("FV-RESEARCH-001 real directly owned synthetic A/A source has proof without
  assert.deepEqual(x.direct_active,["research"]);
  assert.deepEqual(x.direct_planned,[]);
  assert(x.active.includes("research"));
- for(const id of ["ai","web","integration"])
+ for(const id of ["web","integration"])
   assert(x.planned.includes(id),"UNTESTED_RESEARCH_REVERSE "+id);
  const replay=calculateImpact(registry,["src/replay/deterministic.mjs"]);
  const data=calculateImpact(registry,["src/market-data/quote.mjs"]);
  assert(replay.active.includes("research")&&data.active.includes("research"));
+ assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
+});
+
+
+test("FV-AI-001 actual owned no-LLM fixture explanation is included in evidence while Web/Integration remain planned",()=>{
+ const x=calculateImpact(registry,["src/ai/explanation.mjs"]);
+ assert.deepEqual(x.direct_active,["ai"]);
+ assert.deepEqual(x.direct_planned,[]);
+ assert(x.active.includes("ai"));
+ for(const id of ["web","integration"])
+  assert(x.planned.includes(id),"UNTESTED_AI_DOWNSTREAM "+id);
+ for(const source of ["src/risk/evaluate.mjs","src/research/integrity.mjs"])
+  assert(calculateImpact(registry,[source]).active.includes("ai"),"MISSING_MOCK_AI_SOURCE "+source);
  assert(code.includes("planned_reverse_dependents_not_executed:impact.planned"));
 });
