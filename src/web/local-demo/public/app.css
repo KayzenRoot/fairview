@@ -242,6 +242,12 @@ h1 { margin-bottom: 4px; font-size: 25px; font-weight: 620; letter-spacing: -.7p
 .view-state-copy[data-state="degraded"] { border-color: #634c2e; background: #2a2218; color: #efd19b; }
 .view-state-copy[data-state="denied"], .view-state-copy[data-state="error"] { border-color: #613743; background: #28191e; color: #efb7c1; }
 .view-boundary { display: flex; min-height: 145px; align-items: start; gap: 12px; padding: 19px; border-color: #665438; background: linear-gradient(145deg, #211d19, #151b25); }
+.incident-boundary { border-color: #67404a; background: linear-gradient(145deg, #251a21, #151b25); }
+.incident-boundary .view-boundary-icon { border-color: #a35f6d; color: #efb7c1; }
+.incident-boundary strong { color: #efb7c1; }
+.advisory-boundary { border-color: #51436d; background: linear-gradient(145deg, #201b2b, #151b25); }
+.advisory-boundary .view-boundary-icon { border-color: #7965a4; color: #c7b8ff; }
+.advisory-boundary strong { color: #d3caff; }
 .view-boundary-icon { display: grid; width: 24px; height: 24px; flex: 0 0 auto; place-items: center; border: 1px solid #9a7643; border-radius: 50%; color: #e7c991; font-size: 12px; font-weight: 800; }
 .view-boundary strong { display: block; margin: 1px 0 8px; color: #efd19b; font-size: 10px; letter-spacing: .45px; }
 .view-boundary strong.no-authority-label { font-size: 12px; letter-spacing: .25px; }
