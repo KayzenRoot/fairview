@@ -5,11 +5,11 @@ const views = Object.freeze({
   },
   markets: {
     title: "Markets",
-    description: "Market data integrations are not part of this local preview.",
+    description: "Synthetic environment and redaction status only; no market data is available.",
   },
   strategies: {
     title: "Strategies",
-    description: "Strategy operations are not available in this development shell.",
+    description: "No strategy data or strategy engine is included in this local preview.",
   },
   portfolio: {
     title: "Portfolio",
@@ -21,7 +21,7 @@ const views = Object.freeze({
   },
   replay: {
     title: "Replay",
-    description: "Replay is a planned workspace view; no performance claim is available.",
+    description: "Bounded local synthetic sequence status only; no historical replay is available.",
   },
   incidents: {
     title: "Incidents",
@@ -33,7 +33,7 @@ const views = Object.freeze({
   },
   settings: {
     title: "Settings",
-    description: "No account, security, provider, or operational settings are available.",
+    description: "Read-only local preview boundaries; no account or provider settings exist.",
   },
 });
 const statusValues = new Set([
@@ -100,6 +100,7 @@ const snapshotKeys = Object.freeze([
 ]);
 const displayLabels = Object.freeze({
   mock_view: {FICTIONAL_OVERVIEW_ONLY: "Fictional overview"},
+  mode_label: {SYNTHETIC_NONAUTHORITATIVE: "Synthetic · non-authoritative"},
   risk_class: {
     MOCK_RISK_PASS_NOT_AUTHORIZATION: "Mock risk · no authority",
     MOCK_RISK_REFUSAL: "Mock risk refused",
@@ -121,6 +122,8 @@ const displayLabels = Object.freeze({
   },
   incident_banner: {NO_REAL_MONITORING_OR_BROKER_STATE: "No live monitoring or broker state"},
   displayed_session_class: {NOT_AUTHENTICATED_LOCAL_FIXTURE: "No authenticated session"},
+  stream_class: {BOUNDED_LOCAL_SEQUENCE_ONLY: "Bounded local synthetic sequence only"},
+  redaction_class: {ONLY_BOUNDED_ENUMS_NO_IDENTIFIERS: "Only bounded enums; no identifiers"},
 });
 const displayLabel = (field, value) => displayLabels[field]?.[value] ?? "READ_MODEL_UNAVAILABLE";
 const mockViewClasses = new Set(Object.keys(displayLabels.mock_view));
@@ -135,12 +138,17 @@ const redactionClasses = new Set(["ONLY_BOUNDED_ENUMS_NO_IDENTIFIERS"]);
 const snapshotStatus = document.querySelector("#snapshot-status");
 const statusText = document.querySelector("#snapshot-status-text");
 const scenarioSelect = document.querySelector("#fixture-scenario");
-const overviewPanel = document.querySelector("#overview-panel");
-const riskPanel = document.querySelector("#risk-panel");
-const portfolioPanel = document.querySelector("#portfolio-panel");
-const incidentsPanel = document.querySelector("#incidents-panel");
-const advisoryPanel = document.querySelector("#advisory-panel");
-const plannedPanel = document.querySelector("#planned-panel");
+const viewPanels = Object.freeze({
+  overview: "#overview-panel",
+  markets: "#markets-panel",
+  strategies: "#strategies-panel",
+  portfolio: "#portfolio-panel",
+  risk: "#risk-panel",
+  replay: "#replay-panel",
+  incidents: "#incidents-panel",
+  advisory: "#advisory-panel",
+  settings: "#settings-panel",
+});
 let currentView = "overview";
 let latestSnapshotRequestId = 0;
 const hasView = (viewId) => Object.hasOwn(views, viewId);
@@ -160,7 +168,7 @@ function setState(selector, state) {
   if (target) target.dataset.state = state;
 }
 /**
- * Clears every read-model label on all five implemented views for a non-renderable state.
+ * Clears every read-model label on all nine implemented views for a non-renderable state.
  * The scenario label is supplied only from a fixed local map, never from untrusted response text.
  * @param {"loading"|"degraded"|"denied"|"error"} state Current safe display state.
  * @param {string} scenarioLabel Fixed scenario display label or unavailable marker.
@@ -183,6 +191,17 @@ function markReadModelUnavailable(state = "error", scenarioLabel = "SNAPSHOT_UNA
     "#incident-page-banner",
     "#incident-page-diagnostic",
     "#advisory-page-value",
+    "#markets-mode-value",
+    "#markets-stream-value",
+    "#markets-redaction-value",
+    "#strategies-mode-value",
+    "#strategies-redaction-value",
+    "#replay-stream-value",
+    "#replay-session-value",
+    "#replay-redaction-value",
+    "#settings-mode-value",
+    "#settings-session-value",
+    "#settings-redaction-value",
   ]) {
     setText(selector, "READ_MODEL_UNAVAILABLE");
   }
@@ -192,6 +211,13 @@ function markReadModelUnavailable(state = "error", scenarioLabel = "SNAPSHOT_UNA
     "#risk-page-context", "#portfolio-page-context", "#risk-view-card", "#portfolio-view-card", "#pause-note",
     "#incident-page-banner", "#incident-page-diagnostic", "#incident-page-context", "#incident-view-card",
     "#advisory-page-value", "#advisory-page-context", "#advisory-view-card",
+    "#markets-mode-value", "#markets-stream-value", "#markets-redaction-value",
+    "#markets-page-context", "#markets-view-card", "#strategies-mode-value",
+    "#strategies-redaction-value", "#strategies-page-context", "#strategies-view-card",
+    "#replay-stream-value", "#replay-session-value", "#replay-redaction-value",
+    "#replay-page-context", "#replay-view-card", "#settings-mode-value",
+    "#settings-session-value", "#settings-redaction-value", "#settings-page-context",
+    "#settings-view-card",
   ]) {
     setState(selector, state);
   }
@@ -205,6 +231,10 @@ function markReadModelUnavailable(state = "error", scenarioLabel = "SNAPSHOT_UNA
   setText("#portfolio-page-context", stateCopy);
   setText("#incident-page-context", stateCopy);
   setText("#advisory-page-context", stateCopy);
+  setText("#markets-page-context", stateCopy);
+  setText("#strategies-page-context", stateCopy);
+  setText("#replay-page-context", stateCopy);
+  setText("#settings-page-context", stateCopy);
   setText("#pause-note-text", stateCopy);
   setText("#scenario-value", scenarioLabel);
   setText("#snapshot-scenario", scenarioLabel);
@@ -337,6 +367,17 @@ function applySnapshot(snapshot, requestedScenario) {
   setText("#advisory-value", displayLabel("advisory_class", model.advisory_class));
   setText("#incident-value", displayLabel("incident_banner", model.incident_banner));
   setText("#session-value", displayLabel("displayed_session_class", model.displayed_session_class));
+  setText("#markets-mode-value", displayLabel("mode_label", model.mode_label));
+  setText("#markets-stream-value", displayLabel("stream_class", model.stream_class));
+  setText("#markets-redaction-value", displayLabel("redaction_class", model.redaction_class));
+  setText("#strategies-mode-value", displayLabel("mode_label", model.mode_label));
+  setText("#strategies-redaction-value", displayLabel("redaction_class", model.redaction_class));
+  setText("#replay-stream-value", displayLabel("stream_class", model.stream_class));
+  setText("#replay-session-value", displayLabel("displayed_session_class", model.displayed_session_class));
+  setText("#replay-redaction-value", displayLabel("redaction_class", model.redaction_class));
+  setText("#settings-mode-value", displayLabel("mode_label", model.mode_label));
+  setText("#settings-session-value", displayLabel("displayed_session_class", model.displayed_session_class));
+  setText("#settings-redaction-value", displayLabel("redaction_class", model.redaction_class));
   setText(
     "#risk-page-context",
     degraded
@@ -361,6 +402,30 @@ function applySnapshot(snapshot, requestedScenario) {
       ? "Fixed fictional template only; no model inference or human review was performed."
       : "Fixed fictional template only; no investment advice, model, or human approval exists.",
   );
+  setText(
+    "#markets-page-context",
+    degraded
+      ? "Incomplete synthetic sources; no live market state is available."
+      : "Complete synthetic fixture; no live market state is represented.",
+  );
+  setText(
+    "#strategies-page-context",
+    degraded
+      ? "Incomplete fixture; this snapshot contains no strategy output."
+      : "This snapshot contains no strategy data or strategy engine.",
+  );
+  setText(
+    "#replay-page-context",
+    degraded
+      ? "Incomplete synthetic fixture; no historical replay or result is available."
+      : "Bounded local synthetic sequence only; no historical replay or result is available.",
+  );
+  setText(
+    "#settings-page-context",
+    degraded
+      ? "Incomplete fixture; the preview remains read-only and unauthenticated."
+      : "Read-only local preview; no login, account, provider, or security settings exist.",
+  );
   const pauseNote = document.querySelector("#pause-note");
   pauseNote.dataset.state = model.hypothetical_pause_hint ? "degraded" : "ready";
   setText(
@@ -377,6 +442,13 @@ function applySnapshot(snapshot, requestedScenario) {
     "#risk-page-context", "#portfolio-page-context", "#risk-view-card", "#portfolio-view-card",
     "#incident-page-banner", "#incident-page-diagnostic", "#incident-page-context", "#incident-view-card",
     "#advisory-page-value", "#advisory-page-context", "#advisory-view-card",
+    "#markets-mode-value", "#markets-stream-value", "#markets-redaction-value",
+    "#markets-page-context", "#markets-view-card", "#strategies-mode-value",
+    "#strategies-redaction-value", "#strategies-page-context", "#strategies-view-card",
+    "#replay-stream-value", "#replay-session-value", "#replay-redaction-value",
+    "#replay-page-context", "#replay-view-card", "#settings-mode-value",
+    "#settings-session-value", "#settings-redaction-value", "#settings-page-context",
+    "#settings-view-card",
   ]) {
     setState(selector, degraded ? "degraded" : "ready");
   }
@@ -418,7 +490,7 @@ async function loadSnapshot(scenario) {
   }
 }
 /**
- * Selects one of five implemented synthetic views, retaining planned placeholders for the others.
+ * Selects one of nine implemented synthetic views while reusing the accepted shared snapshot.
  * All implemented screens share the same accepted snapshot and scenario selector.
  * @param {string} viewId Requested fixed navigation key.
  * @returns {void}
@@ -426,25 +498,14 @@ async function loadSnapshot(scenario) {
 function applyView(viewId) {
   const view = hasView(viewId) ? views[viewId] : views.overview;
   currentView = hasView(viewId) ? viewId : "overview";
-  const isOverview = currentView === "overview";
-  const isRisk = currentView === "risk";
-  const isPortfolio = currentView === "portfolio";
-  const isIncidents = currentView === "incidents";
-  const isAdvisory = currentView === "advisory";
-  const isImplemented = isOverview || isRisk || isPortfolio || isIncidents || isAdvisory;
-  overviewPanel.hidden = !isOverview;
-  riskPanel.hidden = !isRisk;
-  portfolioPanel.hidden = !isPortfolio;
-  incidentsPanel.hidden = !isIncidents;
-  advisoryPanel.hidden = !isAdvisory;
-  plannedPanel.hidden = isImplemented;
-  document.querySelector("#scenario-control").hidden = !isImplemented;
-  snapshotStatus.hidden = !isImplemented;
+  for (const [panelView, selector] of Object.entries(viewPanels)) {
+    document.querySelector(selector).hidden = panelView !== currentView;
+  }
+  document.querySelector("#scenario-control").hidden = false;
+  snapshotStatus.hidden = false;
   document.querySelector("#breadcrumb-current").textContent = view.title;
   document.querySelector("#page-title").textContent = view.title;
   document.querySelector("#page-description").textContent = view.description;
-  document.querySelector("#planned-title").textContent = `${view.title} is planned`;
-  document.querySelector("#planned-description").textContent = view.description;
   for (const link of document.querySelectorAll("[data-view]")) {
     if (link.dataset.view === currentView) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");

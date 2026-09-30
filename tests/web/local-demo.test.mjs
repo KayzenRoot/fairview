@@ -48,6 +48,16 @@ const MODEL_KEYS = [
   "redaction_class",
   "hypothetical_pause_hint",
 ];
+const VIEW_CARD_IDS = Object.freeze({
+  markets: "markets",
+  strategies: "strategies",
+  risk: "risk",
+  portfolio: "portfolio",
+  replay: "replay",
+  incidents: "incident",
+  advisory: "advisory",
+  settings: "settings",
+});
 
 /**
  * Runs a test callback against an ephemeral server and always closes its loopback listener.
@@ -148,17 +158,22 @@ async function createUiHarness(initialHash = "#overview") {
 
   const selectors = [
     "#snapshot-status", "#snapshot-status-text", "#snapshot-scenario", "#fixture-scenario",
-    "#overview-panel", "#risk-panel", "#portfolio-panel", "#incidents-panel", "#advisory-panel",
-    "#planned-panel", "#scenario-control", "#mode-value",
+    "#overview-panel", "#markets-panel", "#strategies-panel", "#risk-panel", "#portfolio-panel",
+    "#replay-panel", "#incidents-panel", "#advisory-panel", "#settings-panel",
+    "#scenario-control", "#mode-value",
     "#risk-value", "#portfolio-value", "#diagnostic-value", "#model-view",
     "#advisory-value", "#incident-value", "#session-value", "#pause-note-text",
     "#pause-note", "#scenario-value", "#breadcrumb-current", "#page-title",
-    "#page-description", "#planned-title", "#planned-description",
+    "#page-description",
     "#risk-view-card", "#risk-page-value", "#risk-pause-value", "#risk-page-context",
     "#portfolio-view-card", "#portfolio-page-value", "#portfolio-certainty", "#portfolio-page-context",
     "#incident-view-card", "#incident-page-banner", "#incident-page-diagnostic", "#incident-page-context",
     "#advisory-view-card", "#advisory-page-value", "#advisory-page-context",
     "#advisory-model-state", "#advisory-human-state",
+    "#markets-view-card", "#markets-mode-value", "#markets-stream-value", "#markets-redaction-value", "#markets-page-context",
+    "#strategies-view-card", "#strategies-mode-value", "#strategies-redaction-value", "#strategies-page-context",
+    "#replay-view-card", "#replay-stream-value", "#replay-session-value", "#replay-redaction-value", "#replay-page-context",
+    "#settings-view-card", "#settings-mode-value", "#settings-session-value", "#settings-redaction-value", "#settings-page-context",
   ];
   const elements = new Map(selectors.map((selector) => [selector, fakeElement()]));
   elements.get("#fixture-scenario").value = "healthy";
@@ -254,6 +269,10 @@ function assertDisplayedScenario(harness, selectedScenario) {
       incidentBanner: "No live monitoring or broker state",
       diagnostic: "In-process diagnostic",
       advisory: "Fixed template only",
+      marketMode: "Synthetic · non-authoritative",
+      stream: "Bounded local synthetic sequence only",
+      redaction: "Only bounded enums; no identifiers",
+      session: "No authenticated session",
     },
     degraded: {
       scenario: "INCOMPLETE_FIXTURE",
@@ -266,6 +285,10 @@ function assertDisplayedScenario(harness, selectedScenario) {
       incidentBanner: "No live monitoring or broker state",
       diagnostic: "Local diagnostic refused",
       advisory: "Fixed template only",
+      marketMode: "Synthetic · non-authoritative",
+      stream: "Bounded local synthetic sequence only",
+      redaction: "Only bounded enums; no identifiers",
+      session: "No authenticated session",
     },
     denied: {
       scenario: "DENIED_FIXTURE",
@@ -278,6 +301,10 @@ function assertDisplayedScenario(harness, selectedScenario) {
       incidentBanner: "READ_MODEL_UNAVAILABLE",
       diagnostic: "READ_MODEL_UNAVAILABLE",
       advisory: "READ_MODEL_UNAVAILABLE",
+      marketMode: "READ_MODEL_UNAVAILABLE",
+      stream: "READ_MODEL_UNAVAILABLE",
+      redaction: "READ_MODEL_UNAVAILABLE",
+      session: "READ_MODEL_UNAVAILABLE",
     },
   }[selectedScenario];
   assert.equal(harness.elements.get("#fixture-scenario").value, selectedScenario);
@@ -293,16 +320,28 @@ function assertDisplayedScenario(harness, selectedScenario) {
   assert.equal(harness.elements.get("#incident-page-banner").textContent, expected.incidentBanner);
   assert.equal(harness.elements.get("#incident-page-diagnostic").textContent, expected.diagnostic);
   assert.equal(harness.elements.get("#advisory-page-value").textContent, expected.advisory);
+  assert.equal(harness.elements.get("#markets-mode-value").textContent, expected.marketMode);
+  assert.equal(harness.elements.get("#markets-stream-value").textContent, expected.stream);
+  assert.equal(harness.elements.get("#markets-redaction-value").textContent, expected.redaction);
+  assert.equal(harness.elements.get("#strategies-mode-value").textContent, expected.marketMode);
+  assert.equal(harness.elements.get("#strategies-redaction-value").textContent, expected.redaction);
+  assert.equal(harness.elements.get("#replay-stream-value").textContent, expected.stream);
+  assert.equal(harness.elements.get("#replay-session-value").textContent, expected.session);
+  assert.equal(harness.elements.get("#replay-redaction-value").textContent, expected.redaction);
+  assert.equal(harness.elements.get("#settings-mode-value").textContent, expected.marketMode);
+  assert.equal(harness.elements.get("#settings-session-value").textContent, expected.session);
+  assert.equal(harness.elements.get("#settings-redaction-value").textContent, expected.redaction);
   assert.equal(harness.elements.get("#advisory-model-state").textContent, "FALSE · NO MODEL");
   assert.equal(harness.elements.get("#advisory-human-state").textContent, "FALSE · NO HUMAN APPROVAL");
-  assert.equal(harness.elements.get("#risk-view-card").dataset.state, expected.status);
-  assert.equal(harness.elements.get("#portfolio-view-card").dataset.state, expected.status);
-  assert.equal(harness.elements.get("#incident-view-card").dataset.state, expected.status);
-  assert.equal(harness.elements.get("#advisory-view-card").dataset.state, expected.status);
+  for (const view of ["markets", "strategies", "risk", "portfolio", "replay", "incidents", "advisory", "settings"]) {
+    const card = harness.elements.get(`#${VIEW_CARD_IDS[view]}-view-card`);
+    assert.ok(card, `${view} value card exists in the fake DOM`);
+    assert.equal(card.dataset.state, expected.status);
+  }
 }
 
 /**
- * Asserts every dynamic value from all five implemented views is cleared after an invalid response.
+ * Asserts every dynamic value from all nine implemented views is cleared after an invalid response.
  * @param {{elements: Map<string, {textContent: string, dataset: Record<string, string>}>}} harness Fake UI under test.
  * @returns {void}
  */
@@ -312,17 +351,28 @@ function assertAllImplementedViewsUnavailable(harness) {
     "#diagnostic-value", "#model-view", "#advisory-value", "#incident-value", "#session-value",
     "#risk-page-value", "#risk-pause-value", "#portfolio-page-value", "#portfolio-certainty",
     "#incident-page-banner", "#incident-page-diagnostic", "#advisory-page-value",
+    "#markets-mode-value", "#markets-stream-value", "#markets-redaction-value",
+    "#strategies-mode-value", "#strategies-redaction-value", "#replay-stream-value",
+    "#replay-session-value", "#replay-redaction-value", "#settings-mode-value",
+    "#settings-session-value", "#settings-redaction-value",
   ]) {
     const expected = ["#scenario-value", "#snapshot-scenario"].includes(selector)
       ? "SNAPSHOT_UNAVAILABLE"
       : "READ_MODEL_UNAVAILABLE";
     assert.equal(harness.elements.get(selector).textContent, expected, selector);
   }
-  for (const selector of ["#risk-view-card", "#portfolio-view-card", "#incident-view-card", "#advisory-view-card"]) {
-    assert.equal(harness.elements.get(selector).dataset.state, "error", selector);
+  for (const view of ["markets", "strategies", "risk", "portfolio", "replay", "incidents", "advisory", "settings"]) {
+    const selector = `#${VIEW_CARD_IDS[view]}-view-card`;
+    const card = harness.elements.get(selector);
+    assert.ok(card, `${selector} exists in the fake DOM`);
+    assert.equal(card.dataset.state, "error", selector);
   }
   assert.equal(harness.elements.get("#advisory-model-state").textContent, "FALSE · NO MODEL");
   assert.equal(harness.elements.get("#advisory-human-state").textContent, "FALSE · NO HUMAN APPROVAL");
+  for (const view of ["markets", "strategies", "replay", "settings"]) {
+    assert.equal(harness.elements.get(`#${view}-page-context`).textContent,
+      "Snapshot unavailable or invalid; earlier view values are cleared.", `${view} context`);
+  }
 }
 
 /**
@@ -342,6 +392,10 @@ function assertScenarioMismatchFailsClosed(harness, requestedScenario, receivedS
     "#diagnostic-value", "#model-view", "#advisory-value", "#incident-value", "#session-value",
     "#risk-page-value", "#risk-pause-value", "#portfolio-page-value", "#portfolio-certainty",
     "#incident-page-banner", "#incident-page-diagnostic", "#advisory-page-value",
+    "#markets-mode-value", "#markets-stream-value", "#markets-redaction-value",
+    "#strategies-mode-value", "#strategies-redaction-value", "#replay-stream-value",
+    "#replay-session-value", "#replay-redaction-value", "#settings-mode-value",
+    "#settings-session-value", "#settings-redaction-value",
   ];
   for (const selector of unavailableSelectors) {
     const expected = ["#scenario-value", "#snapshot-scenario"].includes(selector)
@@ -349,14 +403,18 @@ function assertScenarioMismatchFailsClosed(harness, requestedScenario, receivedS
       : "READ_MODEL_UNAVAILABLE";
     assert.equal(harness.elements.get(selector).textContent, expected, selector);
   }
-  for (const selector of ["#risk-page-context", "#portfolio-page-context", "#incident-page-context", "#advisory-page-context", "#pause-note-text"]) {
+  for (const selector of [
+    "#risk-page-context", "#portfolio-page-context", "#incident-page-context", "#advisory-page-context",
+    "#markets-page-context", "#strategies-page-context", "#replay-page-context", "#settings-page-context", "#pause-note-text",
+  ]) {
     assert.equal(
       harness.elements.get(selector).textContent,
       "Snapshot unavailable or invalid; earlier view values are cleared.",
       selector,
     );
   }
-  for (const selector of ["#incident-view-card", "#advisory-view-card"]) {
+  for (const view of ["markets", "strategies", "risk", "portfolio", "replay", "incidents", "advisory", "settings"]) {
+    const selector = `#${VIEW_CARD_IDS[view]}-view-card`;
     assert.equal(harness.elements.get(selector).dataset.state, "error", selector);
   }
 
@@ -507,6 +565,17 @@ test("local page and assets are served with a restrictive same-origin-only polic
       "Overview", "Markets", "Strategies", "Portfolio", "Risk",
       "Replay", "Incidents", "Advisory", "Settings",
     ]) assert.match(page.body, new RegExp(name));
+    assert.doesNotMatch(page.body, /PLANNED/i);
+    for (const boundary of [
+      "NO LIVE MARKET DATA", "NO QUOTES / NO ORDER BOOK / NO BROKER", "Fixed synthetic fixture only",
+      "NO STRATEGY ENGINE", "NO SIGNAL / NO RECOMMENDATION", "NO BACKTEST / NO PERFORMANCE CLAIM",
+      "NO HISTORICAL MARKET REPLAY", "NO BACKTEST / NO REAL PERFORMANCE",
+      "BOUNDED LOCAL SYNTHETIC SEQUENCE ONLY", "NO LOGIN / NO ACCOUNT",
+      "NO PROVIDER OR SECURITY SETTINGS", "READ-ONLY LOCAL PREVIEW",
+    ]) assert.ok(page.body.includes(boundary), `missing permanent view boundary: ${boundary}`);
+    assert.match(page.body, /id="markets-panel"[^]*id="strategies-panel"/);
+    assert.match(page.body, /id="replay-panel"[^]*id="settings-panel"/);
+    assert.doesNotMatch(page.body, /local_sequence|fixture_scope|account_id|api_key|provider_token/i);
     assert.match(css.body, /@media \(max-width: 820px\)/);
     assert.match(css.body, /@media \(max-width: 520px\)/);
     assert.match(js.body, /credentials: "omit"/);
@@ -557,7 +626,7 @@ test("API returns only the real redacted model labels and keeps degraded state v
   });
 });
 
-test("all five implemented views support hash and mouse navigation without fetching another snapshot", async () => {
+test("all nine implemented views support hash and mouse navigation without fetching another snapshot", async () => {
   const ui = await createUiHarness("#incidents");
   assert.equal(ui.elements.get("#incidents-panel").hidden, false);
   assert.equal(ui.elements.get("#overview-panel").hidden, true);
@@ -566,17 +635,17 @@ test("all five implemented views support hash and mouse navigation without fetch
   ui.requests[0].resolve(apiResponse(createDemoSnapshot("healthy")));
   await ui.startupPromise;
 
-  const implementedViews = ["overview", "risk", "portfolio", "incidents", "advisory"];
+  const implementedViews = ["overview", "markets", "strategies", "portfolio", "risk", "replay", "incidents", "advisory", "settings"];
   for (const view of implementedViews) {
     const clickResult = ui.navigate(view);
     assert.deepEqual(clickResult, {prevented: true, url: `#${view}`});
     for (const panel of implementedViews) {
       assert.equal(ui.elements.get(`#${panel}-panel`).hidden, panel !== view, `${view} mouse navigation`);
     }
-    assert.equal(ui.elements.get("#planned-panel").hidden, true);
     assert.equal(ui.elements.get("#scenario-control").hidden, false);
     assert.equal(ui.elements.get("#snapshot-status").hidden, false);
     assert.equal(ui.links.find((link) => link.dataset.view === view).attributes.get("aria-current"), "page");
+    assert.equal(ui.links.filter((link) => link.attributes.get("aria-current") === "page").length, 1);
     assert.equal(ui.requests.length, 1, `${view} mouse navigation reuses the shared snapshot`);
   }
 
@@ -584,17 +653,18 @@ test("all five implemented views support hash and mouse navigation without fetch
     ui.setHash(`#${view}`);
     assert.equal(ui.elements.get(`#${view}-panel`).hidden, false, `${view} hash navigation`);
     assert.equal(ui.links.find((link) => link.dataset.view === view).attributes.get("aria-current"), "page");
+    assert.equal(ui.links.filter((link) => link.attributes.get("aria-current") === "page").length, 1);
     assert.equal(ui.requests.length, 1, `${view} hash navigation reuses the shared snapshot`);
   }
 
   ui.setHash("#settings");
-  assert.equal(ui.elements.get("#planned-panel").hidden, false);
-  assert.equal(ui.elements.get("#scenario-control").hidden, true);
-  assert.equal(ui.elements.get("#snapshot-status").hidden, true);
+  assert.equal(ui.elements.get("#settings-panel").hidden, false);
+  assert.equal(ui.elements.get("#scenario-control").hidden, false);
+  assert.equal(ui.elements.get("#snapshot-status").hidden, false);
   assert.equal(ui.requests.length, 1);
 });
 
-test("all five views render all three shared fixture states and clear while pending", async () => {
+test("all nine views render all three shared fixture states and clear while pending", async () => {
   const ui = await createUiHarness();
   ui.navigate("risk");
   ui.requests[0].resolve(apiResponse(createDemoSnapshot("healthy")));
@@ -616,8 +686,14 @@ test("all five views render all three shared fixture states and clear while pend
     assert.equal(ui.elements.get("#incident-view-card").dataset.state, "loading");
     assert.equal(ui.elements.get("#advisory-page-value").textContent, "READ_MODEL_UNAVAILABLE");
     assert.equal(ui.elements.get("#advisory-view-card").dataset.state, "loading");
+    for (const view of ["markets", "strategies", "replay", "settings"]) {
+      assert.equal(ui.elements.get(`#${view}-view-card`).dataset.state, "loading", `${view} loading state`);
+      assert.equal(ui.elements.get(`#${view}-page-context`).textContent,
+        "Loading a synthetic fixture; earlier view values are cleared.", `${view} pending context`);
+    }
 
-    for (const view of ["portfolio", "incidents", "advisory", "overview", "risk"]) {
+    const implementedViews = ["overview", "markets", "strategies", "portfolio", "risk", "replay", "incidents", "advisory", "settings"];
+    for (const view of implementedViews) {
       ui.navigate(view);
       assert.equal(ui.elements.get(`#${view}-panel`).hidden, false);
       assert.equal(ui.elements.get("#scenario-control").hidden, false);
@@ -631,12 +707,16 @@ test("all five views render all three shared fixture states and clear while pend
     assert.match(ui.elements.get("#portfolio-page-context").textContent, /synthetic|fictional/i);
     assert.match(ui.elements.get("#incident-page-context").textContent, /synthetic|fictional|diagnostic/i);
     assert.match(ui.elements.get("#advisory-page-context").textContent, /synthetic|fictional|template/i);
+    assert.match(ui.elements.get("#markets-page-context").textContent, /synthetic|market/i);
+    assert.match(ui.elements.get("#strategies-page-context").textContent, /fixture|snapshot|strategy/i);
+    assert.match(ui.elements.get("#replay-page-context").textContent, /synthetic|fixture|replay/i);
+    assert.match(ui.elements.get("#settings-page-context").textContent, /fixture|preview/i);
     assert.equal(ui.elements.get("#snapshot-status-text").textContent.includes("denied"), scenario === "denied");
     const accepted = createDemoSnapshot(scenario);
     const rendered = [...ui.elements.values()].map((element) => element.textContent).join(" ");
     assert.equal(rendered.includes(accepted.reason_code), false, "reason codes are never rendered");
 
-    for (const view of ["overview", "risk", "portfolio", "incidents", "advisory"]) {
+    for (const view of implementedViews) {
       ui.navigate(view);
       assert.equal(ui.elements.get(`#${view}-panel`).hidden, false);
       assertDisplayedScenario(ui, scenario);
@@ -726,6 +806,14 @@ test("browser UI fails closed on malformed, missing, forged, or unexpected snaps
       },
     },
     {
+      name: "malformed mode label",
+      response: () => {
+        const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
+        snapshot.read_model.mode_label = "REAL_MODE_SENTINEL";
+        return apiResponse(snapshot);
+      },
+    },
+    {
       name: "unlisted stream enum",
       response: () => {
         const snapshot = JSON.parse(JSON.stringify(createDemoSnapshot("degraded")));
@@ -746,6 +834,14 @@ test("browser UI fails closed on malformed, missing, forged, or unexpected snaps
       "mandatory_audit_satisfied",
       "model_inference_performed",
       "human_review_complete",
+      "session_authenticated",
+      "server_authorization_performed",
+      "live_stream_connected",
+      "operator_command_available",
+      "real_market_performance_established",
+      "comparative_benchmark_supported",
+      "network_performed",
+      "authenticated_provider_evidence",
     ].map((flag) => ({
       name: `forged ${flag} flag`,
       response: () => {
@@ -822,13 +918,14 @@ test("browser UI fails closed on malformed, missing, forged, or unexpected snaps
       "REAL_BALANCE_VERIFIED", "RAW_DIAGNOSTIC_SENTINEL", "REAL_ADVICE_SENTINEL",
       "REAL_MONITORING_SENTINEL", "REAL_OVERVIEW_SENTINEL", "AUTHENTICATED_SESSION_SENTINEL",
       "LIVE_STREAM_SENTINEL", "RAW_DATA_SENTINEL", "RAW_PROMPT_SENTINEL",
+      "REAL_MODE_SENTINEL",
     ]) {
       assert.equal(rendered.includes(sentinel), false, `${invalid.name}: ${sentinel}`);
     }
   }
 });
 
-test("current denied response with a non-null read model fails closed on all five views", async () => {
+test("current denied response with a non-null read model fails closed on all nine views", async () => {
   const ui = await createUiHarness("#advisory");
   ui.requests[0].resolve(apiResponse(createDemoSnapshot("healthy")));
   await ui.startupPromise;
@@ -844,8 +941,8 @@ test("current denied response with a non-null read model fails closed on all fiv
   assertAllImplementedViewsUnavailable(ui);
 });
 
-test("valid but wrong current scenario bodies fail closed on Incidents and Advisory", async () => {
-  for (const view of ["incidents", "advisory"]) {
+test("valid but wrong current scenario bodies fail closed on all nine views", async () => {
+  for (const view of ["overview", "markets", "strategies", "portfolio", "risk", "replay", "incidents", "advisory", "settings"]) {
     const ui = await createUiHarness(`#${view}`);
     ui.requests[0].resolve(apiResponse(createDemoSnapshot("healthy")));
     await ui.startupPromise;
@@ -898,7 +995,7 @@ test("a current healthy request rejects a valid denied snapshot across view navi
   request.resolve(apiResponse(deniedSnapshot));
   await pending;
 
-  for (const view of ["overview", "risk", "portfolio", "incidents", "advisory"]) {
+  for (const view of ["overview", "markets", "strategies", "portfolio", "risk", "replay", "incidents", "advisory", "settings"]) {
     ui.navigate(view);
     assertScenarioMismatchFailsClosed(ui, "healthy", deniedSnapshot);
   }
@@ -952,20 +1049,37 @@ test("late response-body completion and fetch errors cannot overwrite the latest
   await staleBodyPromise;
   assertDisplayedScenario(ui, "denied");
 
-  const staleErrorPromise = ui.selectScenario("healthy");
-  const staleErrorRequest = ui.requests[3];
+  const staleBodyFailure = deferred();
+  let signalBodyRead;
+  const bodyReadStarted = new Promise((resolveBodyRead) => { signalBodyRead = resolveBodyRead; });
+  const staleBodyFailurePromise = ui.selectScenario("healthy");
+  const staleBodyFailureRequest = ui.requests[3];
+  staleBodyFailureRequest.resolve(apiResponse(undefined, () => {
+    signalBodyRead();
+    return staleBodyFailure.promise;
+  }));
+  await bodyReadStarted;
   const latestDegradedPromise = ui.selectScenario("degraded");
   const latestDegradedRequest = ui.requests[4];
   latestDegradedRequest.resolve(apiResponse(createDemoSnapshot("degraded")));
   await latestDegradedPromise;
   assertDisplayedScenario(ui, "degraded");
+  staleBodyFailure.reject(new SyntaxError("late stale body failure"));
+  await staleBodyFailurePromise;
+  assertDisplayedScenario(ui, "degraded");
 
+  const staleErrorPromise = ui.selectScenario("healthy");
+  const staleErrorRequest = ui.requests[5];
+  const latestAfterFetchErrorPromise = ui.selectScenario("degraded");
+  ui.requests[6].resolve(apiResponse(createDemoSnapshot("degraded")));
+  await latestAfterFetchErrorPromise;
+  assertDisplayedScenario(ui, "degraded");
   staleErrorRequest.reject(new Error("delayed local fetch failure"));
   await staleErrorPromise;
   assertDisplayedScenario(ui, "degraded");
 
   const currentErrorPromise = ui.selectScenario("healthy");
-  ui.requests[5].reject(new Error("current local fetch failure"));
+  ui.requests[7].reject(new Error("current local fetch failure"));
   await currentErrorPromise;
   assert.equal(ui.elements.get("#snapshot-status").dataset.state, "error");
   assertAllImplementedViewsUnavailable(ui);
