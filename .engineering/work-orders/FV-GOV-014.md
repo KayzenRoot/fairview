@@ -65,3 +65,16 @@ The original allowlist remains exactly thirteen paths. No source, tests, CI, GEF
 ## Permanent boundaries
 
 This change documents the already merged synthetic local UI only. It adds no execution, monitoring, alert delivery, model inference, human approval, investment advice, provider/account connection, money, persistence, module activation, or new dependency. Fairview remains public development with invented fixtures only. No checkpoint promotion or real financial operation is authorized.
+
+
+## FV-GOV-014-CORR-002 | accepted-source status wording in Web charter
+
+Origin: CodeRabbit final review of PR #55 exact HEAD `651a14e2f946fc4a324fd616e973e8c913fac6f8`, Run ID `026711e0-32c8-48d3-9f0c-3833a873c224`. The review completed successfully and produced one valid MINOR documentation finding outside the diff: `docs/architecture/modules/web.md` still described FV-UI-DEMO-003 as a candidate awaiting evidence/re-audit even though PR #54 is already merged, issue #53 closed, exact-main run 36654946218 is 4/4 with full synthetic 576/576, and the subsequent author/ChatGPT contact-sheet review is recorded as NOT_INDEPENDENT.
+
+### Required correction
+
+Change ONLY the stale FV-UI-DEMO-003 heading/status wording in the already-allowlisted `docs/architecture/modules/web.md` section so it states that the implementation is **accepted in source**. Preserve all substantive boundaries: five pages are synthetic/read-only; Markets, Strategies, Replay and Settings remain PLANNED; no real alert, monitoring, model, advice, auth, provider, financial authority or checkpoint promotion; visual review is NOT_INDEPENDENT and not design certification; D-007/D-008 and HIGH_ASSURANCE remain OPEN.
+
+### Boundaries
+
+This is a same-WO documentation correction within the original thirteen-path allowlist. No new path, code, test, registry graph/state, CI, GEF, dependency, security or financial gate change is authorized. Re-run exact-head hosted validation after this edit. Do not merge until CodeRabbit has re-reviewed the new exact HEAD with no unresolved actionable finding.
