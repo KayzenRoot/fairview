@@ -73,4 +73,18 @@ This delta authorizes only this correction record within the existing Work Order
 
 ### Completion evidence
 
-Pending execution. Record the official server/listener result, all 24 capture states and eight sheet hashes, inspected PR evidence-comment URL, final candidate HEAD, exact-path audit, local validations, and four hosted check results here before final handoff.
+Correction completed on 2026-09-30. This delta stays within this Work Order; the original seven-path allowlist is unchanged.
+
+- Safe port inspection found no listener on 127.0.0.1:4173; historical PID 17512 was not running. No process was terminated. The official command `node src/web/local-demo/server.mjs` was run from `D:\Projects\fairview` at candidate HEAD `84ddaf9280f37a282a73728d0a996512135579d4`. It printed `Fairview synthetic local preview: http://127.0.0.1:4173`; the capture run verified a loopback listener for the same Node command (PID 8672). A subsequent live confirmation also started the same official command and verified `127.0.0.1:4173`, HTTP 200, and the four page entries (current listener PID 12952). The capture script uses a literal base URL of `http://127.0.0.1:4173/`. No source was changed to select a port.
+- The existing preview returned the expected synthetic scenario contracts for `healthy` (`HEALTHY_FIXTURE`), `degraded` (`INCOMPLETE_FIXTURE`), and `denied` (`DENIED_FIXTURE` / `DENY`). The capture harness verified the four routes (Markets, Strategies, Replay, Settings), all three scenarios, and both desktop (1440×900) and mobile (390 px) viewports: 24/24 screenshots. The eight resulting contact sheets were visually inspected and attached to the updated PR evidence comment: https://github.com/KayzenRoot/fairview/pull/57#issuecomment-5903844691. That comment now identifies 4173, the exact command and capture HEAD, and supersedes the previous 4174 statement.
+- All images, capture script, and manifest are outside Git under `C:\Users\csn19\.codex\visualizations\2026\09\27\01a0e401-589b-7542-b015-6720fe096f67\fv-ui-demo-004`. Contact-sheet SHA-256 values:
+  - `markets-desktop-contact-sheet.png` — `6431018E2050445EB15A37893D6C7DB19579530B2B4F10C7CCF9FD814BAD83A9`
+  - `markets-mobile-contact-sheet.png` — `F0B7F51FD5D3FEC69B72A3CB2C816D1ED0B3E9464A732FE61889C64212EB4F0E`
+  - `strategies-desktop-contact-sheet.png` — `90D13C023EE37F1BFFD32E805091F453CB9DEB19F4AE74C436FA1FB368941DE3`
+  - `strategies-mobile-contact-sheet.png` — `6C7FD46CDFA66CD0177730C304984FC474F25838E4B014CF126229EB553E572F`
+  - `replay-desktop-contact-sheet.png` — `FB9E31A340056ABC1C87D2ACFB3DE98AA4A8C72EDEA6B92BC578FE44DB3DB127`
+  - `replay-mobile-contact-sheet.png` — `01C1553A401A701CCA6463405D64F749442D1054A6210F4B3BAAAAD20D7FF4E7`
+  - `settings-desktop-contact-sheet.png` — `703B694AAE0DE4384A00267291BBA671D3C6C6D8F6DADA01BB91A2253A67B463`
+  - `settings-mobile-contact-sheet.png` — `319FF89932640ADC6C80C248427C46C07E32A06859E93C7B841FE8ECF2B8F610`
+- No application source, tests, lock, module, server, registry, checkpoint, CI, GEF, dependency, or financial path was changed by this correction. The only repository path changed is this already-allowlisted Work Order. The PR evidence comment was verified to contain the eight new GitHub user-attachment links; no screenshot image is committed.
+- Local validation and hosted required checks must be recorded in the PR description against the final evidence commit. The PR remains OPEN and DRAFT; checkpoint delta remains NONE; no merge, checkpoint promotion, or live financial capability is authorized. Author inspection remains `NOT_INDEPENDENT`; CodeRabbit is still skipped because the PR is draft.
