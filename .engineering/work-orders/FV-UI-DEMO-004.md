@@ -56,3 +56,21 @@ Do not edit `src/web/local-demo/server.mjs`, `src/web/read-model.mjs`, registry/
 Stop if protected main or locked source fingerprints drift, the exact required baseline fails, an unlisted path is necessary, an authority gate becomes ambiguous, or a current validation/review blocker cannot be resolved within the admitted paths. Do not merge, promote any checkpoint, enable real financial operations, or claim independent approval, production readiness, market data, authentication, monitoring, strategy execution, backtesting, investment advice, or real replay functionality.
 
 Completion means an auditable pushed DRAFT PR at an exact candidate HEAD with the seven-path scope, complete local and hosted evidence, all four required checks successful at that HEAD, and the four new synthetic pages visually available for review. It does not authorize merge, checkpoint promotion, production, or real financial functionality.
+
+## Correction delta: FV-UI-DEMO-004-CORR-001
+
+Recorded before any correction evidence or PR update on 2026-09-30, in response to the ChatGPT review of PR #57 at candidate HEAD `8b00c9e9975defa8152aadf5b2f72f6fcad44266`.
+
+### Finding and authorized correction
+
+The original visual evidence comment used `http://127.0.0.1:4174`, while this Work Order requires the supported preview at `http://127.0.0.1:4173`. The original comment states that 4173 was occupied by a pre-existing local process and left untouched. At this correction's initial live inspection, `Get-NetTCPConnection -State Listen -LocalPort 4173` returned no listener, and historical PID `17512` was not running. No process has been terminated. The correction will use the exact supported command `node src/web/local-demo/server.mjs` from this checkout to serve on 4173, verify the listener and rendered application, and regenerate all 24 captures and eight contact sheets (four pages × three scenarios × desktop/mobile) outside Git. The existing same-origin synthetic snapshot and unchanged preview source are used; no source edit to select or alter the port is authorized or required.
+
+The eight updated contact sheets will replace the prior 4174 evidence in the PR evidence comment, explicitly identify 4173 as the capture origin, and retain hashes and exact state records in the external evidence manifest. If the official 4173 preview cannot be started or verified, stop without terminating any process or claiming visual completion, record the concrete failure here, and leave the existing evidence labeled as 4174 pending re-audit.
+
+### Scope and gates
+
+This delta authorizes only this correction record within the existing Work Order path, the prescribed local preview execution, regeneration and inspection of external visual artifacts, and updating PR #57's evidence comment/description. The original seven-path allowlist is unchanged. No product source, tests, documentation outside this Work Order, server, read model, registry, checkpoint, CI, GEF, dependency, or financial module change is authorized by this delta. PR #57 remains OPEN and DRAFT; no merge, checkpoint promotion, or real financial capability is authorized. If this record is committed, rerun all correction-required local validations and obtain the four hosted checks on the exact final HEAD before handoff.
+
+### Completion evidence
+
+Pending execution. Record the official server/listener result, all 24 capture states and eight sheet hashes, inspected PR evidence-comment URL, final candidate HEAD, exact-path audit, local validations, and four hosted check results here before final handoff.
