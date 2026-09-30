@@ -48,6 +48,20 @@ No other path is authorized. No source, tests, package/dependency, CI, GEF, secu
 5. Publish a draft PR with exact base/head, this Work Order and lock, exact 13-path allowlist, unchanged registry comparison, evidence links, full local/hosted results, compatibility/security/dependency notes, the unlinked visual evidence caveat, checkpoint delta `NONE`, and author review `NOT_INDEPENDENT`. Require all four hosted checks on its exact head and review findings assessed without relaxing gates.
 6. Keep the reconciliation PR open and in draft for audit. Do not merge it, update the checkpoint with its own future merge/run, promote `FV-CP-0002-PROPOSED`, reopen issue #53, or claim visual, independent, production, or financial approval.
 
+## FV-GOV-014-CORR-001 | exact work-order, hosted-suite, and visual-evidence corrections
+
+Origin: latest ChatGPT technical review on PR #55, reviewed against candidate HEAD `db76a07ff3400d43de28bea83e50baf8665dda3c`. This correction remains within FV-GOV-014 and the original thirteen-path allowlist above; it adds no path or product scope.
+
+### Required corrections
+
+1. In `.engineering/CHECKPOINT.json`, change the top-level `work_order` value from `FV-GOV-013` to `FV-GOV-014`. Do not modify `checkpoint`, `status`, `independent_approval`, D-007, D-008, migration/approval identity, or any financial gate.
+2. Correct the PR/documentation test statement for exact candidate HEAD `db76a07ff3400d43de28bea83e50baf8665dda3c`: hosted Actions run `36657387689`, Source Pack/impact job `109704554088`, executed `harness verify --changed` with `full: true`, no unknown paths, and all fourteen synthetic suites passing **576/576** (bootstrap88, risk39, forex29, ai25, web42, policy57, clock56, market-data79, ledger27, execution27, portfolio27, replay30, research24, observability26). The protected-main-only step named `Full active harness (protected main)` was skipped on that pull-request workflow; this must not be described as the full fourteen-suite hosted PR proof being skipped or local-only. Preserve that distinction in the PR description and current evidence summaries.
+3. Preserve that PR #54 has no GitHub-hosted image attachments or public image URLs. Four contact sheets were supplied later in the conversation: Desktop Advisory, Desktop Incidents, Mobile Advisory, and Mobile Incidents, each covering Healthy, Degraded, and Denied. They were reviewed by the author/ChatGPT as `NOT_INDEPENDENT`, with no blocking visual finding; the minor mobile-navigation density observation is non-blocking. Describe this as an author review outside GitHub, not independent design approval. Do not invent a public URL or claim that images were attached to PR #54.
+
+### Boundaries
+
+The original allowlist remains exactly thirteen paths. No source, tests, CI, GEF, module registry graph/state, dependencies, images, or path outside that allowlist may change. Keep PR #55 open and in draft; do not merge, promote the checkpoint, change financial gates, or record a future GOV-014 merge/run in its own candidate.
+
 ## Permanent boundaries
 
 This change documents the already merged synthetic local UI only. It adds no execution, monitoring, alert delivery, model inference, human approval, investment advice, provider/account connection, money, persistence, module activation, or new dependency. Fairview remains public development with invented fixtures only. No checkpoint promotion or real financial operation is authorized.
